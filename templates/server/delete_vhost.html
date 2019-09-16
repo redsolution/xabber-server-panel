@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete virtual host{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Delete virtual host</h1></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <p>Virtual host <b>{{ vhost_to_del }}</b> will be deleted from the server. Are you sure?</p>
+
+                <form method="post" action="{% url 'server:delete-vhost' vhost_to_del.id %}">
+                    {% csrf_token %}
+
+                    {% with form.name as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row" style="margin-bottom: 24px;">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="btn-set">
+                        <a href="{% url 'server:settings' %}">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" class="btn btn-primary">Delete virtual host</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

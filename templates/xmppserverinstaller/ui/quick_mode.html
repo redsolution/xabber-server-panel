@@ -1,0 +1,100 @@
+{% extends 'xmppserverinstaller/base.html' %}
+{% load static %}
+
+{% block title %}Xabber server installation{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+          integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://johann-s.github.io/bs-stepper/dist/css/bs-stepper.min.css">
+{% endblock %}
+
+{% block main-container %}
+    <div class="container">
+        <div class="mb-5 p-4">
+            <div class="logo">
+                <img class="logo-img" width="48" height="48"
+                     src="{% static 'xmppserverui/img/logo.png' %}">
+                <h3>Xabber server installation</h3>
+            </div>
+
+                <div id="stepper1" class="bs-stepper">
+                <div class="bs-stepper-header" >
+                    <div class="bs-stepper-line"></div>
+                    <div class="step active">
+                        <button type="button" class="step-trigger">
+                            <span class="bs-stepper-label">Installation</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+
+                </div>
+
+                <div class="bs-stepper-content" style="width: 80%">
+                    <form method="post" action="{% url 'installer:quick' %}" class="installer-form">
+                        {% csrf_token %}
+
+                        <div id="test-l-2"
+                             class="form-content{% if step == form.STEP_1 %} visible{% endif %}">
+                            <p>Configure admin account for the server. It will be used to perform
+                                all administration and maintenance operations with the server.
+                                You will be able to chat using this account, you will also
+                                receive security alerts from the server. You will be able
+                                to configure additional admin accounts later.
+                            </p>
+                            <div style="width: 45%; margin: 0 auto;">
+                                {% with form.admin_username as field %}
+{#                                    {% with form.xmpp_host.value as xmpp_host_value %}#}
+                                        {% include 'xmppserverinstaller/ui/include/input_field_with_postfix.html' %}
+{#                                    {% endwith %}#}
+                                {% endwith %}
+                                {% with form.admin_password as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                <button type="submit" class="btn btn-next btn-primary" name="next_to_step2">Next</button>
+                            </div>
+                        </div>
+
+                        <div id="test-l-4" class="form-content{% if step == form.STEP_2 %} visible{% endif %}">
+                            <div style="width: 60%; margin: 0 auto;">
+                                {% if installation_error %}
+                                    <div class="text-center">
+                                        <div class="spinner-text">
+                                            Installation failed.<br/>
+                                            {{ installation_error }}
+                                        </div>
+                                        <button type="submit" class="btn btn-secondary" name="prev_to_step1">Back</button>
+                                    </div>
+                                {% else %}
+                                    <button type="submit" class="btn btn-next btn-success" name="submit">Submit</button>
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                        <div class="spinner-text">Waiting for installation...</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://johann-s.github.io/bs-stepper/dist/js/bs-stepper.min.js"></script>
+    <script>
+        var stepper1 = null
+        document.addEventListener('DOMContentLoaded', function () {
+            stepper1 = new Stepper(document.querySelector('#stepper1'))
+        })
+
+        {% if step == form.STEP_2 and not installation_error %}
+            $(".btn[name=submit]").trigger('click');
+        {% endif %}
+    </script>
+{% endblock %}

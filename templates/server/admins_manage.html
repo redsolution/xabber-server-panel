@@ -1,0 +1,127 @@
+{% extends 'server/overview_tabs.html' %}
+
+{% block title %}Manage administrators{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <div style="margin: 0 0 15px;">
+                    <h3>Manage administrators</h3>
+                </div>
+
+                <form method="post" action="{% url 'server:manage-admins' %}">
+                    {% csrf_token %}
+
+                    <div class="row form-group {% if field.errors %}invalid{% endif %}">
+                        <div class="col-sm-12">
+                            <ul class="list-group" id="admin_list">
+                                {% for user in users %}
+                                    <li class="list-group-item">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox"
+                                                 class="custom-control-input select-item"
+                                                 id="select-member-{{ forloop.counter }}"
+                                                 data-admin="{{ user }}"
+                                                 {% if user.is_admin %}checked{% endif %}>
+                                            <label class="custom-control-label"
+                                                 for="select-member-{{ forloop.counter }}">
+                                                {% if user.member_verbose %}
+                                                    {{ user.member_verbose }}
+                                                {% else %}
+                                                    {{ user }}
+                                                {% endif %}
+                                                {% if user.secondary_verbose %}
+                                                    <span style="color:grey;">{{ user.secondary_verbose }}</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
+                            <input type="hidden" name="admin_list" />
+                        </div>
+                    </div>
+
+                    {% if select_admins_error %}
+                        <div class="row form-group">
+                            <div class="col-sm-12 non-field-error">
+                                {{ select_admins_error }}
+                            </div>
+                        </div>
+                     {% endif %}
+
+                    <div class="row form-group form-btn-block">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary"
+                                    id="btn_add_admins" disabled>Save</button>
+                            <a href="{% url 'server:admins-list' %}">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        style="margin-left: 24px;">Cancel</button>
+                            </a>
+                            <span id="selected_counts" class="selected-counts-text">
+                                <span id="selected_counter">0</span> selected
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+
+    <script>
+        function updateAdminsInputField(admins) {
+            var members_string = Array.from(admins).join(' ');
+            $('input[name=admin_list]').val(members_string);
+        }
+
+        function initAdmins() {
+            var admins = new Set();
+            $("#admin_list .select-item:checked").each(function() {
+                var admin = $(this).attr("data-admin");
+                admins.add(admin);
+            });
+            updateAdminsInputField(admins);
+            return admins;
+        }
+
+        function equalSet(as, bs) {
+            if (as.size !== bs.size) return false;
+            for (var a of as) if (!bs.has(a)) return false;
+            return true;
+        }
+
+        $(document).ready(function() {
+            var new_admin = initAdmins(),
+                curr_admin = initAdmins();
+
+            $("#admin_list").on("change", ".select-item", function(event) {
+                event.preventDefault();
+
+                var is_checked = this.checked,
+                    admin = $(this).attr("data-admin");
+
+                if (is_checked)
+                    new_admin.add(admin);
+                else
+                    new_admin.delete(admin);
+
+                updateAdminsInputField(new_admin);
+
+                if (equalSet(new_admin, curr_admin)) {
+                    $("#btn_add_admins").prop('disabled', true);
+                    $("#selected_counts").hide();
+                } else {
+                    $("#btn_add_admins").prop('disabled', false);
+                    $("#selected_counter").text(new_admin.size);
+                    $("#selected_counts").show();
+                }
+            });
+        });
+    </script>
+{% endblock %}

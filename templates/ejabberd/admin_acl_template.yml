@@ -1,0 +1,4 @@
+acl:
+  admin:
+    user: {% for admin in admins %}
+      - "{% if admin.username %}{{ admin.username }}@{{ admin.host}}{% else %}{{ admin }}{% endif %}"{% endfor%}

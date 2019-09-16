@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ group }}{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:groups' %}">Groups</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ group.group }}</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    <li class="list-group-item"><h4>{{ group.host }}</h4></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col tabs">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'group-details' %} active{% endif %}"
+                           href="{% url 'virtualhost:group-details' group.id %}">Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'group-members' %} active{% endif %}"
+                           href="{% url 'virtualhost:group-members' group.id %}">Members</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'group-subscriptions' %} active{% endif %}"
+                           href="{% url 'virtualhost:group-subscriptions' group.id %}">Shared contacts</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    {% block tab_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        $(window).scroll(function() {
+            if ($(window).scrollTop() == $(document).height() - $(window).height()){
+                $('.form-btn-block').addClass('fixed');
+            }
+            else {
+                $('.form-btn-block').removeClass('fixed');
+            }
+        });
+    </script>
+{% endblock %}

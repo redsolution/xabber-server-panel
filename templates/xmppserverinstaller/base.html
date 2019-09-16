@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!--<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>-->
+        <link rel="stylesheet" href="{% static 'bootstrap/4.3.1/css/bootstrap.min.css' %}"/>
+        <link rel="stylesheet" href="{% static 'xmppserverinstaller/css/style.css' %}"/>
+        {% block css %}{% endblock %}
+
+        <title>{% block title %}{% endblock %}</title>
+    </head>
+    <body>
+        {% block main-container %}
+        {% endblock %}
+
+        <script src="{% static 'jquery/js/jquery-3.3.1.slim.min.js' %}"></script>
+        <script src="{% static 'bootstrap/4.3.1/js/bootstrap.min.js' %}"></script>
+        <!--<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>-->
+        {% block js %}{% endblock %}
+    </body>
+</html>

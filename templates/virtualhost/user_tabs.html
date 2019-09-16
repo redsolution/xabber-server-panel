@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ curr_user }}{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:users' %}">Users</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ curr_user }}</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    <li class="list-group-item"><h4>Active</h4></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col tabs">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'user-details' %} active{% endif %}"
+                           href="{% url 'virtualhost:user-details' curr_user.id %}">Details</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'user-vcard' %} active{% endif %}"
+                           href="{% url 'virtualhost:user-vcard' curr_user.id %}">vCard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
+                           href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'user-groups' %} active{% endif %}"
+                           href="{% url 'virtualhost:user-groups' curr_user.id %}">Groups</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    {% block tab_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

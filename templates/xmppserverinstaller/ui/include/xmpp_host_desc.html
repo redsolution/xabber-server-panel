@@ -1,0 +1,64 @@
+<p>
+    To make XMPP work on your server, you need to set up SRV records for domain {{ host }}.
+    It will allow XMPP clients to correctly find the location of your server using Domain Name System (DNS).
+    You need to add several types of DNS records to make things work:
+</p>
+<ul>
+    <li>A record for subdomain <b>{{ host }}</b> to make server management panel available from the Internet on this address</li>
+    <li>SRV records to help XMPP clients and servers find your server</li>
+</ul>
+
+<br/>
+<h4>A Record</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Hostname</th>
+            <th scope="col">IP Address</th>
+            <th scope="col">TTL (seconds)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="table-data">xabber.{{ host }}</td>
+            <td class="table-data">Your server IP</td>
+            <td class="table-data">Default</td>
+        </tr>
+    </tbody>
+</table>
+
+<br/>
+<h4>SRV Record</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Service</th>
+            <th scope="col">Protocol</th>
+            <th scope="col">Priority</th>
+            <th scope="col">Weight</th>
+            <th scope="col">Port</th>
+            <th scope="col">Target</th>
+            <th scope="col">TTL (seconds)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="table-data">_xmpp-client</td>
+            <td class="table-data">TCP</td>
+            <td class="table-data">10</td>
+            <td class="table-data">5</td>
+            <td class="table-data">5222</td>
+            <td class="table-data">xabber.{{ host }}</td>
+            <td class="table-data">Default</td>
+        </tr>
+        <tr>
+            <td class="table-data">_xmpp-server</td>
+            <td class="table-data">TCP</td>
+            <td class="table-data">10</td>
+            <td class="table-data">5</td>
+            <td class="table-data">5269</td>
+            <td class="table-data">xabber.{{ host }}</td>
+            <td class="table-data">Default</td>
+        </tr>
+    </tbody>
+</table>

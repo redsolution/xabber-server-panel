@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Create new group{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Create new group</h1></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <form method="post" action="{% url 'virtualhost:group-create' %}" >
+                    {% csrf_token %}
+
+                    {% with form.group as field %}
+                        {% with form.host as dropdown_field %}
+                            {% include 'include/input_field_with_dropdown.html' %}
+                        {% endwith %}
+                    {% endwith %}
+                    {% with form.name as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+                    {% with form.description as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+{#                    {% with form.displayed_groups as field %}#}
+{#                        {% include 'include/input_field.html' %}#}
+{#                    {% endwith %}#}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                     {% endfor %}
+
+                    <div class="row">
+                        <div class="col-sm-3"></div>
+                        <div class="col-sm-9">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

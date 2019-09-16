@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete user{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Delete user</h1></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <p>User <b>{{ user_to_del }}</b> will be deleted from the server. Are you sure?</p>
+
+                <form method="post" action="{% url 'virtualhost:user-delete' user_to_del.id %}">
+                    {% csrf_token %}
+
+                    {% with form.username as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+                    {% with form.host as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row" style="margin-bottom: 24px;">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="btn-set">
+                        <a href="{% url 'virtualhost:users' %}">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" class="btn btn-primary">Delete user</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

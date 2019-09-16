@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ host }}{% endblock %}
+
+{% block main_content %}
+   <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'server:settings' %}">Server settings</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ host }}</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    <li class="list-group-item"><h4>Active</h4></li>
+                </ul>
+            </div>
+
+        </div>
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <div class="row col-sm-12">
+                    <p>
+                        To make XMPP work on your server, you need to set up SRV records for domain customdomain.com.
+                        It will allow XMPP clients to correctly find the location of your server using Domain Name System (DNS).
+                        You need to add several types of DNS records to make things work:
+                    </p>
+                </div>
+
+                <div class="row" style="padding-bottom: 16px; margin-top: 24px">
+                    <div class="col-sm-9">
+                        <h3>A record</h3>
+                    </div>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Hostname</th>
+                            <th scope="col">IP Address</th>
+                            <th scope="col">TTL (seconds)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="table-data">{{ host }}</td>
+                            <td class="table-data">Your server IP</td>
+                            <td class="table-data">Default</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="row" style="padding-bottom: 16px; margin-top: 24px">
+                    <div class="col-sm-9">
+                        <h3>SRV records</h3>
+                    </div>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Service</th>
+                            <th scope="col">Protocol</th>
+                            <th scope="col">Priority</th>
+                            <th scope="col">Weight</th>
+                            <th scope="col">Port</th>
+                            <th scope="col">Target</th>
+                            <th scope="col">TTL (seconds)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="table-data">_xmpp-client</td>
+                            <td class="table-data">TCP</td>
+                            <td class="table-data">10</td>
+                            <td class="table-data">5</td>
+                            <td class="table-data">5222</td>
+                            <td class="table-data">{{ host }}</td>
+                            <td class="table-data">86400</td>
+                        </tr>
+                        <tr>
+                            <td class="table-data">_xmpp-server</td>
+                            <td class="table-data">TCP</td>
+                            <td class="table-data">10</td>
+                            <td class="table-data">5</td>
+                            <td class="table-data">5269</td>
+                            <td class="table-data">{{ host }}</td>
+                            <td class="table-data">86400</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+   </div>
+{% endblock %}

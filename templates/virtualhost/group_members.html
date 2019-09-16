@@ -1,0 +1,150 @@
+{% extends 'virtualhost/group_tabs.html' %}
+{% load xmppserverui_tags %}
+
+{% block title %}Edit {{ group }} members{% endblock %}
+
+{% block tab_content %}
+    <div class="modal fade" id="add-new-member-modal" tabindex="-1"
+         role="dialog" aria-labelledby="exampleModalCenterTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="border-bottom: none;">
+                    <h5 class="modal-title">Add new member</h5>
+                </div>
+                <div class="modal-body" style="border-bottom: none;">
+                    <form id="add-gm-form" method="post"
+                          action="{% url 'virtualhost:group-members' group.id %}">
+                         {% csrf_token %}
+
+                         {% with add_member_form.member as field %}
+                             <div class="row form-group">
+                                 <div class="col-sm-12">
+                                     <div class="input-field">
+                                         {{ field }}
+                                         <small class="form-text text-muted">
+                                             Add external users for this group here.
+                                         </small>
+                                         <div class="invalid-feedback d-block">
+                                             {% for field_error in field.errors %}
+                                                {{ field_error }}
+                                             {% endfor %}
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         {% endwith %}
+
+                        <div class="modal-footer" style="border-top: none; padding: 1rem 0;">
+                            <button type="button" class="btn btn-outline-secondary"
+                                    data-dismiss="modal">Cancel</button>
+                            <button type="submit" name="add_member_form"
+                                    id="btn_add_new_member"
+                                    class="btn btn-primary">Add member</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade show active" style="margin: 0;">
+
+        <div class="alert alert-success alert-dismissible"
+             id="success_alert_for_add_member"
+             style="margin: 16px 0 0; display: none;">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            A new member has been <strong>successfully</strong> added to the group.
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col breadcrumbs" style="margin-top:0;">
+                <ul class="list-group list-group-flush list-group-horizontal" style="width: 100%;">
+                    <li class="list-group-item" style="padding: 0;">
+                        <ul class="list-group list-group-flush list-group-horizontal">
+                            <li class="list-group-item"><h3>Members</h3></li>
+                            <li class="list-group-item"><div class="divider" style="height:24px"></div></li>
+                            <li class="list-group-item"><h4>{{ curr_page_title }}</h4></li>
+                        </ul>
+                    </li>
+                    <li class="list-group-item" style="padding: 0; float: right;">
+                        <button type="button" class="btn btn-primary"
+                                data-toggle="modal" data-target="#add-new-member-modal"
+                                style="margin-right:24px;">Add</button>
+                        <a href="{% url 'virtualhost:group-members-select' group.id %}">
+                            <button type="button" class="btn btn-primary">Manage</button>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                    <tr>
+                        <td class="table-data">
+                            {% if member.member_verbose != 'All' %}
+                                {% if member.user and member.user.photo %}
+                                    <img class="user-avatar-preview"
+                                         src="{{ member.user.photo.url }}" />
+                                {% elif member.user %}
+                                    <p class="user-avatar-preview-p"
+                                       data-letters="{% get_user_initials member.user %}"></p>
+                                {% else %}
+                                     <p class="user-avatar-preview-p"
+                                        data-letters="{% get_user_initials member.member %}"></p>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="table-data">
+                            {% if member.user %}
+                                <a href="{% url 'virtualhost:user-details' member.user.id %}">
+                                    {{ member.member }}
+                                </a>
+                            {% else %}
+                                {% if member.member_verbose %}
+                                    {{ member.member_verbose }}
+                                {% else %}
+                                    {{ member.member }}
+                                {% endif %}
+                                {% if member.secondary_verbose %}
+                                    <span style="color:grey;">{{ member.secondary_verbose }}</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="table-data">
+                            {% if member.user and member.user.first_name and member.user.last_name %}
+                                {{ member.user.first_name }} {{ member.user.last_name }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% with members as data %}
+            {% include 'include/pagination.html' %}
+        {% endwith %}
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function() {
+            {% if has_form_errors %}
+                $('#add-new-member-modal').modal('show');
+            {% endif %}
+            {% if added_new_member %}
+                $('#success_alert_for_add_member').show();
+            {% endif %}
+        });
+    </script>
+{% endblock %}

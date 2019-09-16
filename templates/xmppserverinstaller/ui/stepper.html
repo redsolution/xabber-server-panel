@@ -1,0 +1,159 @@
+{% extends 'xmppserverinstaller/base.html' %}
+{% load static %}
+
+{% block title %}Xabber server installation{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+          integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://johann-s.github.io/bs-stepper/dist/css/bs-stepper.min.css">
+{% endblock %}
+
+{% block main-container %}
+    <div class="container">
+        <div class="mb-5 p-4">
+            <div class="logo">
+                <img class="logo-img" width="48" height="48"
+                     src="{% static 'xmppserverui/img/logo.png' %}">
+                <h3>Xabber server installation</h3>
+            </div>
+
+            <div id="stepper1" class="bs-stepper">
+                <div class="bs-stepper-header" role="tablist">
+                    <div class="step {% if step == form.STEP_1 %}active{% endif %}">
+                        <button type="button" class="step-trigger" role="tab" id="stepper1trigger1">
+                            <span class="bs-stepper-circle">1</span>
+                            <span class="bs-stepper-label">{{ form.STEP_1 }}</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step {% if step == form.STEP_2 %}active{% endif %}">
+                        <button type="button" class="step-trigger" role="tab" id="stepper1trigger2">
+                            <span class="bs-stepper-circle">2</span>
+                            <span class="bs-stepper-label">{{ form.STEP_2 }}</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step {% if step == form.STEP_3 %}active{% endif %}">
+                        <button type="button" class="step-trigger" role="tab" id="stepper1trigger3">
+                            <span class="bs-stepper-circle">3</span>
+                            <span class="bs-stepper-label">{{ form.STEP_3 }}</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step {% if step == form.STEP_4 %}active{% endif %}">
+                        <button type="button" class="step-trigger" role="tab" id="stepper1trigger4">
+                            <span class="bs-stepper-circle">4</span>
+                            <span class="bs-stepper-label">{{ form.STEP_4 }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bs-stepper-content" style="width: 80%">
+                    <form method="post" action="{% url 'installer:stepper' %}" class="installer-form">
+                        {% csrf_token %}
+
+                        <div id="test-l-1" role="tabpanel"
+                             class="form-content{% if step == form.STEP_1 %} visible{% endif %}">
+                            <p>Configure main domain name for the XMPP server.
+                                It will be used to access server from the internet.
+                                All users will receive accounts in this domain.
+                                You must have access to DNS settings for this domain
+                                to make it work.</p>
+                            <div style="width: 60%; margin: 0 auto;">
+                                {% with form.xmpp_host as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                <button type="submit" class="btn btn-next btn-primary" name="next_to_step2">Next</button>
+                            </div>
+                        </div>
+
+                        <div id="test-l-2" role="tabpanel"
+                             class="form-content{% if step == form.STEP_2 %} visible{% endif %}">
+                            <p>Configure admin account for the server. It will be used to perform
+                                all administration and maintenance operations with the server.
+                                You will be able to chat using this account, you will also
+                                receive security alerts from the server. You will be able
+                                to configure additional admin accounts later.
+                            </p>
+                            <div style="width: 60%; margin: 0 auto;">
+                                {% with form.admin_username as field %}
+                                    {% with form.xmpp_host.value as xmpp_host_value %}
+                                        {% include 'xmppserverinstaller/ui/include/input_field_with_postfix.html' %}
+                                    {% endwith %}
+                                {% endwith %}
+                                {% with form.admin_password as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                <button type="submit" class="btn btn-secondary" name="prev_to_step1">Previous</button>
+                                <button type="submit" class="btn btn-next btn-primary" name="next_to_step3">Next</button>
+                            </div>
+                        </div>
+
+                        <div id="test-l-3" role="tabpanel" class="form-content{% if step == form.STEP_3 %} visible{% endif %}">
+                            <p>Connect server to a database. You must have it preconfigured
+                                before proceeding with installation. Database installation
+                                instruction can be found <a href="https://github.com/redsolution/xabber-server/wiki/Installation#postgresql-installation" target="_blank">here</a>.
+                            </p>
+
+                            <div style="width: 60%; margin: 0 auto;">
+                                {% with form.db_host as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                {% with form.db_name as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                {% with form.db_user as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                {% with form.db_user_pass as field %}
+                                    {% include 'xmppserverinstaller/ui/include/input_field.html' %}
+                                {% endwith %}
+                                <button type="submit" class="btn btn-secondary" name="prev_to_step2">Previous</button>
+                                <button type="submit" class="btn btn-next btn-success" name="next_to_step4">Next</button>
+                            </div>
+                        </div>
+
+                        <div id="test-l-4" role="tabpanel" class="form-content{% if step == form.STEP_4 %} visible{% endif %}">
+                            <div style="width: 60%; margin: 0 auto;">
+                                {% if installation_error %}
+                                    <div class="text-center">
+                                        <div class="spinner-text">
+                                            Installation failed.<br/>
+                                            {{ installation_error }}
+                                        </div>
+                                        <button type="submit" class="btn btn-secondary" name="prev_to_step3">Back</button>
+                                    </div>
+                                {% else %}
+                                    <button type="submit" class="btn btn-next btn-success" name="submit">Submit</button>
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                        <div class="spinner-text">Waiting for installation...</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://johann-s.github.io/bs-stepper/dist/js/bs-stepper.min.js"></script>
+    <script>
+        var stepper1 = null
+        document.addEventListener('DOMContentLoaded', function () {
+            stepper1 = new Stepper(document.querySelector('#stepper1'))
+        })
+
+        {% if step == form.STEP_4 and not installation_error %}
+            $(".btn[name=submit]").trigger('click');
+        {% endif %}
+    </script>
+{% endblock %}

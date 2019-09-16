@@ -1,0 +1,114 @@
+{% extends 'virtualhost/group_tabs.html' %}
+
+{% block title %}Edit {{ group }} details{% endblock %}
+
+{% block tab_content %}
+<div class="tab-pane fade show active">
+    <div class="row no-gutters">
+        <div class="col page-content">
+            <form method="post" action="{% url 'virtualhost:group-subscriptions' group.id %}">
+                {% csrf_token %}
+
+                <div class="row form-group {% if field.errors %}invalid{% endif %}">
+                    <div class="col-sm-12">
+                        <ul class="list-group" id="v_groups_list">
+                            {% for group in displayed_groups %}
+                                <li class="list-group-item">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox"
+                                             class="custom-control-input select-item"
+                                             id="select-group-{{ forloop.counter }}"
+                                             data-group="{{ group.group }}"
+                                             {% if group.checked %}checked{% endif %}>
+                                        <label class="custom-control-label"
+                                             for="select-group-{{ forloop.counter }}">
+                                            {% if group.group_verbose %}
+                                                {{ group.group_verbose }}
+                                            {% else %}
+                                                {{ group.group }}
+                                            {% endif %}
+                                            {% if group.secondary_verbose %}
+                                                <span style="color:grey;">{{ group.secondary_verbose }}</span>
+                                            {% endif %}
+                                        </label>
+                                        <span class="badge badge-primary badge-pill group-members-count">
+                                            {{ group.members }} members
+                                        </span>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                        <input type="hidden" name="displayed_groups" />
+                    </div>
+                </div>
+
+                <div class="row form-group form-btn-block">
+                    <div class="col-sm-12">
+                        <button type="submit" id="btn_save_groups"
+                                class="btn btn-primary" disabled>Save</button>
+                        <span id="selected_counts" class="selected-counts-text">
+                            <span id="selected_counter">0</span> selected
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+
+    <script>
+        function updateVGroupsInputField(groups) {
+            var groups_string = Array.from(groups).join(';');
+            $('input[name=displayed_groups]').val(groups_string);
+        }
+
+        function equalSet(as, bs) {
+            if (as.size !== bs.size) return false;
+            for (var a of as) if (!bs.has(a)) return false;
+            return true;
+        }
+
+        function initVGroups() {
+            var groups = new Set();
+            $("#v_groups_list .select-item:checked").each(function() {
+                var group = $(this).attr("data-group");
+                groups.add(group);
+            });
+            updateVGroupsInputField(groups);
+            return groups;
+        }
+
+        $(document).ready(function() {
+            var new_groups = initVGroups(),
+                curr_groups = initVGroups();
+
+            $("#v_groups_list").on("change", ".select-item", function(event) {
+                event.preventDefault();
+
+                var is_checked = this.checked,
+                    group = $(this).attr("data-group");
+
+                if (is_checked)
+                    new_groups.add(group);
+                else
+                    new_groups.delete(group);
+
+                updateVGroupsInputField(new_groups);
+
+                if (equalSet(new_groups, curr_groups)) {
+                    $("#btn_save_groups").prop('disabled', true);
+                    $("#selected_counts").hide();
+                } else {
+                    $("#btn_save_groups").prop('disabled', false);
+                    $("#selected_counter").text(new_groups.size);
+                    $("#selected_counts").show();
+                }
+            });
+        });
+    </script>
+{% endblock %}

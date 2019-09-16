@@ -1,0 +1,23 @@
+{% extends 'xmppserverinstaller/base.html' %}
+{% load static %}
+
+{% block title %}Xabber server have successfully installed{% endblock %}
+
+{% block main-container %}
+    <div class="container">
+        <div class="mb-5 p-4">
+            <div class="logo">
+                <img class="logo-img" width="48" height="48"
+                     src="{% static 'xmppserverui/img/logo.png' %}">
+                <h3>Xabber server have successfully installed</h3>
+            </div>
+            <div style="margin: 48px 0;">
+                <a href="{% url 'server:dashboard' %}"><button class="btn btn-primary">Go to the management console</button></a>
+            </div>
+
+            {% with form.xmpp_host.value as xmpp_host %}
+                {% include 'xmppserverinstaller/ui/include/xmpp_host_desc.html' %}
+            {% endwith %}
+        </div>
+    </div>
+{% endblock %}

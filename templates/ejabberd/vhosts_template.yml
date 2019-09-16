@@ -1,0 +1,4 @@
+hosts: {% for host in vhosts %}
+  - "{{ host }}"{% endfor%}
+
+oauth_default_server: "{{ vhosts|first }}"

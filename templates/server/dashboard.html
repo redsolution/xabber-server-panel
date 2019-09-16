@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Dashboard</h1></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters" style="padding:0 8px 24px;">
+            <div class="col">
+                <h3 style="margin:24px 0;">XMPP Server</h3>
+                <div style="margin:0 0 24px;">Status:
+                    {% if is_ejabberd_started %}
+                        <span style="color:green;">started</span>
+                    {% else %}
+                         <span style="color:red;">stopped</span>
+                    {% endif %}
+                </div>
+                <form method="post" action="{% url 'server:dashboard' %}"
+                      id="change_server_status_form">
+                    {% csrf_token %}
+
+                    <div class="btn-set">
+                        <button type="button" name="start_server"
+                                class="btn btn-primary"
+                                {% if is_ejabberd_started %}disabled{% endif %}>
+                            Start server</button>
+                        <button type="button" name="restart_server"
+                                class="btn btn-custom-blue"
+                                {% if not is_ejabberd_started %}disabled{% endif %}>
+                            Restart server</button>
+                        <button type="button" name="stop_server"
+                                class="btn btn-custom-yellow"
+                                {% if not is_ejabberd_started %}disabled{% endif %}>
+                            Stop server</button>
+
+                        <input name="action" type="hidden"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row no-gutters" style="padding: 0 8px 48px;">
+            <div class="col">
+                <h3 style="margin:24px 0;">Virtual hosts and users</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Virtual host</th>
+                            <th scope="col">All users</th>
+                            <th scope="col">Online users</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for host in vhosts_data %}
+                            <tr>
+                                <td class="table-data">{% if host.name %}{{ forloop.counter }}{% endif %}</td>
+                                <td class="table-data">{{ host.name }}</td>
+                                <td class="table-data">
+                                    {% if host.registeredusers %}{{ host.registeredusers }}{% else %}--{% endif %}
+                                </td>
+                                <td class="table-data">
+                                    {% if host.onlineusers %}{{ host.onlineusers }}{% else %}--{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function() {
+            $("#change_server_status_form button").click(function() {
+                $("#change_server_status_form button").prop('disabled', true);
+
+                var action = $(this).prop('name');
+                $("#change_server_status_form input[name=action]").val(action);
+                $("#change_server_status_form").submit();
+            });
+        });
+    </script>
+{% endblock %}

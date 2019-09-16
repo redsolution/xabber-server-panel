@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Add virtual host{% endblock %}
+
+{% block main_content %}
+   <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'server:settings' %}">Settings</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>Add virtual host</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    <li class="list-group-item"><h4>{{ vhosts_count }} {% if vhosts_count == 1 %}host{% else %}hosts{% endif %}</h4></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="row" style="padding-bottom: 16px; margin-top: 32px">
+            <div class="col-sm-9">
+                <form action="{% url 'server:add-vhost' %}" method="post">
+                    {% csrf_token %}
+                    {% with form.name as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row" style="margin-bottom: 24px;">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+   
+   </div>
+{% endblock %}

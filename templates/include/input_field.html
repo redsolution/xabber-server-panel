@@ -1,0 +1,16 @@
+{% if not field.is_hidden %}
+<div class="row form-group {% if field.errors %}invalid{% endif %}">
+    <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+        {{ field.label }}
+    </label>
+    <div class="col-sm-9">
+        {{ field }}
+        {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+        <div class="invalid-feedback d-block">
+            {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

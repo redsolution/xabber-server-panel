@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+    <title>Xabber Web</title>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" type="image/png" href="{% static 'xmppserverui/img/favicon.png' %}"/>
+    <link rel="manifest" href="{% static 'xabberweb/manifest.json' %}">
+    <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase-messaging.js"></script>
+    <link href="{% static 'xabberweb/quill.snow.css' %}" rel="stylesheet">
+    <script src="{% static 'xabberweb/quill.js' %}"></script>
+    <link rel="stylesheet" href="/static/xabberweb/dist/xabber.min.css?{{ xabber_web_ver }}">
+    <script src="/static/xabberweb/dist/xabber.min.js?{{ xabber_web_ver }}"></script>
+</head>
+
+<body>
+</body>
+
+<script>
+    require(['xabber'], function (xabber) {
+        xabber.configure({
+            CONNECTION_URL: (window.location.protocol === 'https:' ? 'wss' : 'ws') + '://' + window.location.hostname  + (window.location.protocol === 'https:' ? ':5443/wss' : ':5280/ws'),
+            DISABLE_LOOKUP_WS: false,
+            LOG_LEVEL: 'INFO',
+            DEBUG: true,
+            STORAGE_NAME_ENDING: 'dev',
+            CHECK_VERSION: false,
+            PERSONAL_AREA_URL: {
+                'url': '/profile/',
+                'label': 'Profile',
+                'icon_name': 'account-circle'
+            }
+        });
+        {% if token_fetched %}
+            let jid = "{{ account_jid }}",
+                token = "{{ account_token }}",
+                accounts_storage_name = xabber.getStorageName() + '-accounts',
+                account_settings_storage_name = xabber.getStorageName() + '-account-settings',
+                accounts = JSON.parse(localStorage.getItem(accounts_storage_name)) || [],
+                account_settings = JSON.parse(localStorage.getItem(account_settings_storage_name)) || [];
+            accounts.push(jid);
+            account_settings.push(jid);
+            localStorage.setItem(accounts_storage_name, JSON.stringify(accounts));
+            localStorage.setItem(account_settings_storage_name, JSON.stringify(account_settings));
+            localStorage.setItem('xabber-storage-v8-dev-accounts-' + jid, JSON.stringify({enabled: true, jid: jid, auth_type: 'x-token', x_token: {token: token}, password: null}));
+        {% endif %}
+    xabber.start();
+    });
+</script>
+</html>
+

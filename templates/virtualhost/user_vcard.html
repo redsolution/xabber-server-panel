@@ -1,0 +1,37 @@
+{% extends 'virtualhost/user_tabs.html' %}
+
+{% block title %}vCard for {{ curr_user }}{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <form method="post" action="{% url 'virtualhost:user-vcard' curr_user.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% with form.username as field %}
+                {% include 'include/input_field.html' %}
+            {% endwith %}
+            {% with form.host as field %}
+                {% include 'include/input_field.html' %}
+            {% endwith %}
+            {% with form.nickname as field %}
+                {% include 'include/input_field.html' %}
+            {% endwith %}
+            {% with form.first_name as field %}
+                {% include 'include/input_field.html' %}
+            {% endwith %}
+            {% with form.last_name as field %}
+                {% include 'include/input_field.html' %}
+            {% endwith %}
+            <!--{% with form.photo as field %}-->
+                <!--{% include 'include/input_file_field.html' %}-->
+            <!--{% endwith %}-->
+
+            <div class="row">
+                <div class="col-sm-3"></div>
+                <div class="col-sm-9">
+                    <button type="submit" class="btn btn-primary">Edit vcard</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

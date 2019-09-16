@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block body_container %}
+    <div class="login-page">
+        <div class="container wrapper">
+            <div class="row content">
+                <div class="col">
+                    <div class="logo">
+                        <a href="https://www.xabber.com/">
+                            <img src="{% static 'xmppserverui/img/logo.png' %}" alt="xabber-logo">
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card">
+                        <div class="card-title">Xabber Server</div>
+                        <div class="card-subtitle">Management panel</div>
+
+                        <form method="post" action="{% url 'auth:login' %}">
+                            {% csrf_token %}
+
+                            {% with form.username as field %}
+                                <div class="row form-group {% if field.errors %}invalid{% endif %}">
+                                    {{ field }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                    </div>
+                                </div>
+                            {% endwith %}
+                            {% with form.password as field %}
+                                <div class="row form-group {% if field.errors %}invalid{% endif %}">
+                                    {{ field }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                    </div>
+                                </div>
+                            {% endwith %}
+
+                            <input type="hidden" name="source_browser" value="{{ request.META.HTTP_USER_AGENT }}"/>
+                            <input type="hidden" name="source_ip" value="{% if user_ip%}{{ user_ip }}{% else %}{{ request.META.REMOTE_ADDR }}{% endif %}"/>
+
+                            <div class="row form-group errors">
+                                <div class="non-field-error">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="row buttons-row">
+                                <button type="submit"
+                                        class="btn btn-primary login-button">Login</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="login-panel-clients-wrap">
+                    <div class="row login-panel-clients">
+                        <div class="col lp-client-item">
+                            <a target="_blank" href="https://play.google.com/store/apps/details?id=com.xabber.android">
+                                <div class="lp-client-logo">
+                                    <img src="{% static 'xabberweb/images/client_android.svg' %}" alt="">
+                                </div>
+                                <div class="lp-client-title">
+                                    Xabber for Android
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col lp-client-item">
+                            <a target="_blank" href="https://testflight.apple.com/join/8AVdKqCK">
+                                <div class="lp-client-logo">
+                                    <img src="{% static 'xabberweb/images/client_iphone.svg' %}" alt="">
+                                </div>
+                                <div class="lp-client-title">
+                                    Xabber for iOS
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+
+            <div class="row footer">
+                <div class="col">
+                    <div class="login-page-footer-link">
+                        <a href="https://www.xabber.com/">www.xabber.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function() {
+            $('form .form-group.invalid input').addClass('is-invalid');
+        });
+    </script>
+{% endblock %}

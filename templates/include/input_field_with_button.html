@@ -1,0 +1,19 @@
+<div class="row form-group {% if field.errors %}invalid{% endif %}">
+    <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+        {{ field.label }}
+    </label>
+    <div class="col-sm-9 input-group">
+        <div class="input-group">
+            {{ field }}
+            <div class="input-group-append">
+                <button id="id_password_btn" class="btn btn-outline-secondary" type="button">Show</button>
+            </div>
+            {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+        </div>
+        <div class="invalid-feedback d-block">
+            {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+        </div>
+    </div>
+</div>

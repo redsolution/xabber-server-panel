@@ -1,0 +1,28 @@
+{% extends 'virtualhost/user_tabs.html' %}
+{% load xmppserverui_tags %}
+
+{% block title %}Details for {{ curr_user }}{% endblock %}
+
+{% block tab_content %}
+<div class="tab-pane fade show active">
+    <div class="user-details">
+        <div class="user-avatar-container">
+            {% if curr_user.photo %}
+                <img class="user-avatar" src="{{ curr_user.photo.url }}" />
+            {% else %}
+                <p class="user-avatar-p" data-letters="{% get_user_initials curr_user %}"></p>
+            {% endif %}
+        </div>
+        <div class="user-name">
+            {{ curr_user.full_name }}
+        </div>
+        <div class="btn-set">
+            <!--<button type="button" class="btn btn-outline-secondary">Activate</button>-->
+            <!--<button type="button" class="btn btn-custom-yellow">Suspend</button>-->
+            <a href="{% url 'virtualhost:user-delete' curr_user.id %}">
+                <button type="button" class="btn btn-custom-red">Delete</button>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

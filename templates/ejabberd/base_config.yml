@@ -1,0 +1,280 @@
+loglevel: 4
+
+log_rotate_size: 10485760
+log_rotate_date: ""
+log_rotate_count: 1
+
+log_rate_limit: 100
+
+certfiles:
+ - "{{ PROJECT_DIR }}/certs/*.pem"
+
+listen:
+  -
+    port: 5222
+    ip: "::"
+    module: ejabberd_c2s
+    starttls: true
+    starttls_required: true
+    max_stanza_size: 65536
+    shaper: c2s_shaper
+    access: c2s
+  -
+    port: 5269
+    ip: "::"
+    module: ejabberd_s2s_in
+  -
+    port: 5280
+    ip: "::"
+    module: ejabberd_http
+    request_handlers:
+      "/ws": ejabberd_http_ws
+      "/bosh": mod_bosh
+      "/upload": mod_http_upload
+      "/api": mod_http_api
+    web_admin: true
+    captcha: true
+  -
+    port: 5443
+    ip: "::"
+    module: ejabberd_http
+    request_handlers:
+      "/wss": ejabberd_http_ws
+      "/upload": mod_http_upload
+    tls: true
+
+auth_password_format: scram
+
+auth_method: sql
+sql_type: pgsql
+sql_server: "{{ db_host }}"
+sql_database: "{{ db_name }}"
+sql_username: "{{ db_user }}"
+sql_password: {% if db_user_pass %}"{{ db_user_pass }}"{% endif %}
+sql_pool_size: 5
+new_sql_schema: true
+
+shaper:
+  normal: 1000
+  fast: 50000
+
+max_fsm_queue: 10000
+
+acl:
+  admin:
+    user:
+
+  local:
+    user_regexp: ""
+
+  loopback:
+    ip:
+      - "127.0.0.0/8"
+      - "::1/128"
+      - "::FFFF:127.0.0.1/128"
+
+shaper_rules:
+  max_user_sessions: 10
+  max_user_offline_messages:
+    - 5000: admin
+    - 100
+  c2s_shaper:
+    - none: admin
+    - normal
+  s2s_shaper: fast
+
+access_rules:
+  local:
+    - allow: local
+  c2s:
+    - deny: blocked
+    - allow
+  announce:
+    - allow: admin
+  configure:
+    - allow: admin
+  muc_create:
+    - allow: local
+  pubsub_createnode:
+    - allow: local
+  register:
+    - allow
+  trusted_network:
+    - allow: loopback
+
+api_permissions:
+  "console commands":
+    from:
+      - ejabberd_ctl
+    who: all
+    what: "*"
+  "admin access":
+    who:
+      - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
+      - oauth:
+        - scope: "ejabberd:admin"
+        - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
+    what:
+      - "*"
+      - "!stop"
+      - "!start"
+  "web admin":
+    who:
+      - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
+      - oauth:
+        - scope: "sasl_auth"
+        - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
+    what:
+      - "*"
+      - "!stop"
+      - "!start"
+
+  "web user":
+    who:
+      - access:
+          - allow:
+            - acl: loopback
+            - acl: local
+      - oauth:
+        - scope: "sasl_auth"
+        - access:
+          - allow:
+            - acl: loopback
+            - acl: local
+    what:
+      - "xabber_oauth_issue_token"
+      - "xabber_revoke_token"
+      - "xabberuser_change_password"
+      - "change_password"
+      - "get_vcard"
+      - "get_vcard2"
+      - "get_vcard2_multi"
+      - "xabberuser_get_vcard"
+      - "xabberuser_get_vcard2"
+      - "xabberuser_get_vcard2_multi"
+      - "xabberuser_set_nickname"
+      - "xabberuser_set_vcard"
+      - "xabberuser_set_vcard2"
+      - "xabberuser_set_vcard2_multi"
+  "public commands":
+    who:
+      - ip: "127.0.0.1/8"
+    what:
+      - "status"
+      - "connected_users_number"
+
+language: "en"
+
+acme:
+   contact: "mailto:{{ admin_username }}"
+   ca_url: "https://acme-v01.api.letsencrypt.org"
+
+sm_db_type: mnesia
+default_db: sql
+
+modules:
+  mod_xep_ccc: {}
+  mod_xep_rrr: {}
+  mod_groupchat_present_mnesia: {}
+  mod_x_auth_token: {}
+  mod_groupchat_presence:
+    xabber_global_indexs:
+      - "index.xabber.com"
+  mod_groupchat_users: {}
+  mod_groupchat_chats: {}
+  mod_groupchat_service_message: {}
+  mod_groupchat_discovery: {}
+  mod_groupchat_retract: {}
+  mod_groupchat_iq_handler: {}
+  mod_groupchat_inspector: {}
+  mod_groupchat_access_model: {}
+  mod_groupchat_domains: {}
+  mod_groupchat_block: {}
+  mod_groupchat_messages: {}
+  mod_adhoc: {}
+  mod_admin_extra: {}
+  mod_announce:
+    access: announce
+  mod_blocking: {}
+  mod_caps: {}
+  mod_carboncopy: {}
+  mod_client_state: {}
+  mod_configure: {}
+  mod_disco: {}
+  mod_irc: {}
+  mod_bosh: {}
+  mod_http_upload:
+    docroot: "{{ PROJECT_DIR }}/user_images"
+    get_url: "https://{% if HTTP_HOST %}{{ HTTP_HOST }}{% else %}@HOST@:5443{% endif %}/upload"
+    put_url: "https://{% if HTTP_HOST %}{{ HTTP_HOST }}{% else %}@HOST@:5443{% endif %}/upload"
+    custom_headers:
+      "Access-Control-Allow-Origin": "*"
+      "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS, DELETE"
+      "Access-Control-Allow-Headers": "Content-Type, Origin, X-Requested-With"
+
+  mod_last: {}
+  mod_mam:
+    default: always
+    db_type: sql
+    strip_outgoing_stanza_id: false
+
+  mod_ping: {}
+  mod_privacy: {}
+  mod_private: {}
+
+  mod_pubsub:
+    access_createnode: pubsub_createnode
+    ignore_pep_from_offline: true
+    last_item_cache: false
+    plugins:
+      - "flat"
+      - "hometree"
+      - "pep"
+    force_node_config:
+      "eu.siacs.conversations.axolotl.*":
+        access_model: whitelist
+      "storage:bookmarks":
+        access_model: whitelist
+  mod_push: {}
+  mod_push_keepalive: {}
+  mod_roster: {}
+  mod_shared_roster: {}
+  mod_stats: {}
+  mod_time: {}
+  mod_vcard:
+    search: false
+  mod_vcard_xupdate: {}
+  mod_avatar: {}
+  mod_version: {}
+  mod_stream_mgmt: {}
+  mod_s2s_dialback: {}
+  mod_http_api: {}
+  mod_fail2ban: {}
+  mod_unique: {}
+  mod_previous: {}
+  mod_register: {}
+  mod_xabber_api: {}
+
+allow_contrib_modules: true
+
+commands_admin_access: configure
+commands:
+  - add_commands:
+    - user
+oauth_expire: 3600
+oauth_access: all
+
+include_config_file: "{{ VHOST_FILE }}"
+include_config_file: "{{ ADMIN_ACL_FILE }}"

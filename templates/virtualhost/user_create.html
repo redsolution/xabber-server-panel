@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Create new user{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Create new user</h1></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <form method="post" action="{% url 'virtualhost:user-create' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="form-group-name"><h3>Credentials</h3></div>
+                    {% with form.username as field %}
+                        {% with form.host as dropdown_field %}
+                            {% include 'include/input_field_with_dropdown.html' %}
+                        {% endwith %}
+                    {% endwith %}
+                    {% with form.password as field %}
+                        {% include 'include/input_field_with_button.html' %}
+                    {% endwith %}
+
+                    <div class="form-group row">
+                        <div class="col-sm-3"></div>
+                        <div class="col-sm-9">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkbox-generate-pass">
+                                <label class="form-check-label" for="checkbox-generate-pass">Generate password</label>
+                            </div>
+
+                            <!--<div class="form-check form-check-inline">-->
+                                <!--<input class="form-check-input" type="checkbox" id="checkbox-pass-changed">-->
+                                <!--<label class="form-check-label" for="checkbox-pass-changed">Require password change</label>-->
+                            <!--</div>-->
+
+                            <!-- WORK WITH CONFIG -->
+                            <!--<div class="form-check form-check-inline">-->
+                                <!--<input class="form-check-input" type="checkbox" id="checkbox-admin">-->
+                                <!--<label class="form-check-label" for="checkbox-admin">Administrator</label>-->
+                            <!--</div>-->
+                        </div>
+                    </div>
+
+                    <div class="form-group-name"><h3>User details</h3></div>
+                    {% with form.nickname as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+                    {% with form.first_name as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+                    {% with form.last_name as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+                    <!--{% with form.photo as field %}-->
+                        <!--{% include 'include/input_file_field.html' %}-->
+                    <!--{% endwith %}-->
+
+
+                    {% with form.is_admin as field %}
+                        <div class="form-group row">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9">
+                                <div class="form-check form-check-inline">
+                                    {{ field }}
+                                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+
+
+
+{#                    {% with form.is_admin as field %}#}
+{#                        {% include 'include/input_field.html' %}#}
+{#                        {% include 'include/input_file_field.html' %}#}
+{#                    {% endwith %}#}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                     {% endfor %}
+
+                    <div class="row">
+                        <div class="col-sm-3"></div>
+                        <div class="col-sm-9">
+                            <button type="submit" class="btn btn-primary">Create user</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function() {
+            function generatePassword() {
+                var length = {{ gen_pass_len }},
+                    charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+                    res = '';
+                for (var i = 0, n = charset.length; i < length; ++i) {
+                    res += charset.charAt(Math.floor(Math.random() * n));
+                }
+                return res;
+            };
+
+            function hidePassword() {
+                $('#id_password').attr('type', 'password');
+                $('#id_password_btn').text('Show');
+            };
+
+            function showPassword() {
+                $('#id_password').attr('type', 'text');
+                $('#id_password_btn').text('Hide');
+            };
+
+            $('#id_password_btn').on('click',function(){
+                var action = $('#id_password_btn').text().toLowerCase();
+                if (action == 'show') {
+                    showPassword();
+                } else {
+                    hidePassword();
+                }
+            });
+
+            $('#checkbox-generate-pass').on('change',function(){
+                if (this.checked) {
+                    var generated_password = generatePassword();
+                    $('#id_password').val(generated_password);
+                    showPassword();
+                } else {
+                    $('#id_password').val('');
+                    hidePassword();
+                }
+            });
+        });
+    </script>
+{% endblock %}
