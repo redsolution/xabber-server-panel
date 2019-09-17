@@ -30,13 +30,13 @@ fi
 
 
 function run_server() {
-  if pgrep -f "$BUNDLE_DIR/gunicorn-with-settings xmppserverui.wsgi:application" > /dev/null 2>&1; then
+  if pgrep -f "$BUNDLE_DIR/gunicorn xmppserverui.wsgi:application" > /dev/null 2>&1; then
     echo "Xannre server already running"
   else
     if $DEBUG ; then
-      $BUNDLE_DIR/gunicorn-with-settings xmppserverui.wsgi:application $GUNICORN_SSL_KEY -c $CONFIG_DIR --log-file $LOG_FILE_DIR/error.log --access-logfile $LOG_FILE_DIR/access.log --log-level debug --pid $PID_FILE
+      $BUNDLE_DIR/gunicorn xmppserverui.wsgi:application $GUNICORN_SSL_KEY -c $CONFIG_DIR --log-file $LOG_FILE_DIR/error.log --access-logfile $LOG_FILE_DIR/access.log --log-level debug --pid $PID_FILE
     else
-      $BUNDLE_DIR/gunicorn-with-settings xmppserverui.wsgi:application $GUNICORN_SSL_KEY -c $CONFIG_DIR --pid $PID_FILE
+      $BUNDLE_DIR/gunicorn xmppserverui.wsgi:application $GUNICORN_SSL_KEY -c $CONFIG_DIR --pid $PID_FILE
     fi
     for (( i = 0; i < 10; i++ )); do
         if [[ -f "$PID_FILE" ]]; then
@@ -78,7 +78,7 @@ function status_service() {
   else
     echo -e "XMPP server status: ${ERROR_TEXT}stopped${NORMAL_TEXT}"
   fi
-  if pgrep -f "$BUNDLE_DIR/gunicorn-with-settings xmppserverui.wsgi:application" > /dev/null 2>&1; then
+  if pgrep -f "$BUNDLE_DIR/gunicorn xmppserverui.wsgi:application" > /dev/null 2>&1; then
     echo -e "Web console status: ${SUCCESS_TEXT}running${NORMAL_TEXT}"
   else
     echo -e "Web console status: ${ERROR_TEXT}stopped${NORMAL_TEXT}"
