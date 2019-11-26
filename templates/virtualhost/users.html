@@ -40,7 +40,9 @@
                             <th scope="col">Username</th>
                             <th scope="col">Name</th>
                             <th scope="col">Created</th>
-                            <th scope="col">Actions</th>
+                            {% if auth_backend.is_sql %}
+                                <th scope="col">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -68,6 +70,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}</td>
+                                {% if auth_backend.is_sql %}
                                 <td class="table-data dots-menu">
                                     {% if obj.user.id %}
                                     <div class="btn-group dropleft">
@@ -85,6 +88,7 @@
                                     </div>
                                     {% endif %}
                                 </td>
+                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>

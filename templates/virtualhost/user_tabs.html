@@ -33,10 +33,12 @@
                         <a class="nav-link{% if active_tab == 'user-vcard' %} active{% endif %}"
                            href="{% url 'virtualhost:user-vcard' curr_user.id %}">vCard</a>
                     </li>
+                    {% if auth_backend.is_sql %}
                     <li class="nav-item">
                         <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
                            href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
                     </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link{% if active_tab == 'user-groups' %} active{% endif %}"
                            href="{% url 'virtualhost:user-groups' curr_user.id %}">Groups</a>

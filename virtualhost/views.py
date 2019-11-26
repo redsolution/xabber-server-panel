@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 
 from xmppserverui import settings
-from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
+from xmppserverui.mixins import PageContextMixin, ServerStartedMixin, SQLAuthMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     CreateGroupForm, EditGroupForm, DeleteGroupForm, AddGroupMemberForm, \
     DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm
@@ -100,7 +100,7 @@ class UserListView(VhostContextView, TemplateView):
                                           "curr_page_title": page_title})
 
 
-class UserCreateView(PageContextMixin, TemplateView):
+class UserCreateView(SQLAuthMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_create.html'
 
@@ -126,7 +126,7 @@ class UserCreateView(PageContextMixin, TemplateView):
         })
 
 
-class UserCreatedView(PageContextMixin, TemplateView):
+class UserCreatedView(SQLAuthMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_created.html'
 
@@ -220,7 +220,7 @@ class UserDetailsView(PageContextMixin, TemplateView):
                                         "active_tab": USER_TAB_DETAILS})
 
 
-class UserSecurityView(PageContextMixin, TemplateView):
+class UserSecurityView(SQLAuthMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_security.html'
 
@@ -349,7 +349,7 @@ class UserGroupsView(PageContextMixin, TemplateView):
                                         "displayed_groups": self.get_groups_list(curr_user)})
 
 
-class DeleteUserView(PageContextMixin, TemplateView):
+class DeleteUserView(SQLAuthMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_delete.html'
 
