@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^admin/server/', include('server.urls', namespace='server')),
     url(r'^admin/virtualhost/', include('virtualhost.urls', namespace='virtualhost')),
     url(r'^admin/installation/', include('xmppserverinstaller.urls', namespace='installer')),
+    url(r'^admin/error/', include('error.urls', namespace='error')),
     url(r'^admin/$', DefaultView.as_view()),
     url(r'^admin', DefaultView.as_view()),
     url(r'^profile/', include('personal_area.urls', namespace='personal-area')),
