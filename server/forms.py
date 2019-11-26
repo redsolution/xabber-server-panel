@@ -124,8 +124,9 @@ class ManageAuthBackendForm(BaseForm):
             visible.field.widget.attrs['class'] = 'form-control'
 
         self.fields['backend'].choices = AuthBackend.BACKEND_CHOICES
-        if AuthBackend.objects.filter(is_active=True).exists():
-            self.curr_backend = self.curr_backend[0]
+        auth_backends = AuthBackend.objects.filter(is_active=True)
+        if auth_backends.exists():
+            self.curr_backend = auth_backends[0]
             self.fields['backend'].initial = self.curr_backend.name
 
     def after_clean(self, cleaned_data):
