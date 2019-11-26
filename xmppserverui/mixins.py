@@ -1,7 +1,7 @@
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
-from virtualhost.models import VirtualHost, User
+from virtualhost.models import VirtualHost, User, AuthBackend
 from server.utils import is_ejabberd_running
 from .utils import get_default_url, is_xmpp_server_installed
 
@@ -86,7 +86,8 @@ class PageContextMixin(AdminMixin):
         self.context = {'page': page_data,
                         'auth_user': user,
                         'need_to_request_user_pass': need_to_request_user_pass,
-                        'vhosts': VirtualHost.objects.all().order_by('id')}
+                        'vhosts': VirtualHost.objects.all().order_by('id'),
+                        'auth_backend': AuthBackend}
 
     def fill_page_context(self, request, *args, **kwargs):
         pass
@@ -97,6 +98,15 @@ class PageContextMixin(AdminMixin):
     def render_to_response(self, context, **response_kwargs):
         self.context.update(context)
         return super(PageContextMixin, self).render_to_response(self.context, **response_kwargs)
+
+
+class SQLAuthMixin(PageContextMixin):
+    permission_methods = PageContextMixin.permission_methods + \
+                         ['is_sql_auth_backend']
+
+    def is_sql_auth_backend(self, request, *args, **kwargs):
+        if not AuthBackend.is_sql():
+            return HttpResponseRedirect(reverse('error:403'))
 
 
 class ServerStartedMixin(PageContextMixin):

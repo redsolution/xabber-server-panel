@@ -132,3 +132,18 @@ class AuthBackend(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    @classmethod
+    def current_backend(cls):
+        try:
+            return cls.objects.get(is_active=True).name
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def is_ldap(cls):
+        return cls.current_backend == cls.BACKEND_LDAP
+
+    @classmethod
+    def is_sql(cls):
+        return cls.current_backend == cls.BACKEND_SQL
