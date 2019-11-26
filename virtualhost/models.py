@@ -117,3 +117,18 @@ class GroupChat(models.Model):
 
     def __unicode__(self):
         return self.full_jid
+
+
+class AuthBackend(models.Model):
+    BACKEND_SQL = 'sql'
+    BACKEND_LDAP = 'ldap'
+
+    BACKEND_CHOICES = (
+        (BACKEND_SQL, 'SQL'),
+        (BACKEND_LDAP, 'LDAP')
+    )
+    name = models.CharField(max_length=10, choices=BACKEND_CHOICES)
+    is_active = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.name
