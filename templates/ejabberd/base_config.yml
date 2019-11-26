@@ -45,7 +45,6 @@ listen:
 
 auth_password_format: scram
 
-auth_method: sql
 sql_type: pgsql
 sql_server: "{{ db_host }}"
 sql_database: "{{ db_name }}"
@@ -278,3 +277,4 @@ oauth_access: all
 
 include_config_file: "{{ VHOST_FILE }}"
 include_config_file: "{{ ADMIN_ACL_FILE }}"
+include_config_file: "{{ AUTH_METHOD_FILE }}"
