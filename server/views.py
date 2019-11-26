@@ -5,14 +5,15 @@ from django.http import HttpResponseRedirect, Http404
 
 from xmppserverui import settings
 from xmppserverui.mixins import PageContextMixin
-from virtualhost.models import VirtualHost, User, Group, GroupMember
+from virtualhost.models import VirtualHost, User, Group, GroupMember, AuthBackend
 from virtualhost.utils import get_system_group_suffix
-from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm
+from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, ManageAuthBackendForm
 from .utils import start_ejabberd, restart_ejabberd, stop_ejabberd, is_ejabberd_running, update_ejabberd_config
 
 
 SETTINGS_TAB_VHOSTS = 'vhosts'
 SETTINGS_TAB_ADMINS = 'admins'
+SETTINGS_TAB_AUTH_BACKENDS = 'auth_backends'
 
 
 class ServerDashboardView(PageContextMixin, TemplateView):
@@ -289,3 +290,42 @@ class VirtualHostDetauView(PageContextMixin, TemplateView):
         return self.render_to_response({
             'host': vhost,
         })
+
+
+class ServerAuthBackendsListView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-list'
+    template_name = 'server/auth_backends_list.html'
+
+    def get(self, request, *args, **kwargs):
+        auth_backends = AuthBackend.objects.all()
+
+        context = {
+            'auth_backends': auth_backends,
+            'active_tab': SETTINGS_TAB_AUTH_BACKENDS
+        }
+        return self.render_to_response(context)
+
+
+class ManageAuthBackendsView(PageContextMixin, TemplateView):
+    page_section = 'manage-auth-backend'
+    template_name = 'server/auth_backends_manage.html'
+
+    def get_page_context(self):
+        auth_backends = AuthBackend.objects.all()
+        return {
+            'auth_backends': auth_backends,
+            'active_tab': SETTINGS_TAB_AUTH_BACKENDS,
+            'form': ManageAuthBackendForm()
+        }
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(self.get_page_context())
+
+    def post(self, request, *args, **kwargs):
+        form = ManageAuthBackendForm(request.POST)
+        if form.is_valid():
+            update_ejabberd_config()
+            return HttpResponseRedirect(reverse('server:auth-backends-list'))
+        context = self.get_page_context()
+        context['form'] = form
+        return self.render_to_response(context)

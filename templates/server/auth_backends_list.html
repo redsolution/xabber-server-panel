@@ -1,0 +1,37 @@
+{% extends 'server/overview_tabs.html' %}
+
+{% block title %}Authentication backends{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Backend</th>
+                            <th scope="col">Is active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for backend in auth_backends %}
+                            <tr>
+                                <td class="table-data">{{ forloop.counter }}</td>
+                                <td class="table-data">{{ backend.get_name_display }}</td>
+                                <td class="table-data">{{ backend.is_active }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="padding-bottom: 16px; margin-top: 24px">
+            <div class="col-sm-9">
+            </div>
+            <div class="col-sm-3">
+                <a class="btn btn-primary" style="float: right" href="{% url 'server:manage-auth-backends' %}">Manage</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -72,6 +72,7 @@ def create_config(data):
     data['PROJECT_DIR'] = settings.PROJECT_DIR
     data['VHOST_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_VHOSTS_CONFIG_FILE)
     data['ADMIN_ACL_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_ADMINS_CONFIG_FILE)
+    data['AUTH_METHOD_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_AUTH_CONFIG_FILE)
     config_template = get_template('ejabberd/base_config.yml')
     config_file = open(os.path.join(settings.EJABBERD_CONFIG_PATH, 'ejabberd.yml'), "w+")
     config_file.write(config_template.render(context=data))

@@ -1,0 +1,74 @@
+{% extends 'server/overview_tabs.html' %}
+
+{% block title %}Manage authentication backends{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col page-content">
+                <div style="margin: 0 0 15px;">
+                    <h3>Manage authentication backends</h3>
+                </div>
+
+                <form action="{% url 'server:manage-auth-backends' %}" method="post" id="form_manage_backends" >
+                    {% csrf_token %}
+
+                    {% with form.backend as field %}
+                        <div class="row form-group {% if field.errors %}invalid{% endif %}">
+                            <div class="col-sm-4">
+                                {{ field }}
+                                <div class="invalid-feedback d-block">
+                                    {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="row form-group form-btn-block">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary"
+                                    id="btn_manage_backends" disabled>Save</button>
+                            <a href="{% url 'server:auth-backends-list' %}">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        style="margin-left: 24px;">Cancel</button>
+                            </a>
+                            <span id="selected_counts" class="selected-counts-text">
+                                <span id="selected_counter">0</span> selected
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+
+    <script>
+        function getSelectBackend() {
+            return $("#form_manage_backends select[name=backend]").val();
+        }
+
+        $(document).ready(function() {
+            var curr_backend = '{{ form.curr_backend }}';
+
+            $("#form_manage_backends").on("change", "select[name=backend]", function(event) {
+                event.preventDefault();
+
+                new_backend = getSelectBackend();
+                var disable_select = new_backend == curr_backend ? true : false;
+                $("#btn_manage_backends").prop('disabled', disable_select);
+            });
+        });
+    </script>
+{% endblock %}

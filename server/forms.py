@@ -2,7 +2,7 @@ from django import forms
 import re
 from api.forms import AuthorizedApiForm
 
-from virtualhost.models import User, VirtualHost
+from virtualhost.models import User, VirtualHost, AuthBackend
 
 
 class BaseForm(forms.Form):
@@ -109,3 +109,29 @@ class DeleteVirtualHostForm(BaseForm):
         VirtualHost.objects \
             .filter(name=cleaned_data['name']) \
             .delete()
+
+
+class ManageAuthBackendForm(BaseForm):
+
+    backend = forms.ChoiceField(
+        required=True,
+        widget=forms.Select()
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(ManageAuthBackendForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+
+        self.fields['backend'].choices = AuthBackend.BACKEND_CHOICES
+        if AuthBackend.objects.filter(is_active=True).exists():
+            self.curr_backend = self.curr_backend[0]
+            self.fields['backend'].initial = self.curr_backend.name
+
+    def after_clean(self, cleaned_data):
+        self.curr_backend.is_active = False
+        self.curr_backend.save()
+
+        self.new_backend = AuthBackend.objects.get(name=cleaned_data['backend'])
+        self.new_backend.is_active = True
+        self.new_backend.save()

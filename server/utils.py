@@ -5,7 +5,7 @@ import subprocess
 from django.template.loader import render_to_string
 from django.conf import settings
 
-from virtualhost.models import User, VirtualHost
+from virtualhost.models import User, VirtualHost, AuthBackend
 from xmppserverui.utils import is_xmpp_server_installed
 # def execute_ejabberd_cmd(cmd):
 #     cmd_ejabberd = [settings.EJABBERDCTL, ] + cmd
@@ -85,6 +85,7 @@ def is_ejabberd_running():
 def update_ejabberd_config():
     update_admins_config()
     update_vhosts_config()
+    update_backends_config()
     reload_ejabberd_config()
 
 
@@ -106,3 +107,14 @@ def update_vhosts_config():
                              settings.EJABBERD_VHOSTS_CONFIG_FILE), 'w+')
     file.write(render_to_string(template, {'vhosts': vhosts}))
     file.close()
+
+
+def update_backends_config():
+    template = 'ejabberd/auth_method_template.yml'
+    curr_backend = AuthBackend.objects.filter(is_active=True)
+    if curr_backend.exists():
+        curr_backend = curr_backend[0].name
+        file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
+                                 settings.EJABBERD_AUTH_CONFIG_FILE), 'w+')
+        file.write(render_to_string(template, {'backend': curr_backend}))
+        file.close()

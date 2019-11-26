@@ -23,6 +23,10 @@
                         <a class="nav-link{% if active_tab == 'admins' %} active{% endif %}"
                            href="{% url 'server:admins-list' %}">Administrators</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'auth_backends' %} active{% endif %}"
+                           href="{% url 'server:auth-backends-list' %}">Auth backends</a>
+                    </li>
                 </ul>
 
                 <div class="tab-content">
