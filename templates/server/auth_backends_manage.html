@@ -24,6 +24,93 @@
                         </div>
                     {% endwith %}
 
+                    <div id="ldap-settings-block">
+                        <div style="margin: 0 0 15px;">
+                            <h3>LDAP Settings</h3>
+                        </div>
+
+                        {% with form.ldap_server as field %}
+                            {% if not field.is_hidden %}
+                                <div class="form-group {% if field.errors %}invalid{% endif %}">
+                                    <div class="row">
+                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                            {{ field.label }}
+                                        </label>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {{ field }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
+                        {% with form.ldap_port as field %}
+                            {% if not field.is_hidden %}
+                                <div class="form-group {% if field.errors %}invalid{% endif %}">
+                                    <div class="row">
+                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                            {{ field.label }}
+                                        </label>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {{ field }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
+                        {% with form.ldap_rootdn as field %}
+                            {% if not field.is_hidden %}
+                                <div class="form-group {% if field.errors %}invalid{% endif %}">
+                                    <div class="row">
+                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                            {{ field.label }}
+                                        </label>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {{ field }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
+                        {% with form.ldap_password as field %}
+                            {% if not field.is_hidden %}
+                                <div class="form-group {% if field.errors %}invalid{% endif %}">
+                                    <div class="row">
+                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                            {{ field.label }}
+                                        </label>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {{ field }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
+                    </div>
+
                     {% for error in form.non_field_errors %}
                         <div class="form-group row">
                             <div class="col-sm-12 non-field-error">
@@ -59,15 +146,34 @@
             return $("#form_manage_backends select[name=backend]").val();
         }
 
-        $(document).ready(function() {
+        function checkSelectedBackend(backend) {
+            var is_ldap = backend == 'ldap',
+                has_ldap_settings = '{{ form.has_ldap_settings }}' == 'True';
+            if (is_ldap && !has_ldap_settings) {
+                $("#form_manage_backends #ldap-settings-block").show();
+            } else {
+                $("#form_manage_backends #ldap-settings-block").show();
+            }
+        }
+
+        function checkSaveBtnState(new_backend) {
             var curr_backend = '{{ form.curr_backend }}';
+            var disable_select = new_backend == curr_backend ? true : false;
+            $("#btn_manage_backends").prop('disabled', disable_select);
+        }
+
+        function checkForm() {
+            var selected_backend = getSelectBackend();
+            checkSelectedBackend(selected_backend);
+            checkSaveBtnState(selected_backend);
+        }
+
+        $(document).ready(function() {
+            checkForm();
 
             $("#form_manage_backends").on("change", "select[name=backend]", function(event) {
                 event.preventDefault();
-
-                new_backend = getSelectBackend();
-                var disable_select = new_backend == curr_backend ? true : false;
-                $("#btn_manage_backends").prop('disabled', disable_select);
+                checkForm();
             });
         });
     </script>
