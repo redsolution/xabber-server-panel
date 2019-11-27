@@ -142,7 +142,7 @@ class ManageAuthBackendForm(BaseForm):
         max_length=50,
         required=False,
         label='Password',
-        widget=forms.PasswordInput(attrs={'placeholder': '********'})
+        widget=forms.PasswordInput(render_value=True, attrs={'placeholder': '********'})
     )
 
     def __init__(self, *args, **kwargs):
@@ -154,25 +154,23 @@ class ManageAuthBackendForm(BaseForm):
         self.has_ldap_settings = LDAPSettings.has_saved_settings()
         self.fields['backend'].initial = self.curr_backend.name
         self.fields['backend'].choices = AuthBackend.BACKEND_CHOICES
+        if self.has_ldap_settings:
+            ldap_settings = LDAPSettings.current()
+            self.fields['ldap_server'].initial = ldap_settings['server']
+            self.fields['ldap_port'].initial = ldap_settings['port']
+            self.fields['ldap_rootdn'].initial = ldap_settings['rootdn']
+            self.fields['ldap_password'].initial = ldap_settings['password']
 
     def before_clean(self):
-        if self.cleaned_data['backend'] == AuthBackend.BACKEND_LDAP and \
-                not self.has_ldap_settings:
+        if self.cleaned_data['backend'] == AuthBackend.BACKEND_LDAP:
             for field in self.cleaned_data.keys():
                 if field.startswith('ldap_') and not self.cleaned_data[field]:
                     self.add_error(field, 'This field is required.')
 
     def after_clean(self, cleaned_data):
         with transaction.atomic():
-            if cleaned_data['backend'] == AuthBackend.BACKEND_LDAP and \
-                    not self.has_ldap_settings:
-                ldap_settings = LDAPSettings.objects.create(
-                    port=cleaned_data['ldap_port'],
-                    rootdn=cleaned_data['ldap_rootdn'],
-                    password=cleaned_data['ldap_password'])
-                LDAPServer.objects.create(
-                    server=cleaned_data['ldap_server'],
-                    settings=ldap_settings)
+            if cleaned_data['backend'] == AuthBackend.BACKEND_LDAP:
+                LDAPSettings.create_or_update(cleaned_data)
 
             self.curr_backend.is_active = False
             self.curr_backend.save()

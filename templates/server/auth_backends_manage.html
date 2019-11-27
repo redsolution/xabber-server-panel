@@ -147,18 +147,16 @@
         }
 
         function checkSelectedBackend(backend) {
-            var is_ldap = backend == 'ldap',
-                has_ldap_settings = '{{ form.has_ldap_settings }}' == 'True';
-            if (is_ldap && !has_ldap_settings) {
+            if (backend == 'ldap')
                 $("#form_manage_backends #ldap-settings-block").show();
-            } else {
-                $("#form_manage_backends #ldap-settings-block").show();
-            }
+            else
+                $("#form_manage_backends #ldap-settings-block").hide();
         }
 
         function checkSaveBtnState(new_backend) {
             var curr_backend = '{{ form.curr_backend }}';
             var disable_select = new_backend == curr_backend ? true : false;
+            disable_select = new_backend == 'ldap' ? false : disable_select;
             $("#btn_manage_backends").prop('disabled', disable_select);
         }
 

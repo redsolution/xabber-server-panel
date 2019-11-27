@@ -58,18 +58,34 @@ class LDAPSettings(models.Model):
     def current(cls):
         try:
             instance = cls.objects.all()[0]
-            return {
-                "servers":   [o.server for o in LDAPServer.objects.filter(settings=instance)],
+            data = {
+                "server":  LDAPServer.objects.filter(settings=instance)[0],
                 "port":     instance.port,
                 "rootdn":   instance.rootdn,
                 "password": instance.password
             }
+            return data
         except IndexError:
             return None
 
     @classmethod
     def has_saved_settings(cls):
         return True if cls.current() else False
+
+    @classmethod
+    def create_or_update(cls, data):
+        if cls.current():
+            LDAPServer.objects.all().delete()
+            LDAPSettings.objects.all().delete()
+
+        instance = cls.objects.create(
+            port=data['ldap_port'],
+            rootdn=data['ldap_rootdn'],
+            password=data['ldap_password'])
+        LDAPServer.objects.create(
+            server=data['ldap_server'],
+            settings=instance)
+        return instance
 
 
 class LDAPServer(models.Model):

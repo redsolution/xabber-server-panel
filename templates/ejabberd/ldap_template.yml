@@ -1,5 +1,5 @@
-ldap_servers: {% for o in servers %}
-  - "{{ o }}"{% endfor %}
+ldap_servers:
+  - "{{ server }}"
 ldap_port: {{ port }}
 ldap_rootdn: "{{ rootdn }}"
 ldap_password: "{{ password }}"
