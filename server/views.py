@@ -5,8 +5,9 @@ from django.http import HttpResponseRedirect, Http404
 
 from xmppserverui import settings
 from xmppserverui.mixins import PageContextMixin
-from virtualhost.models import VirtualHost, User, Group, GroupMember, AuthBackend
+from virtualhost.models import VirtualHost, User, Group, GroupMember
 from virtualhost.utils import get_system_group_suffix
+from .models import AuthBackend
 from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, ManageAuthBackendForm
 from .utils import start_ejabberd, restart_ejabberd, stop_ejabberd, is_ejabberd_running, update_ejabberd_config
 

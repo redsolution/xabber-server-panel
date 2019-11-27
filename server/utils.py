@@ -5,8 +5,9 @@ import subprocess
 from django.template.loader import render_to_string
 from django.conf import settings
 
-from virtualhost.models import User, VirtualHost, AuthBackend
+from virtualhost.models import User, VirtualHost
 from xmppserverui.utils import is_xmpp_server_installed
+from .models import AuthBackend
 # def execute_ejabberd_cmd(cmd):
 #     cmd_ejabberd = [settings.EJABBERDCTL, ] + cmd
 #     cmd = subprocess.Popen(cmd_ejabberd,

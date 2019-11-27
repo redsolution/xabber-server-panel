@@ -2,7 +2,8 @@ from django import forms
 import re
 from api.forms import AuthorizedApiForm
 
-from virtualhost.models import User, VirtualHost, AuthBackend
+from virtualhost.models import User, VirtualHost
+from .models import AuthBackend
 
 
 class BaseForm(forms.Form):

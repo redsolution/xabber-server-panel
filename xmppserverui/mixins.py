@@ -1,7 +1,8 @@
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
-from virtualhost.models import VirtualHost, User, AuthBackend
+from virtualhost.models import VirtualHost, User
+from server.models import AuthBackend
 from server.utils import is_ejabberd_running
 from .utils import get_default_url, is_xmpp_server_installed
 
