@@ -109,6 +109,26 @@
                             {% endif %}
                         {% endwith %}
 
+                        {% with form.ldap_base as field %}
+                            {% if not field.is_hidden %}
+                                <div class="form-group {% if field.errors %}invalid{% endif %}">
+                                    <div class="row">
+                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
+                                            {{ field.label }}
+                                        </label>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {{ field }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
                     </div>
 
                     {% for error in form.non_field_errors %}

@@ -119,7 +119,6 @@ class ManageAuthBackendForm(BaseForm):
         required=True,
         widget=forms.Select()
     )
-
     ldap_server = forms.CharField(
         max_length=50,
         required=False,
@@ -144,6 +143,15 @@ class ManageAuthBackendForm(BaseForm):
         label='Password',
         widget=forms.PasswordInput(render_value=True, attrs={'placeholder': '********'})
     )
+    ldap_base = forms.CharField(
+        max_length=100,
+        required=False,
+        label='Base',
+        widget=forms.TextInput(
+            attrs={'placeholder': 'ou=Users,dc=example,dc=org'})
+    )
+
+    LDAP_REQUIRED_FIELDS = ['ldap_server', 'ldap_port', 'ldap_base']
 
     def __init__(self, *args, **kwargs):
         super(ManageAuthBackendForm, self).__init__(*args, **kwargs)
@@ -160,11 +168,13 @@ class ManageAuthBackendForm(BaseForm):
             self.fields['ldap_port'].initial = ldap_settings['port']
             self.fields['ldap_rootdn'].initial = ldap_settings['rootdn']
             self.fields['ldap_password'].initial = ldap_settings['password']
+            self.fields['ldap_base'].initial = ldap_settings['base']
 
     def before_clean(self):
         if self.cleaned_data['backend'] == AuthBackend.BACKEND_LDAP:
             for field in self.cleaned_data.keys():
-                if field.startswith('ldap_') and not self.cleaned_data[field]:
+                if field in self.LDAP_REQUIRED_FIELDS and \
+                        not self.cleaned_data[field]:
                     self.add_error(field, 'This field is required.')
 
     def after_clean(self, cleaned_data):
