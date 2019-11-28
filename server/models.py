@@ -46,10 +46,12 @@ class AuthBackend(models.Model):
 # ldap_port: 389
 # ldap_rootdn: "cn=Manager,dc=domain,dc=org"
 # ldap_password: "**********"
+# ldap_base: "ou=People,dc=redsolution,dc=ru"
 class LDAPSettings(models.Model):
     port = models.PositiveSmallIntegerField()
-    rootdn = models.CharField(max_length=100)
-    password = models.CharField(max_length=50)
+    rootdn = models.CharField(max_length=100, null=True, blank=True)
+    password = models.CharField(max_length=50, null=True, blank=True)
+    base = models.CharField(max_length=100)
 
     def __unicode__(self):
         return 'LDAP Settings'
@@ -59,10 +61,11 @@ class LDAPSettings(models.Model):
         try:
             instance = cls.objects.all()[0]
             data = {
-                "server":  LDAPServer.objects.filter(settings=instance)[0],
+                "server":   LDAPServer.objects.filter(settings=instance)[0],
                 "port":     instance.port,
                 "rootdn":   instance.rootdn,
-                "password": instance.password
+                "password": instance.password,
+                "base":     instance.base,
             }
             return data
         except IndexError:
@@ -81,7 +84,8 @@ class LDAPSettings(models.Model):
         instance = cls.objects.create(
             port=data['ldap_port'],
             rootdn=data['ldap_rootdn'],
-            password=data['ldap_password'])
+            password=data['ldap_password'],
+            base=data['ldap_base'])
         LDAPServer.objects.create(
             server=data['ldap_server'],
             settings=instance)
