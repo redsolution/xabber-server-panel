@@ -41,17 +41,99 @@ class AuthBackend(models.Model):
         return cls.current().name == cls.BACKEND_SQL
 
 
-# ldap_servers:
-#   - ldap1.example.org
-# ldap_port: 389
-# ldap_rootdn: "cn=Manager,dc=domain,dc=org"
-# ldap_password: "**********"
-# ldap_base: "ou=People,dc=redsolution,dc=ru"
+class LDAPAuth(models.Model):
+    ldap_base = models.CharField(max_length=100)
+    ldap_filter = models.CharField(max_length=100, null=True, blank=True)
+    ldap_dn_filter = models.CharField(max_length=100, null=True, blank=True)
+
+    def __unicode__(self):
+        return 'LDAP Auth'
+
+    @classmethod
+    def current(cls):
+        try:
+            return cls.objects.all().first()
+        except IndexError:
+            return None
+
+    @property
+    def uids(self):
+        return self.ldapauth_set.all()
+
+    @property
+    def data(self):
+        return {
+            "ldap_uids": [],
+            "ldap_base": self.ldap_base,
+            "ldap_filter": self.ldap_filter,
+            "ldap_dn_filter": self.ldap_dn_filter
+        }
+
+    @classmethod
+    def create_or_update(cls, data):
+        if cls.current():
+            LDAPAuth.objects.all().delete()
+            LDAPAuthUid.objects.all().delete()
+
+        # ldap_uid_list = data.pop('ldap_uid_list')
+        instance = cls.objects.create(**data)
+        # for uid in ldap_uid_list:
+        #     LDAPAuthUid.objects.create(ldap_uidattr=uid, auth=instance)
+        return instance
+
+
+class LDAPAuthUid(models.Model):
+    ldap_uidattr = models.CharField(max_length=100, default='uid')
+    ldap_uidattr_format = models.CharField(max_length=100, default='%u')
+    auth = models.ForeignKey(LDAPAuth)
+
+    def __unicode__(self):
+        return 'LDAP Auth uuid'
+
+
 class LDAPSettings(models.Model):
-    port = models.PositiveSmallIntegerField()
-    rootdn = models.CharField(max_length=100, null=True, blank=True)
-    password = models.CharField(max_length=50, null=True, blank=True)
-    base = models.CharField(max_length=100)
+    ENCRYPT_NONE = 'none'
+    ENCRYPT_TLS = 'tls'
+    ENCRYPT_CHOICE = (
+        (ENCRYPT_NONE, 'none'),
+        (ENCRYPT_TLS, 'tls')
+    )
+
+    TLS_VERIFY_FALSE = 'false'
+    TLS_VERIFY_SOFT = 'soft'
+    TLS_VERIFY_HARD = 'hard'
+    TLS_VERIFY_CHOICE = (
+        (TLS_VERIFY_FALSE, 'false'),
+        (TLS_VERIFY_SOFT, 'soft'),
+        (TLS_VERIFY_HARD, 'hard'),
+    )
+
+    DEFER_ALIASES_NEVER = 'never'
+    DEFER_ALIASES_ALWAYS = 'always'
+    DEFER_ALIASES_FINDING = 'finding'
+    DEFER_ALIASES_SEARCHING = 'searching'
+    DEFER_ALIASES_CHOICE = (
+        (DEFER_ALIASES_NEVER, 'never'),
+        (DEFER_ALIASES_ALWAYS, 'always'),
+        (DEFER_ALIASES_FINDING, 'finding'),
+        (DEFER_ALIASES_SEARCHING, 'searching'),
+    )
+
+    ldap_encrypt = models.CharField(
+        max_length=100, choices=ENCRYPT_CHOICE, null=True, blank=True)
+    ldap_tls_verify = models.CharField(
+        max_length=100, choices=TLS_VERIFY_CHOICE, null=True, blank=True)
+    ldap_tls_cacertfile = models.CharField(
+        max_length=100, null=True, blank=True)
+    ldap_tls_depth = models.PositiveSmallIntegerField(
+        null=True, blank=True)
+    ldap_port = models.PositiveSmallIntegerField(default=389)
+    ldap_rootdn = models.CharField(
+        max_length=100, null=True, blank=True)
+    ldap_password = models.CharField(
+        max_length=50, null=True, blank=True)
+    ldap_deref_aliases = models.CharField(
+        max_length=100, choices=DEFER_ALIASES_CHOICE, null=True, blank=True)
 
     def __unicode__(self):
         return 'LDAP Settings'
@@ -59,17 +141,27 @@ class LDAPSettings(models.Model):
     @classmethod
     def current(cls):
         try:
-            instance = cls.objects.all()[0]
-            data = {
-                "server":   LDAPServer.objects.filter(settings=instance)[0],
-                "port":     instance.port,
-                "rootdn":   instance.rootdn,
-                "password": instance.password,
-                "base":     instance.base,
-            }
-            return data
+            return cls.objects.all().first()
         except IndexError:
             return None
+
+    @property
+    def servers(self):
+        return self.ldapsettingsserver_set.all()
+
+    @property
+    def data(self):
+        return {
+            "ldap_servers": self.servers,
+            "ldap_port": self.ldap_port,
+            "ldap_encrypt": self.ldap_encrypt,
+            "ldap_tls_verify": self.ldap_tls_verify,
+            "ldap_tls_cacertfile": self.ldap_tls_cacertfile,
+            "ldap_tls_depth": self.ldap_tls_depth,
+            "ldap_rootdn": self.ldap_rootdn,
+            "ldap_password": self.ldap_password,
+            "ldap_deref_aliases": self.ldap_deref_aliases
+        }
 
     @classmethod
     def has_saved_settings(cls):
@@ -78,23 +170,19 @@ class LDAPSettings(models.Model):
     @classmethod
     def create_or_update(cls, data):
         if cls.current():
-            LDAPServer.objects.all().delete()
+            LDAPSettingsServer.objects.all().delete()
             LDAPSettings.objects.all().delete()
 
-        instance = cls.objects.create(
-            port=data['ldap_port'],
-            rootdn=data['ldap_rootdn'],
-            password=data['ldap_password'],
-            base=data['ldap_base'])
-        LDAPServer.objects.create(
-            server=data['ldap_server'],
-            settings=instance)
+        ldap_server_list = data.pop('ldap_server_list')
+        instance = cls.objects.create(**data)
+        for server in ldap_server_list:
+            LDAPSettingsServer.objects.create(server=server, settings=instance)
         return instance
 
 
-class LDAPServer(models.Model):
+class LDAPSettingsServer(models.Model):
     server = models.CharField(max_length=50)
     settings = models.ForeignKey(LDAPSettings)
 
     def __unicode__(self):
-        return self.server
+        return 'LDAP Settings {}'.format(self.server)
