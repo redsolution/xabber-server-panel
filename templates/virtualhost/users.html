@@ -52,7 +52,11 @@
                                     {% if obj.user.photo %}
                                         <img class="user-avatar-preview" src="{{ obj.photo_url }}" />
                                     {% else %}
-                                        <p class="user-avatar-preview-p" data-letters="{% get_user_initials obj.user %}"></p>
+                                        {% if obj.user %}
+                                            <p class="user-avatar-preview-p" data-letters="{% get_user_initials obj.user %}"></p>
+                                        {% else %}
+                                            <p class="user-avatar-preview-p" data-letters="{% get_user_initials obj.username %}"></p>
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                                 <td class="table-data">

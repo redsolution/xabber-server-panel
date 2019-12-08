@@ -57,16 +57,8 @@ class UserListView(VhostContextView, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         vhost = self.get_vhost(request)
-
-        pagination_limit = settings.PAGINATION_PAGE_SIZE
-        pagination_page = int(request.GET.get('page', 1))
-
-        user_count = user.api.xabber_registered_users_count(
-            {"host": vhost}).get('number')
-        users = user.api.xabber_registered_users(
-            {"host": vhost,
-             "limit": pagination_limit,
-             "page": pagination_page})
+        users = user.api.get_registered_users({"host": vhost})
+        user_count = len(users)
 
         if "error" in users:
             return self.get_response(request,
@@ -83,20 +75,22 @@ class UserListView(VhostContextView, TemplateView):
                 "photo_url": settings.MEDIA_URL + django_user[0]["photo"] if django_user else None
              })
 
-        page_count = int(math.ceil(float(user_count) / pagination_limit))
-        pagination_range = xrange(1, page_count + 1)
+        pagination_limit = settings.PAGINATION_PAGE_SIZE
+        paginator = Paginator(data, pagination_limit)
+        paginator_page = int(request.GET.get('page', 1))
+        data = paginator.page(paginator_page)
         page_title = '{all} of {all}'.format(all=user_count) \
-            if len(pagination_range) < 2 \
+            if len(paginator.page_range) < 2 \
             else '{first} - {last} of {all}'.format(
-            first=(pagination_page - 1) * pagination_limit + 1,
-            last=(pagination_page - 1) * pagination_limit + len(data),
+            first=(paginator_page - 1) * pagination_limit + 1,
+            last=(paginator_page - 1) * pagination_limit + len(data),
             all=user_count)
 
         return self.get_response(request,
                                  vhost=vhost,
                                  context={"data": data,
-                                          "pages": pagination_range,
-                                          "curr_page": pagination_page,
+                                          "pages": paginator.page_range,
+                                          "curr_page": paginator_page,
                                           "curr_page_title": page_title})
 
 
