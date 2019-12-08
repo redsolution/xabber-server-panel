@@ -278,4 +278,5 @@ oauth_access: all
 include_config_file: "{{ VHOST_FILE }}"
 include_config_file: "{{ ADMIN_ACL_FILE }}"
 include_config_file: "{{ AUTH_METHOD_FILE }}"
-include_config_file: "{{ LDAP_FILE }}"
+include_config_file: "{{ LDAP_CONN_FILE }}"
+include_config_file: "{{ LDAP_AUTH_FILE }}"

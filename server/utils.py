@@ -7,7 +7,7 @@ from django.conf import settings
 
 from virtualhost.models import User, VirtualHost
 from xmppserverui.utils import is_xmpp_server_installed
-from .models import AuthBackend, LDAPSettings
+from .models import AuthBackend, LDAPSettings, LDAPAuth
 # def execute_ejabberd_cmd(cmd):
 #     cmd_ejabberd = [settings.EJABBERDCTL, ] + cmd
 #     cmd = subprocess.Popen(cmd_ejabberd,
@@ -121,11 +121,26 @@ def update_backends_config():
         file.close()
 
 
-def update_ldap_config():
-    template = 'ejabberd/ldap_template.yml'
+def update_ldap_conn():
+    template = 'ejabberd/ldap_conn_template.yml'
     ldap_settings = LDAPSettings.current()
     if ldap_settings:
         file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
-                                 settings.EJABBERD_LDAP_CONFIG_FILE), 'w+')
-        file.write(render_to_string(template, ldap_settings))
+                                 settings.EJABBERD_LDAP_CONN_CONFIG_FILE), 'w+')
+        file.write(render_to_string(template, ldap_settings.data))
         file.close()
+
+
+def update_ldap_auth():
+    template = 'ejabberd/ldap_auth_template.yml'
+    ldap_auth = LDAPAuth.current()
+    if ldap_auth:
+        file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
+                                 settings.EJABBERD_LDAP_AUTH_CONFIG_FILE), 'w+')
+        file.write(render_to_string(template, ldap_auth.data))
+        file.close()
+
+
+def update_ldap_config():
+    update_ldap_conn()
+    update_ldap_auth()

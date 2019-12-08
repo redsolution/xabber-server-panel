@@ -5,7 +5,7 @@
 {% block tab_content %}
     <div class="tab-pane fade show active">
         <div class="row no-gutters">
-            <div class="col page-content">
+            <div class="col-sm-10 page-content">
                 <div style="margin: 0 0 15px;">
                     <h3>Manage authentication backends</h3>
                 </div>
@@ -14,121 +14,57 @@
                     {% csrf_token %}
 
                     {% with form.backend as field %}
-                        <div class="row form-group {% if field.errors %}invalid{% endif %}">
-                            <div class="col-sm-4">
-                                {{ field }}
-                                <div class="invalid-feedback d-block">
-                                    {% for field_error in field.errors %}{{ field_error }} {% endfor %}
-                                </div>
-                            </div>
-                        </div>
+                        {% include 'include/input_field.html' %}
                     {% endwith %}
 
                     <div id="ldap-settings-block">
                         <div style="margin: 0 0 15px;">
                             <h3>LDAP Settings</h3>
                         </div>
-
-                        {% with form.ldap_server as field %}
-                            {% if not field.is_hidden %}
-                                <div class="form-group {% if field.errors %}invalid{% endif %}">
-                                    <div class="row">
-                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                            {{ field.label }}
-                                        </label>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {{ field }}
-                                            <div class="invalid-feedback d-block">
-                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
+                        {% with form.ldap_server_list as field %}
+                            {% include 'include/input_field.html' %}
                         {% endwith %}
-
+                        {% with form.ldap_encrypt as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        {% with form.ldap_tls_verify as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        {% with form.ldap_tls_cacertfile as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        {% with form.ldap_tls_depth as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
                         {% with form.ldap_port as field %}
-                            {% if not field.is_hidden %}
-                                <div class="form-group {% if field.errors %}invalid{% endif %}">
-                                    <div class="row">
-                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                            {{ field.label }}
-                                        </label>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {{ field }}
-                                            <div class="invalid-feedback d-block">
-                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
+                            {% include 'include/input_field.html' %}
                         {% endwith %}
-
                         {% with form.ldap_rootdn as field %}
-                            {% if not field.is_hidden %}
-                                <div class="form-group {% if field.errors %}invalid{% endif %}">
-                                    <div class="row">
-                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                            {{ field.label }}
-                                        </label>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {{ field }}
-                                            <div class="invalid-feedback d-block">
-                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        {% with form.ldap_password as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        {% with form.ldap_deref_aliases as field %}
+                            {% include 'include/input_field.html' %}
                         {% endwith %}
 
-                        {% with form.ldap_password as field %}
-                            {% if not field.is_hidden %}
-                                <div class="form-group {% if field.errors %}invalid{% endif %}">
-                                    <div class="row">
-                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                            {{ field.label }}
-                                        </label>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {{ field }}
-                                            <div class="invalid-feedback d-block">
-                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endwith %}
+                        <div style="margin: 0 0 15px;">
+                            <h3>LDAP Authentication</h3>
+                        </div>
 
                         {% with form.ldap_base as field %}
-                            {% if not field.is_hidden %}
-                                <div class="form-group {% if field.errors %}invalid{% endif %}">
-                                    <div class="row">
-                                        <label for="{{ field.id_for_label }}" class="col-sm-4">
-                                            {{ field.label }}
-                                        </label>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {{ field }}
-                                            <div class="invalid-feedback d-block">
-                                                {% for field_error in field.errors %}{{ field_error }} {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
+                            {% include 'include/input_field.html' %}
                         {% endwith %}
-
+                        <!--{% with form.ldap_uid_list as field %}-->
+                            <!--{% include 'include/input_field.html' %}-->
+                        <!--{% endwith %}-->
+                        {% with form.ldap_filter as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        <!--{% with form.ldap_dn_filter as field %}-->
+                            <!--{% include 'include/input_field.html' %}-->
+                        <!--{% endwith %}-->
                     </div>
 
                     {% for error in form.non_field_errors %}

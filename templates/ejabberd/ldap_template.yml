@@ -1,6 +1,0 @@
-ldap_servers:
-  - "{{ server }}"
-ldap_port: {{ port }}
-ldap_base: "{{ base }}"
-{% if rootdn %}ldap_rootdn: "{{ rootdn }}"{% endif %}
-{% if password %}ldap_password: "{{ password }}"{% endif %}

@@ -4,7 +4,7 @@ from django import forms
 from django.db import transaction
 
 from virtualhost.models import User, VirtualHost
-from .models import AuthBackend, LDAPSettings, LDAPServer
+from .models import AuthBackend, LDAPSettings, LDAPAuth
 
 
 class BaseForm(forms.Form):
@@ -119,16 +119,41 @@ class ManageAuthBackendForm(BaseForm):
         required=True,
         widget=forms.Select()
     )
-    ldap_server = forms.CharField(
-        max_length=50,
+    ldap_server_list = forms.CharField(
         required=False,
-        label='Server',
-        widget=forms.TextInput(attrs={'placeholder': 'ldap1.example.org'})
+        label='Server list',
+        help_text='Enter the each server name from a new line',
+        widget=forms.Textarea(attrs={
+            'placeholder': 'ldap1.example.org\n'
+                           'ldap2.example.org\n'
+                           'ldap3.example.org',
+            'rows': 4})
+    )
+    ldap_encrypt = forms.ChoiceField(
+        choices=LDAPSettings.ENCRYPT_CHOICE,
+        required=False,
+        label='Encrypt',
+        widget=forms.Select()
+    )
+    ldap_tls_verify = forms.ChoiceField(
+        choices=LDAPSettings.TLS_VERIFY_CHOICE,
+        required=False,
+        label='TLS verify',
+        widget=forms.Select()
+    )
+    ldap_tls_cacertfile = forms.CharField(
+        max_length=100,
+        required=False,
+        label='TLS cacertfile'
+    )
+    ldap_tls_depth = forms.IntegerField(
+        required=False,
+        label='TLS depth'
     )
     ldap_port = forms.IntegerField(
         required=False,
-        label='Port',
-        widget=forms.TextInput(attrs={'placeholder': '389'})
+        initial=389,
+        label='Port'
     )
     ldap_rootdn = forms.CharField(
         max_length=100,
@@ -143,6 +168,12 @@ class ManageAuthBackendForm(BaseForm):
         label='Password',
         widget=forms.PasswordInput(render_value=True, attrs={'placeholder': '********'})
     )
+    ldap_deref_aliases = forms.ChoiceField(
+        choices=LDAPSettings.DEFER_ALIASES_CHOICE,
+        required=False,
+        label='Defer aliases',
+        widget=forms.Select()
+    )
     ldap_base = forms.CharField(
         max_length=100,
         required=False,
@@ -150,8 +181,49 @@ class ManageAuthBackendForm(BaseForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'ou=Users,dc=example,dc=org'})
     )
+    # ldap_uid_list = forms.CharField(
+    #     required=False,
+    #     label='UIDs',
+    #     help_text='ldap_uidattr | {ldap_uidattr: ldap_uidattr_format}',
+    #     widget=forms.Textarea(attrs={'rows': 4})
+    # )
+    ldap_filter = forms.CharField(
+        max_length=100,
+        required=False,
+        label='Filter'
+    )
+    # ldap_dn_filter = forms.CharField(
+    #     max_length=100,
+    #     required=False,
+    #     label='DN filter'
+    # )
 
-    LDAP_REQUIRED_FIELDS = ['ldap_server', 'ldap_port', 'ldap_base']
+    LDAP_AUTH_FIELDS_REQUIRED = ['ldap_base']
+    # LDAP_AUTH_FIELDS = ['ldap_base', 'ldap_uid_list', 'ldap_filter', 'ldap_dn_filter']
+    LDAP_AUTH_FIELDS = ['ldap_base', 'ldap_filter']
+    LDAP_CONN_FIELDS_REQUIRED = ['ldap_server_list', 'ldap_port']
+    LDAP_CONN_FIELDS = ['ldap_server_list', 'ldap_encrypt', 'ldap_tls_verify',
+                        'ldap_tls_cacertfile', 'ldap_tls_depth', 'ldap_port',
+                        'ldap_rootdn', 'ldap_password', 'ldap_deref_aliases']
+    LDAP_REQUIRED_FIELDS = LDAP_AUTH_FIELDS_REQUIRED + LDAP_CONN_FIELDS_REQUIRED
+
+    def init_ldap_fields(self):
+        ldap_auth = LDAPAuth.current()
+        ldap_settings = LDAPSettings.current()
+        for field in self.fields.keys():
+            if ldap_auth and field.startswith('ldap_'):
+                if hasattr(ldap_auth, field):
+                    self.fields[field].initial = getattr(ldap_auth, field)
+                # elif field == 'ldap_uid_list':
+                #     self.fields[field].initial = '\n'.join(
+                #         ['{}: {}'.format(u.ldap_uidattr, u.ldap_uidattr_format)
+                #          for u in ldap_auth.uids])
+            if ldap_settings and field.startswith('ldap_'):
+                if hasattr(ldap_settings, field):
+                    self.fields[field].initial = getattr(ldap_settings, field)
+                elif field == 'ldap_server_list':
+                    self.fields[field].initial = '\n'.join(
+                        [s.server for s in ldap_settings.servers])
 
     def __init__(self, *args, **kwargs):
         super(ManageAuthBackendForm, self).__init__(*args, **kwargs)
@@ -159,16 +231,10 @@ class ManageAuthBackendForm(BaseForm):
             visible.field.widget.attrs['class'] = 'form-control'
 
         self.curr_backend = AuthBackend.current()
-        self.has_ldap_settings = LDAPSettings.has_saved_settings()
         self.fields['backend'].initial = self.curr_backend.name
         self.fields['backend'].choices = AuthBackend.BACKEND_CHOICES
-        if self.has_ldap_settings:
-            ldap_settings = LDAPSettings.current()
-            self.fields['ldap_server'].initial = ldap_settings['server']
-            self.fields['ldap_port'].initial = ldap_settings['port']
-            self.fields['ldap_rootdn'].initial = ldap_settings['rootdn']
-            self.fields['ldap_password'].initial = ldap_settings['password']
-            self.fields['ldap_base'].initial = ldap_settings['base']
+
+        self.init_ldap_fields()
 
     def before_clean(self):
         if self.cleaned_data['backend'] == AuthBackend.BACKEND_LDAP:
@@ -177,14 +243,23 @@ class ManageAuthBackendForm(BaseForm):
                         not self.cleaned_data[field]:
                     self.add_error(field, 'This field is required.')
 
+        self.cleaned_data['ldap_server_list'] = \
+            self.cleaned_data.get('ldap_server_list', '').splitlines()
+        # self.cleaned_data['ldap_uid_list'] = \
+        #     self.cleaned_data.get('ldap_uid_list', '').splitlines()
+
     def after_clean(self, cleaned_data):
+        backend = cleaned_data['backend']
         with transaction.atomic():
-            if cleaned_data['backend'] == AuthBackend.BACKEND_LDAP:
-                LDAPSettings.create_or_update(cleaned_data)
+            if backend == AuthBackend.BACKEND_LDAP:
+                ldap_auth_data = {k: cleaned_data[k] for k in self.LDAP_AUTH_FIELDS}
+                LDAPAuth.create_or_update(ldap_auth_data)
+                ldap_conn_data = {k: cleaned_data[k] for k in self.LDAP_CONN_FIELDS}
+                LDAPSettings.create_or_update(ldap_conn_data)
 
             self.curr_backend.is_active = False
             self.curr_backend.save()
 
-            self.new_backend = AuthBackend.objects.get(name=cleaned_data['backend'])
+            self.new_backend = AuthBackend.objects.get(name=backend)
             self.new_backend.is_active = True
             self.new_backend.save()

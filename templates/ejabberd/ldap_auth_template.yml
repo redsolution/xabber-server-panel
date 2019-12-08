@@ -1,0 +1,4 @@
+ldap_base: "{{ ldap_base }}"
+{% if ldap_uids %}ldap_uids: {% endif %}
+{% if ldap_filter %}ldap_filter: "{{ ldap_filter }}"{% endif %}
+{% if ldap_dn_filter %}ldap_dn_filter: "{{ ldap_dn_filter }}"{% endif %}
