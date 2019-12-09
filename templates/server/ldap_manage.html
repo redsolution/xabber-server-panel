@@ -1,0 +1,126 @@
+{% extends 'server/overview_tabs.html' %}
+
+{% block title %}LDAP Configuration{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col-sm-12 page-content" style="margin-bottom: 16px;">
+                 <form action="{% url 'server:manage-ldap' %}" method="post" id="form_ldap_auth" >
+                     {% csrf_token %}
+
+                     <div style="margin: 0 0 15px;">
+                        <h3>LDAP Authentication</h3>
+                     </div>
+                     {% with ldap_auth_form.ldap_auth as field %}
+                        {{ field }}
+                     {% endwith %}
+                     <input type="hidden" name="form_ldap_auth"/>
+                 </form>
+            </div>
+        </div>
+
+        {% if ldap_auth_form.ldap_backend.is_active %}
+        <div class="row no-gutters">
+            <div class="col-sm-12 page-content">
+
+                <form action="{% url 'server:manage-ldap' %}" method="post" id="form_ldap_settings" >
+                    {% csrf_token %}
+
+                    <div id="ldap-settings-block">
+                        <div style="margin: 0 0 15px;">
+                            <h3>LDAP Connection</h3>
+                        </div>
+                        {% with ldap_settings_form.ldap_server_list as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_encrypt as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_tls_verify as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_tls_cacertfile as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_tls_depth as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_port as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_rootdn as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_password as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_deref_aliases as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+
+                        <div style="margin: 0 0 15px;">
+                            <h3>LDAP Authentication</h3>
+                        </div>
+                        {% with ldap_settings_form.ldap_base as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_uids as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_filter as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+                        {% with ldap_settings_form.ldap_dn_filter as field %}
+                            {% include 'include/input_field_with_popover.html' %}
+                        {% endwith %}
+
+                        <input type="hidden" name="form_ldap_settings"/>
+                    </div>
+
+                    {% for error in ldap_settings_form.non_field_errors %}
+                        <div class="form-group row">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="row form-group form-btn-block">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary"
+                                    id="btn_manage_backends">Save</button>
+                            <a href="{% url 'server:manage-ldap' %}">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        style="margin-left: 24px;">Cancel</button>
+                            </a>
+                            <span id="selected_counts" class="selected-counts-text">
+                                <span id="selected_counter">0</span> selected
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+
+    <script>
+        $(document).ready(function() {
+
+            $('#form_ldap_auth input[name=ldap_auth]').change(function() {
+                $('#form_ldap_auth').submit();
+            })
+        });
+    </script>
+
+    <script>
+        $(function () {
+            $('[data-toggle="popover"]').popover()
+        })
+    </script>
+{% endblock %}

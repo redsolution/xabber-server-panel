@@ -113,12 +113,10 @@ def update_vhosts_config():
 
 def update_backends_config():
     template = 'ejabberd/auth_method_template.yml'
-    curr_backend = AuthBackend.current()
-    if curr_backend:
-        file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
-                                 settings.EJABBERD_AUTH_CONFIG_FILE), 'w+')
-        file.write(render_to_string(template, {'backend': curr_backend.name}))
-        file.close()
+    file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
+                             settings.EJABBERD_AUTH_CONFIG_FILE), 'w+')
+    file.write(render_to_string(template, {'backend_list': AuthBackend.get_data()}))
+    file.close()
 
 
 def update_ldap_conn():

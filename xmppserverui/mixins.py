@@ -106,8 +106,9 @@ class SQLAuthMixin(PageContextMixin):
                          ['is_sql_auth_backend']
 
     def is_sql_auth_backend(self, request, *args, **kwargs):
-        if not AuthBackend.is_sql():
-            return HttpResponseRedirect(reverse('error:403'))
+        pass
+        # if not AuthBackend.is_sql():
+        #     return HttpResponseRedirect(reverse('error:403'))
 
 
 class ServerStartedMixin(PageContextMixin):

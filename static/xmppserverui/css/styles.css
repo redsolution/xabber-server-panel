@@ -625,3 +625,19 @@ table td.dots-menu {
 body {
     background-color: #fbfbfb;
 }
+
+
+.form-field-popover {
+    padding: 2px 8px;
+    background-color: grey;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.form-field-popover:hover {
+    color: #fff;
+    text-decoration: none;
+}

@@ -8,7 +8,7 @@ from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost, User, Group, GroupMember
 from virtualhost.utils import get_system_group_suffix
 from .models import AuthBackend
-from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, ManageAuthBackendForm
+from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, LDAPAuthForm, LDAPSettingsForm
 from .utils import start_ejabberd, restart_ejabberd, stop_ejabberd, is_ejabberd_running, update_ejabberd_config
 
 
@@ -65,11 +65,12 @@ class ServerDashboardView(PageContextMixin, TemplateView):
 
 
 class ServerStoppedStubView(PageContextMixin, TemplateView):
+    page_section = 'server'
     template_name = 'server/stopped_stub.html'
 
 
 class ServerAdminsListView(PageContextMixin, TemplateView):
-    page_section = 'vhosts-list'
+    page_section = 'server'
     template_name = 'server/admins_list.html'
 
     def get(self, request, *args,**kwargs):
@@ -83,7 +84,7 @@ class ServerAdminsListView(PageContextMixin, TemplateView):
 
 
 class ManageAdminsSelectView(PageContextMixin, TemplateView):
-    page_section = 'add-admin'
+    page_section = 'server'
     template_name = 'server/admins_manage.html'
 
     def get_admin_list(self):
@@ -150,7 +151,7 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
 
 
 class ServerVhostsListView(PageContextMixin, TemplateView):
-    page_section = 'vhosts-list'
+    page_section = 'server'
     template_name = 'server/vhosts_list.html'
 
     def get(self, request, *args,**kwargs):
@@ -164,7 +165,7 @@ class ServerVhostsListView(PageContextMixin, TemplateView):
 
 
 class AddVirtualHostView(PageContextMixin, TemplateView):
-    page_section = 'add-vhost'
+    page_section = 'server'
     template_name = 'server/add_vhost.html'
 
     def create_everybody_group(self, request, hostname):
@@ -233,7 +234,7 @@ class AddVirtualHostView(PageContextMixin, TemplateView):
 
 
 class DeleteVirtualHostView(PageContextMixin, TemplateView):
-    page_section = 'delete-vhost'
+    page_section = 'server'
     template_name = 'server/delete_vhost.html'
 
     def get(self, request, *args, **kwargs):
@@ -280,7 +281,7 @@ class DeleteVirtualHostView(PageContextMixin, TemplateView):
 
 
 class VirtualHostDetauView(PageContextMixin, TemplateView):
-    page_section = 'detail-vhost'
+    page_section = 'server'
     template_name = 'server/detail_vhost.html'
 
     def get(self, request, *args, **kwargs):
@@ -293,40 +294,38 @@ class VirtualHostDetauView(PageContextMixin, TemplateView):
         })
 
 
-class ServerAuthBackendsListView(PageContextMixin, TemplateView):
-    page_section = 'vhosts-list'
-    template_name = 'server/auth_backends_list.html'
-
-    def get(self, request, *args, **kwargs):
-        auth_backends = AuthBackend.objects.all()
-
-        context = {
-            'auth_backends': auth_backends,
-            'active_tab': SETTINGS_TAB_AUTH_BACKENDS
-        }
-        return self.render_to_response(context)
-
-
-class ManageAuthBackendsView(PageContextMixin, TemplateView):
-    page_section = 'manage-auth-backend'
-    template_name = 'server/auth_backends_manage.html'
+class ManageLDAPView(PageContextMixin, TemplateView):
+    page_section = 'server'
+    template_name = 'server/ldap_manage.html'
 
     def get_page_context(self):
         auth_backends = AuthBackend.objects.all()
         return {
             'auth_backends': auth_backends,
             'active_tab': SETTINGS_TAB_AUTH_BACKENDS,
-            'form': ManageAuthBackendForm()
+            'ldap_auth_form': LDAPAuthForm(),
+            'ldap_settings_form': LDAPSettingsForm()
         }
 
     def get(self, request, *args, **kwargs):
         return self.render_to_response(self.get_page_context())
 
     def post(self, request, *args, **kwargs):
-        form = ManageAuthBackendForm(request.POST)
-        if form.is_valid():
-            update_ejabberd_config()
-            return HttpResponseRedirect(reverse('server:auth-backends-list'))
         context = self.get_page_context()
-        context['form'] = form
+
+        if 'form_ldap_auth' in request.POST:
+            form = LDAPAuthForm(request.POST)
+            if form.is_valid():
+                update_ejabberd_config()
+                context['ldap_auth_form'] = LDAPAuthForm()
+            else:
+                context['ldap_auth_form'] = form
+
+        elif 'form_ldap_settings' in request.POST:
+            form = LDAPSettingsForm(request.POST)
+            if form.is_valid():
+                update_ejabberd_config()
+                context['ldap_settings_form'] = LDAPSettingsForm()
+            else:
+                context['ldap_settings_form'] = form
         return self.render_to_response(context)
