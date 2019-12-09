@@ -26,25 +26,22 @@ class AuthBackend(models.Model):
         return self.name
 
     @classmethod
-    def current(cls):
+    def get_data(cls):
+        return [o.name for o in cls.objects.filter(is_active=True)]
+
+    @classmethod
+    def ldap(cls):
         try:
-            return cls.objects.get(is_active=True)
+            return cls.objects.get(name=cls.BACKEND_LDAP)
         except cls.DoesNotExist:
             return None
-
-    @classmethod
-    def is_ldap(cls):
-        return cls.current().name == cls.BACKEND_LDAP
-
-    @classmethod
-    def is_sql(cls):
-        return cls.current().name == cls.BACKEND_SQL
 
 
 class LDAPAuth(models.Model):
     ldap_base = models.CharField(max_length=100)
-    ldap_filter = models.CharField(max_length=100, null=True, blank=True)
-    ldap_dn_filter = models.CharField(max_length=100, null=True, blank=True)
+    ldap_uids = models.CharField(max_length=256, null=True, blank=True)
+    ldap_filter = models.CharField(max_length=256, null=True, blank=True)
+    ldap_dn_filter = models.CharField(max_length=256, null=True, blank=True)
 
     def __unicode__(self):
         return 'LDAP Auth'
@@ -63,7 +60,7 @@ class LDAPAuth(models.Model):
     @property
     def data(self):
         return {
-            "ldap_uids": [],
+            "ldap_uids": self.ldap_uids,
             "ldap_base": self.ldap_base,
             "ldap_filter": self.ldap_filter,
             "ldap_dn_filter": self.ldap_dn_filter
@@ -73,22 +70,18 @@ class LDAPAuth(models.Model):
     def create_or_update(cls, data):
         if cls.current():
             LDAPAuth.objects.all().delete()
-            LDAPAuthUid.objects.all().delete()
 
-        # ldap_uid_list = data.pop('ldap_uid_list')
         instance = cls.objects.create(**data)
-        # for uid in ldap_uid_list:
-        #     LDAPAuthUid.objects.create(ldap_uidattr=uid, auth=instance)
         return instance
 
 
-class LDAPAuthUid(models.Model):
-    ldap_uidattr = models.CharField(max_length=100, default='uid')
-    ldap_uidattr_format = models.CharField(max_length=100, default='%u')
-    auth = models.ForeignKey(LDAPAuth)
-
-    def __unicode__(self):
-        return 'LDAP Auth uuid'
+# class LDAPAuthUid(models.Model):
+#     ldap_uidattr = models.CharField(max_length=100, default='uid')
+#     ldap_uidattr_format = models.CharField(max_length=100, default='%u')
+#     auth = models.ForeignKey(LDAPAuth)
+#
+#     def __unicode__(self):
+#         return 'LDAP Auth uuid'
 
 
 class LDAPSettings(models.Model):
