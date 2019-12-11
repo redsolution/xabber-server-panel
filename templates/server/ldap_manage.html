@@ -1,84 +1,79 @@
 {% extends 'server/overview_tabs.html' %}
 
+{% block css %}
+<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block title %}LDAP Configuration{% endblock %}
 
 {% block tab_content %}
     <div class="tab-pane fade show active">
-        <div class="row no-gutters">
-            <div class="col-sm-12 page-content" style="margin-bottom: 16px;">
-                 <form action="{% url 'server:manage-ldap' %}" method="post" id="form_ldap_auth" >
-                     {% csrf_token %}
-
-                     <div style="margin: 0 0 15px;">
-                        <h3>LDAP Authentication</h3>
-                     </div>
-                     {% with ldap_auth_form.ldap_auth as field %}
-                        {{ field }}
-                     {% endwith %}
-                     <input type="hidden" name="form_ldap_auth"/>
-                 </form>
-            </div>
-        </div>
-
-        {% if ldap_auth_form.ldap_backend.is_active %}
         <div class="row no-gutters">
             <div class="col-sm-12 page-content">
 
                 <form action="{% url 'server:manage-ldap' %}" method="post" id="form_ldap_settings" >
                     {% csrf_token %}
 
+                    <div style="margin: 0 0 15px;">
+                        <h3>LDAP authentication</h3>
+                    </div>
+
+                    {% with form.ldap_is_active as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
+
                     <div id="ldap-settings-block">
                         <div style="margin: 0 0 15px;">
-                            <h3>LDAP Connection</h3>
+                            <h3>LDAP connection</h3>
                         </div>
-                        {% with ldap_settings_form.ldap_server_list as field %}
+                        {% with form.ldap_server_list as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_encrypt as field %}
+                        {% with form.ldap_encrypt as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_tls_verify as field %}
+                        {% with form.ldap_tls_verify as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_tls_cacertfile as field %}
+                        {% with form.ldap_tls_cacertfile as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_tls_depth as field %}
+                        {% with form.ldap_tls_depth as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_port as field %}
+                        {% with form.ldap_port as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_rootdn as field %}
+                        {% with form.ldap_rootdn as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_password as field %}
+                        {% with form.ldap_password as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_deref_aliases as field %}
+                        {% with form.ldap_deref_aliases as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
 
                         <div style="margin: 0 0 15px;">
-                            <h3>LDAP Authentication</h3>
+                            <h3>LDAP authentication details</h3>
                         </div>
-                        {% with ldap_settings_form.ldap_base as field %}
+                        {% with form.ldap_base as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_uids as field %}
+                        {% with form.ldap_uids as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_filter as field %}
+                        {% with form.ldap_filter as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with ldap_settings_form.ldap_dn_filter as field %}
+                        {% with form.ldap_dn_filter as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
 
                         <input type="hidden" name="form_ldap_settings"/>
                     </div>
 
-                    {% for error in ldap_settings_form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
                         <div class="form-group row">
                             <div class="col-sm-12 non-field-error">
                                 {{ error }}
@@ -102,18 +97,26 @@
                 </form>
             </div>
         </div>
-        {% endif %}
     </div>
 {% endblock %}
 
 {% block js %}
     {{ block.super }}
-
     <script>
-        $(document).ready(function() {
+        function set_ldap_settings() {
+            var checked = $('#id_ldap_is_active').prop('checked');
+            if (checked)
+                $('#ldap-settings-block').show();
+            else
+                $('#ldap-settings-block').hide();
+        }
 
-            $('#form_ldap_auth input[name=ldap_auth]').change(function() {
-                $('#form_ldap_auth').submit();
+        $(document).ready(function() {
+            $('#id_ldap_is_active').bootstrapToggle();
+            set_ldap_settings();
+
+            $('#id_ldap_is_active').change(function() {
+                set_ldap_settings();
             })
         });
     </script>

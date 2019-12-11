@@ -1,3 +1,4 @@
+{% if ldap_is_active %}
 ldap_servers: {% for server in ldap_servers %}
   - "{{ server.server }}"{% endfor %}
 ldap_port: {{ ldap_port }}
@@ -8,3 +9,4 @@ ldap_port: {{ ldap_port }}
 {% if ldap_rootdn %}ldap_rootdn: "{{ ldap_rootdn }}"{% endif %}
 {% if ldap_password %}ldap_password: "{{ ldap_password }}"{% endif %}
 {% if ldap_deref_aliases %}ldap_deref_aliases: {{ ldap_deref_aliases }}{% endif %}
+{% endif %}

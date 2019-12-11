@@ -8,7 +8,7 @@ from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost, User, Group, GroupMember
 from virtualhost.utils import get_system_group_suffix
 from .models import AuthBackend
-from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, LDAPAuthForm, LDAPSettingsForm
+from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, LDAPSettingsForm
 from .utils import start_ejabberd, restart_ejabberd, stop_ejabberd, is_ejabberd_running, update_ejabberd_config
 
 
@@ -144,7 +144,6 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
             else:
                 context["select_admins_error"] = \
                     "An unexpected error has occurred. Please, try again later."
-            print context
             return self.render_to_response(context)
         update_ejabberd_config()
         return HttpResponseRedirect(reverse('server:admins-list'))
@@ -303,29 +302,18 @@ class ManageLDAPView(PageContextMixin, TemplateView):
         return {
             'auth_backends': auth_backends,
             'active_tab': SETTINGS_TAB_AUTH_BACKENDS,
-            'ldap_auth_form': LDAPAuthForm(),
-            'ldap_settings_form': LDAPSettingsForm()
+            'form': LDAPSettingsForm()
         }
 
     def get(self, request, *args, **kwargs):
         return self.render_to_response(self.get_page_context())
 
     def post(self, request, *args, **kwargs):
+        form = LDAPSettingsForm(request.POST)
+        if form.is_valid():
+            update_ejabberd_config()
+            return HttpResponseRedirect(reverse('server:manage-ldap'))
+
         context = self.get_page_context()
-
-        if 'form_ldap_auth' in request.POST:
-            form = LDAPAuthForm(request.POST)
-            if form.is_valid():
-                update_ejabberd_config()
-                context['ldap_auth_form'] = LDAPAuthForm()
-            else:
-                context['ldap_auth_form'] = form
-
-        elif 'form_ldap_settings' in request.POST:
-            form = LDAPSettingsForm(request.POST)
-            if form.is_valid():
-                update_ejabberd_config()
-                context['ldap_settings_form'] = LDAPSettingsForm()
-            else:
-                context['ldap_settings_form'] = form
+        context['form'] = form
         return self.render_to_response(context)

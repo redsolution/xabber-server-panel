@@ -113,30 +113,12 @@ class DeleteVirtualHostForm(BaseForm):
             .delete()
 
 
-class LDAPAuthForm(BaseForm):
-    ldap_auth = forms.BooleanField(
-        required=False
+class LDAPSettingsForm(BaseForm):
+    ldap_is_active = forms.BooleanField(
+        required=False,
+        label='Enabled'
     )
 
-    def __init__(self, *args, **kwargs):
-        super(LDAPAuthForm, self).__init__(*args, **kwargs)
-        for visible in self.visible_fields():
-            visible.field.widget.attrs['data-toggle'] = 'toggle'
-
-        self.ldap_backend = AuthBackend.ldap()
-        if self.ldap_backend:
-            self.fields['ldap_auth'].initial = self.ldap_backend.is_active
-
-    def after_clean(self, cleaned_data):
-        print('after_clean')
-        print(cleaned_data['ldap_auth'])
-
-        if self.ldap_backend:
-            self.ldap_backend.is_active = cleaned_data['ldap_auth']
-            self.ldap_backend.save()
-
-
-class LDAPSettingsForm(BaseForm):
     ldap_server_list = forms.CharField(
         required=False,
         label='Server list',
@@ -312,25 +294,36 @@ class LDAPSettingsForm(BaseForm):
                     self.fields[field].initial = '\n'.join(
                         [s.server for s in ldap_settings.servers])
 
-    def __init__(self, *args, **kwargs):
-        super(LDAPSettingsForm, self).__init__(*args, **kwargs)
-        for visible in self.visible_fields():
-            visible.field.widget.attrs['class'] = 'form-control'
-
-        self.init_ldap_fields()
-
-    def before_clean(self):
+    def check_required_fields(self):
         for field in self.cleaned_data.keys():
             if field in self.LDAP_REQUIRED_FIELDS and \
                     not self.cleaned_data[field]:
                 self.add_error(field, 'This field is required.')
 
-        self.cleaned_data['ldap_server_list'] = \
-            self.cleaned_data.get('ldap_server_list', '').splitlines()
+    def __init__(self, *args, **kwargs):
+        super(LDAPSettingsForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+
+        self.ldap_backend = AuthBackend.ldap()
+        self.fields['ldap_is_active'].initial = self.ldap_backend.is_active
+
+        self.init_ldap_fields()
+
+    def before_clean(self):
+        if self.cleaned_data['ldap_is_active']:
+            self.check_required_fields()
+            self.cleaned_data['ldap_server_list'] = \
+                self.cleaned_data.get('ldap_server_list', '').splitlines()
 
     def after_clean(self, cleaned_data):
         with transaction.atomic():
-            ldap_auth_data = {k: cleaned_data[k] for k in self.LDAP_AUTH_FIELDS}
-            LDAPAuth.create_or_update(ldap_auth_data)
-            ldap_conn_data = {k: cleaned_data[k] for k in self.LDAP_CONN_FIELDS}
-            LDAPSettings.create_or_update(ldap_conn_data)
+            self.ldap_backend.is_active = cleaned_data['ldap_is_active']
+            self.ldap_backend.save()
+
+            if self.cleaned_data['ldap_is_active']:
+                ldap_auth_data = {k: cleaned_data[k] for k in self.LDAP_AUTH_FIELDS}
+                LDAPAuth.create_or_update(ldap_auth_data)
+
+                ldap_conn_data = {k: cleaned_data[k] for k in self.LDAP_CONN_FIELDS}
+                LDAPSettings.create_or_update(ldap_conn_data)

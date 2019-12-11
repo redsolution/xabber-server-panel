@@ -60,6 +60,7 @@ class LDAPAuth(models.Model):
     @property
     def data(self):
         return {
+            "ldap_is_active": AuthBackend.ldap().is_active,
             "ldap_uids": self.ldap_uids,
             "ldap_base": self.ldap_base,
             "ldap_filter": self.ldap_filter,
@@ -88,6 +89,7 @@ class LDAPSettings(models.Model):
     ENCRYPT_NONE = 'none'
     ENCRYPT_TLS = 'tls'
     ENCRYPT_CHOICE = (
+        (None, '--'),
         (ENCRYPT_NONE, 'none'),
         (ENCRYPT_TLS, 'tls')
     )
@@ -96,6 +98,7 @@ class LDAPSettings(models.Model):
     TLS_VERIFY_SOFT = 'soft'
     TLS_VERIFY_HARD = 'hard'
     TLS_VERIFY_CHOICE = (
+        (None, '--'),
         (TLS_VERIFY_FALSE, 'false'),
         (TLS_VERIFY_SOFT, 'soft'),
         (TLS_VERIFY_HARD, 'hard'),
@@ -106,6 +109,7 @@ class LDAPSettings(models.Model):
     DEFER_ALIASES_FINDING = 'finding'
     DEFER_ALIASES_SEARCHING = 'searching'
     DEFER_ALIASES_CHOICE = (
+        (None, '--'),
         (DEFER_ALIASES_NEVER, 'never'),
         (DEFER_ALIASES_ALWAYS, 'always'),
         (DEFER_ALIASES_FINDING, 'finding'),
@@ -145,6 +149,7 @@ class LDAPSettings(models.Model):
     @property
     def data(self):
         return {
+            "ldap_is_active": AuthBackend.ldap().is_active,
             "ldap_servers": self.servers,
             "ldap_port": self.ldap_port,
             "ldap_encrypt": self.ldap_encrypt,
