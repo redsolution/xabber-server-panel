@@ -16,7 +16,7 @@
         <div class="user-name">
             {{ curr_user.full_name }}
         </div>
-        {% if auth_backend.is_sql %}
+        {% if not is_ldap_active %}
         <div class="btn-set">
             <!--<button type="button" class="btn btn-outline-secondary">Activate</button>-->
             <!--<button type="button" class="btn btn-custom-yellow">Suspend</button>-->

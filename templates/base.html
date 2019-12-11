@@ -71,7 +71,7 @@
                             Create
                         </button>
                         <div class="dropdown-menu">
-                            {% if auth_backend.is_sql %}
+                            {% if not is_ldap_active %}
                                 <a class="dropdown-item large-padding" href="{% url 'virtualhost:user-create' %}">
                                     <b>User</b>
                                     <div class="dropdown-item-secondary-text">

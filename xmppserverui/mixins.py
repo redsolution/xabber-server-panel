@@ -88,7 +88,7 @@ class PageContextMixin(AdminMixin):
                         'auth_user': user,
                         'need_to_request_user_pass': need_to_request_user_pass,
                         'vhosts': VirtualHost.objects.all().order_by('id'),
-                        'auth_backend': AuthBackend}
+                        'is_ldap_active': AuthBackend.ldap().is_active}
 
     def fill_page_context(self, request, *args, **kwargs):
         pass
@@ -106,9 +106,8 @@ class SQLAuthMixin(PageContextMixin):
                          ['is_sql_auth_backend']
 
     def is_sql_auth_backend(self, request, *args, **kwargs):
-        pass
-        # if not AuthBackend.is_sql():
-        #     return HttpResponseRedirect(reverse('error:403'))
+        if AuthBackend.ldap().is_active:
+            return HttpResponseRedirect(reverse('error:403'))
 
 
 class ServerStartedMixin(PageContextMixin):

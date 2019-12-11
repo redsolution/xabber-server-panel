@@ -40,7 +40,7 @@
                             <th scope="col">Username</th>
                             <th scope="col">Name</th>
                             <th scope="col">Created</th>
-                            {% if auth_backend.is_sql %}
+                            {% if not is_ldap_active %}
                                 <th scope="col">Actions</th>
                             {% endif %}
                         </tr>
@@ -74,7 +74,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}</td>
-                                {% if auth_backend.is_sql %}
+                                {% if not is_ldap_active %}
                                 <td class="table-data dots-menu">
                                     {% if obj.user.id %}
                                     <div class="btn-group dropleft">

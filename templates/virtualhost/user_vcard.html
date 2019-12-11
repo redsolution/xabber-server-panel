@@ -4,7 +4,7 @@
 
 {% block tab_content %}
     <div class="tab-pane fade show active">
-        {% if auth_backend.is_sql %}
+        {% if not is_ldap_active %}
         <form method="post" action="{% url 'virtualhost:user-vcard' curr_user.id %}" enctype="multipart/form-data">
             {% csrf_token %}
 
