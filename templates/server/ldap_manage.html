@@ -22,7 +22,7 @@
                         {% include 'include/input_field.html' %}
                     {% endwith %}
 
-                    <div id="ldap-settings-block">
+                    <div id="ldap-settings-block" style="display:none;">
                         <div style="margin: 0 0 15px;">
                             <h3>LDAP connection</h3>
                         </div>
@@ -85,13 +85,6 @@
                         <div class="col-sm-12">
                             <button type="submit" class="btn btn-primary"
                                     id="btn_manage_backends">Save</button>
-                            <a href="{% url 'server:manage-ldap' %}">
-                                <button type="button" class="btn btn-outline-secondary"
-                                        style="margin-left: 24px;">Cancel</button>
-                            </a>
-                            <span id="selected_counts" class="selected-counts-text">
-                                <span id="selected_counter">0</span> selected
-                            </span>
                         </div>
                     </div>
                 </form>
@@ -111,12 +104,36 @@
                 $('#ldap-settings-block').hide();
         }
 
+        function updateLDAPConnBlock() {
+            var checked = $('#id_ldap_is_active').prop('checked');
+            if (checked)
+                $('#ldap-settings-block').show();
+            else
+                $('#ldap-settings-block').hide();
+        }
+
+        function updateBtnsBlock() {
+            var checked = $('#id_ldap_is_active').prop('checked');
+            if (checked)
+                $("#btn_manage_backends").prop('disabled', false);
+            else {
+                var curr_ldap_state = '{{ form.ldap_backend.is_active }}';
+                curr_ldap_state = curr_ldap_state == 'True' ? true : false;
+                if (curr_ldap_state == checked)
+                    $("#btn_manage_backends").prop('disabled', true);
+                else
+                    $("#btn_manage_backends").prop('disabled', false);
+            }
+        }
+
         $(document).ready(function() {
             $('#id_ldap_is_active').bootstrapToggle();
-            set_ldap_settings();
+            updateLDAPConnBlock();
+            updateBtnsBlock();
 
             $('#id_ldap_is_active').change(function() {
-                set_ldap_settings();
+                updateLDAPConnBlock();
+                updateBtnsBlock();
             })
         });
     </script>
