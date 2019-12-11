@@ -343,7 +343,7 @@ class UserGroupsView(PageContextMixin, TemplateView):
                                         "displayed_groups": self.get_groups_list(curr_user)})
 
 
-class DeleteUserView(SQLAuthMixin, TemplateView):
+class DeleteUserView(PageContextMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_delete.html'
 

@@ -16,7 +16,6 @@
         <div class="user-name">
             {{ curr_user.full_name }}
         </div>
-        {% if not is_ldap_active %}
         <div class="btn-set">
             <!--<button type="button" class="btn btn-outline-secondary">Activate</button>-->
             <!--<button type="button" class="btn btn-custom-yellow">Suspend</button>-->
@@ -24,7 +23,6 @@
                 <button type="button" class="btn btn-custom-red">Delete</button>
             </a>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -4,7 +4,6 @@
 
 {% block tab_content %}
     <div class="tab-pane fade show active">
-        {% if not is_ldap_active %}
         <form method="post" action="{% url 'virtualhost:user-vcard' curr_user.id %}" enctype="multipart/form-data">
             {% csrf_token %}
 
@@ -34,27 +33,5 @@
                 </div>
             </div>
         </form>
-        {% else %}
-        <div class="row no-gutters">
-            <div class="col-sm-6">
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td width="30%" style="border-top: none;">Nickname:</td>
-                            <td style="border-top: none;">{% if curr_user.nickname %}{{ curr_user.nickname }}{% else %}--{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td>First name:</td>
-                            <td>{% if curr_user.first_name %}{{ curr_user.first_name }}{% else %}--{% endif %}</td>
-                        </tr>
-                        <tr>
-                            <td>Last name:</td>
-                            <td>{% if curr_user.last_name %}{{ curr_user.last_name }}{% else %}--{% endif %}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
     </div>
 {% endblock %}
