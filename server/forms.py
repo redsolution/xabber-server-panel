@@ -1,4 +1,5 @@
 import re
+import ldap
 
 from django import forms
 from django.db import transaction
@@ -300,6 +301,22 @@ class LDAPSettingsForm(BaseForm):
                     not self.cleaned_data[field]:
                 self.add_error(field, 'This field is required.')
 
+    def check_ldap_conn(self):
+        self.cleaned_data['ldap_server_list'] = \
+            self.cleaned_data.get('ldap_server_list', '').splitlines()
+
+        invalid_server_list = []
+        for server in self.cleaned_data['ldap_server_list']:
+            try:
+                ldap_obj = ldap.initialize('ldap://{}'.format(server))
+                ldap_obj.simple_bind_s()
+            except ldap.SERVER_DOWN:
+                invalid_server_list.append(server)
+
+        if invalid_server_list:
+            self.add_error('ldap_server_list', 'Invalid server list: {}.'
+                           .format(', '.join(invalid_server_list)))
+
     def __init__(self, *args, **kwargs):
         super(LDAPSettingsForm, self).__init__(*args, **kwargs)
         for visible in self.visible_fields():
@@ -313,8 +330,7 @@ class LDAPSettingsForm(BaseForm):
     def before_clean(self):
         if self.cleaned_data['ldap_is_active']:
             self.check_required_fields()
-            self.cleaned_data['ldap_server_list'] = \
-                self.cleaned_data.get('ldap_server_list', '').splitlines()
+            self.check_ldap_conn()
 
     def after_clean(self, cleaned_data):
         with transaction.atomic():
