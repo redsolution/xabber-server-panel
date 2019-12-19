@@ -297,19 +297,26 @@ class ManageLDAPView(PageContextMixin, TemplateView):
     page_section = 'server'
     template_name = 'server/ldap_manage.html'
 
-    def get_page_context(self):
+    def get_page_context(self, vhost=None):
         auth_backends = AuthBackend.objects.all()
         return {
             'auth_backends': auth_backends,
-            'active_tab': SETTINGS_TAB_AUTH_BACKENDS,
-            'form': LDAPSettingsForm()
+            'active_tab': SETTINGS_TAB_AUTH_BACKENDS
         }
 
     def get(self, request, *args, **kwargs):
-        return self.render_to_response(self.get_page_context())
+        context = self.get_context_data()
+        vhost = request.GET.get('vhost')
+        vhost = VirtualHost.objects.filter(name=vhost).first()
+        if vhost:
+            context['form'] = LDAPSettingsForm(
+                vhosts=self.context['vhosts'], vhost=vhost)
+        else:
+            context['form'] = LDAPSettingsForm(vhosts=self.context['vhosts'])
+        return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        form = LDAPSettingsForm(request.POST)
+        form = LDAPSettingsForm(request.POST, vhosts=self.context['vhosts'])
         if form.is_valid():
             update_ejabberd_config()
             return HttpResponseRedirect(reverse('server:manage-ldap'))

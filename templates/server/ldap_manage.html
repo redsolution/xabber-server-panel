@@ -18,14 +18,20 @@
                         <h3>LDAP authentication</h3>
                     </div>
 
-                    {% with form.ldap_is_active as field %}
+                    {% with form.ldap_vhost as field %}
+                        {% include 'include/input_field_with_popover.html' %}
+                    {% endwith %}
+
+                    {% with form.is_enabled as field %}
                         {% include 'include/input_field.html' %}
                     {% endwith %}
 
                     <div id="ldap-settings-block" style="display:none;">
+
                         <div style="margin: 0 0 15px;">
                             <h3>LDAP connection</h3>
                         </div>
+
                         {% with form.ldap_server_list as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
@@ -53,10 +59,6 @@
                         {% with form.ldap_deref_aliases as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-
-                        <div style="margin: 0 0 15px;">
-                            <h3>LDAP authentication details</h3>
-                        </div>
                         {% with form.ldap_base as field %}
                             {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
@@ -97,7 +99,7 @@
     {{ block.super }}
     <script>
         function set_ldap_settings() {
-            var checked = $('#id_ldap_is_active').prop('checked');
+            var checked = $('#id_is_enabled').prop('checked');
             if (checked)
                 $('#ldap-settings-block').show();
             else
@@ -105,36 +107,26 @@
         }
 
         function updateLDAPConnBlock() {
-            var checked = $('#id_ldap_is_active').prop('checked');
+            var checked = $('#id_is_enabled').prop('checked');
             if (checked)
                 $('#ldap-settings-block').show();
             else
                 $('#ldap-settings-block').hide();
         }
 
-        function updateBtnsBlock() {
-            var checked = $('#id_ldap_is_active').prop('checked');
-            if (checked)
-                $("#btn_manage_backends").prop('disabled', false);
-            else {
-                var curr_ldap_state = '{{ form.ldap_backend.is_active }}';
-                curr_ldap_state = curr_ldap_state == 'True' ? true : false;
-                if (curr_ldap_state == checked)
-                    $("#btn_manage_backends").prop('disabled', true);
-                else
-                    $("#btn_manage_backends").prop('disabled', false);
-            }
-        }
-
         $(document).ready(function() {
-            $('#id_ldap_is_active').bootstrapToggle();
+            $('#id_is_enabled').bootstrapToggle();
             updateLDAPConnBlock();
-            updateBtnsBlock();
 
-            $('#id_ldap_is_active').change(function() {
+            $('#id_is_enabled').change(function() {
                 updateLDAPConnBlock();
-                updateBtnsBlock();
             })
+
+            $("#id_ldap_vhost").change(function() {
+                var url = window.location.protocol + '//' +
+                    window.location.host + window.location.pathname;
+                window.location.href = url + '?vhost=' + $(this).val();
+            });
         });
     </script>
 

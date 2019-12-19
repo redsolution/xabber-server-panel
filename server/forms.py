@@ -2,10 +2,9 @@ import re
 import ldap
 
 from django import forms
-from django.db import transaction
 
 from virtualhost.models import User, VirtualHost
-from .models import AuthBackend, LDAPSettings, LDAPAuth
+from .models import LDAPSettings
 
 
 class BaseForm(forms.Form):
@@ -97,7 +96,6 @@ class AddVirtualHostForm(BaseForm):
 
 
 class DeleteVirtualHostForm(BaseForm):
-
     name = forms.CharField(
         max_length=100,
         required=True,
@@ -115,9 +113,15 @@ class DeleteVirtualHostForm(BaseForm):
 
 
 class LDAPSettingsForm(BaseForm):
-    ldap_is_active = forms.BooleanField(
+    ldap_vhost = forms.ChoiceField(
         required=False,
-        label='Enabled'
+        label='Host',
+        widget=forms.Select()
+    )
+    is_enabled = forms.BooleanField(
+        required=False,
+        label='Enable',
+        initial=False
     )
 
     ldap_server_list = forms.CharField(
@@ -273,31 +277,45 @@ class LDAPSettingsForm(BaseForm):
         })
     )
 
-    LDAP_AUTH_FIELDS_REQUIRED = ['ldap_base']
-    LDAP_AUTH_FIELDS = ['ldap_base', 'ldap_uids', 'ldap_filter', 'ldap_dn_filter']
-    LDAP_CONN_FIELDS_REQUIRED = ['ldap_server_list', 'ldap_port']
-    LDAP_CONN_FIELDS = ['ldap_server_list', 'ldap_encrypt', 'ldap_tls_verify',
-                        'ldap_tls_cacertfile', 'ldap_tls_depth', 'ldap_port',
-                        'ldap_rootdn', 'ldap_password', 'ldap_deref_aliases']
-    LDAP_REQUIRED_FIELDS = LDAP_AUTH_FIELDS_REQUIRED + LDAP_CONN_FIELDS_REQUIRED
+    LDAP_FIELDS_REQUIRED = ['ldap_server_list', 'ldap_port', 'ldap_base',
+                            'ldap_vhost']
+    LDAP_FIELDS = ['ldap_server_list', 'ldap_encrypt', 'ldap_tls_verify',
+                   'ldap_tls_cacertfile', 'ldap_tls_depth', 'ldap_port',
+                   'ldap_rootdn', 'ldap_password', 'ldap_deref_aliases',
+                   'ldap_base', 'ldap_uids', 'ldap_filter', 'ldap_dn_filter',
+                   'ldap_vhost', 'is_enabled']
 
-    def init_ldap_fields(self):
-        ldap_auth = LDAPAuth.current()
-        ldap_settings = LDAPSettings.current()
-        for field in self.fields.keys():
-            if ldap_auth and field.startswith('ldap_'):
-                if hasattr(ldap_auth, field):
-                    self.fields[field].initial = getattr(ldap_auth, field)
-            if ldap_settings and field.startswith('ldap_'):
-                if hasattr(ldap_settings, field):
-                    self.fields[field].initial = getattr(ldap_settings, field)
-                elif field == 'ldap_server_list':
-                    self.fields[field].initial = '\n'.join(
-                        [s.server for s in ldap_settings.servers])
+    def init_ldap_vhost(self):
+        self.fields['ldap_vhost'].choices = [
+            (o.name, o.name) for o in self.vhosts]
+        self.fields['ldap_vhost'].initial = self.vhost.name
+
+    def init_ldap_attrs(self):
+        ldap_conn = LDAPSettings.get(vhost=self.vhost)
+        if not ldap_conn:
+            return
+
+        for field in self.LDAP_FIELDS:
+            if hasattr(ldap_conn, field):
+                self.fields[field].initial = getattr(ldap_conn, field)
+            elif field == 'ldap_server_list':
+                self.fields[field].initial = '\n'.join(
+                    [s.server for s in ldap_conn.servers])
+
+    def __init__(self, *args, **kwargs):
+        self.vhosts = kwargs.pop('vhosts')
+        self.vhost = kwargs.pop('vhost', self.vhosts[0])
+
+        super(LDAPSettingsForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+
+        self.init_ldap_vhost()
+        self.init_ldap_attrs()
 
     def check_required_fields(self):
         for field in self.cleaned_data.keys():
-            if field in self.LDAP_REQUIRED_FIELDS and \
+            if field in self.LDAP_FIELDS_REQUIRED and \
                     not self.cleaned_data[field]:
                 self.add_error(field, 'This field is required.')
 
@@ -317,29 +335,14 @@ class LDAPSettingsForm(BaseForm):
             self.add_error('ldap_server_list', 'Invalid server list: {}.'
                            .format(', '.join(invalid_server_list)))
 
-    def __init__(self, *args, **kwargs):
-        super(LDAPSettingsForm, self).__init__(*args, **kwargs)
-        for visible in self.visible_fields():
-            visible.field.widget.attrs['class'] = 'form-control'
-
-        self.ldap_backend = AuthBackend.ldap()
-        self.fields['ldap_is_active'].initial = self.ldap_backend.is_active
-
-        self.init_ldap_fields()
+    def clean_ldap_vhost(self):
+        host = self.cleaned_data.get('ldap_vhost')
+        return VirtualHost.objects.get(name=host)
 
     def before_clean(self):
-        if self.cleaned_data['ldap_is_active']:
-            self.check_required_fields()
-            self.check_ldap_conn()
+        self.check_required_fields()
+        self.check_ldap_conn()
 
     def after_clean(self, cleaned_data):
-        with transaction.atomic():
-            self.ldap_backend.is_active = cleaned_data['ldap_is_active']
-            self.ldap_backend.save()
-
-            if self.cleaned_data['ldap_is_active']:
-                ldap_auth_data = {k: cleaned_data[k] for k in self.LDAP_AUTH_FIELDS}
-                LDAPAuth.create_or_update(ldap_auth_data)
-
-                ldap_conn_data = {k: cleaned_data[k] for k in self.LDAP_CONN_FIELDS}
-                LDAPSettings.create_or_update(ldap_conn_data)
+        data = {k: cleaned_data[k] for k in self.LDAP_FIELDS}
+        LDAPSettings.create_or_update(data)
