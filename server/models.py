@@ -1,5 +1,7 @@
 from django.db import models
 
+from virtualhost.models import VirtualHost
+
 
 class ConfigData(models.Model):
     db_host = models.CharField(max_length=256)
@@ -11,6 +13,7 @@ class ConfigData(models.Model):
         return 'Server config'
 
 
+# TODO remove
 class AuthBackend(models.Model):
     BACKEND_SQL = 'sql'
     BACKEND_LDAP = 'ldap'
@@ -35,45 +38,6 @@ class AuthBackend(models.Model):
             return cls.objects.get(name=cls.BACKEND_LDAP)
         except cls.DoesNotExist:
             return None
-
-
-class LDAPAuth(models.Model):
-    ldap_base = models.CharField(max_length=100)
-    ldap_uids = models.CharField(max_length=256, null=True, blank=True)
-    ldap_filter = models.CharField(max_length=256, null=True, blank=True)
-    ldap_dn_filter = models.CharField(max_length=256, null=True, blank=True)
-
-    def __unicode__(self):
-        return 'LDAP Auth'
-
-    @classmethod
-    def current(cls):
-        try:
-            return cls.objects.all().first()
-        except IndexError:
-            return None
-
-    @property
-    def uids(self):
-        return self.ldapauth_set.all()
-
-    @property
-    def data(self):
-        return {
-            "ldap_is_active": AuthBackend.ldap().is_active,
-            "ldap_uids": self.ldap_uids,
-            "ldap_base": self.ldap_base,
-            "ldap_filter": self.ldap_filter,
-            "ldap_dn_filter": self.ldap_dn_filter
-        }
-
-    @classmethod
-    def create_or_update(cls, data):
-        if cls.current():
-            LDAPAuth.objects.all().delete()
-
-        instance = cls.objects.create(**data)
-        return instance
 
 
 # class LDAPAuthUid(models.Model):
@@ -131,45 +95,35 @@ class LDAPSettings(models.Model):
         max_length=50, null=True, blank=True)
     ldap_deref_aliases = models.CharField(
         max_length=100, choices=DEFER_ALIASES_CHOICE, null=True, blank=True)
+    ldap_base = models.CharField(max_length=100)
+    ldap_uids = models.CharField(max_length=256, null=True, blank=True)
+    ldap_filter = models.CharField(max_length=256, null=True, blank=True)
+    ldap_dn_filter = models.CharField(max_length=256, null=True, blank=True)
+    ldap_vhost = models.OneToOneField(VirtualHost)
+    is_enabled = models.BooleanField(default=False)
 
     def __unicode__(self):
         return 'LDAP Settings'
-
-    @classmethod
-    def current(cls):
-        try:
-            return cls.objects.all().first()
-        except IndexError:
-            return None
 
     @property
     def servers(self):
         return self.ldapsettingsserver_set.all()
 
     @property
-    def data(self):
-        return {
-            "ldap_is_active": AuthBackend.ldap().is_active,
-            "ldap_servers": self.servers,
-            "ldap_port": self.ldap_port,
-            "ldap_encrypt": self.ldap_encrypt,
-            "ldap_tls_verify": self.ldap_tls_verify,
-            "ldap_tls_cacertfile": self.ldap_tls_cacertfile,
-            "ldap_tls_depth": self.ldap_tls_depth,
-            "ldap_rootdn": self.ldap_rootdn,
-            "ldap_password": self.ldap_password,
-            "ldap_deref_aliases": self.ldap_deref_aliases
-        }
+    def uids(self):
+        return self.ldapauth_set.all()
 
     @classmethod
-    def has_saved_settings(cls):
-        return True if cls.current() else False
+    def get(cls, vhost):
+        if hasattr(vhost, 'ldapsettings'):
+            return vhost.ldapsettings
+        return None
 
     @classmethod
     def create_or_update(cls, data):
-        if cls.current():
-            LDAPSettingsServer.objects.all().delete()
-            LDAPSettings.objects.all().delete()
+        vhost = data['ldap_vhost']
+        if cls.get(vhost):
+            LDAPSettings.objects.filter(ldap_vhost=vhost).delete()
 
         ldap_server_list = data.pop('ldap_server_list')
         instance = cls.objects.create(**data)
