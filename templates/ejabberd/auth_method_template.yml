@@ -1,2 +1,0 @@
-auth_method: {% for backend in backend_list %}
-  - {{ backend }}{% endfor %}

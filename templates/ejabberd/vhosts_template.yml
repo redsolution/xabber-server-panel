@@ -1,4 +1,25 @@
 hosts: {% for host in vhosts %}
-  - "{{ host }}"{% endfor%}
+  - "{{ host }}"{% endfor %}
 
 oauth_default_server: "{{ vhosts|first }}"
+
+host_config: {% for host in vhosts %}
+  "{{ host.name }}":
+    auth_method:
+      - sql
+      {% if host.ldapsettings and host.ldapsettings.is_enabled %}- ldap
+    ldap_servers: {% for s in host.ldapsettings.servers %}
+      - "{{ s.server }}"{% endfor %}
+    ldap_port: {{ host.ldapsettings.ldap_port }}
+    ldap_base: "{{ host.ldapsettings.ldap_base }}"
+    {% if ldap_uids %}ldap_uids: "{{ host.ldapsettings.ldap_uids }}"{% endif %}
+    {% if ldap_filter %}ldap_filter: "{{ host.ldapsettings.ldap_filter }}"{% endif %}
+    {% if ldap_dn_filter %}ldap_dn_filter: "{{ host.ldapsettings.ldap_dn_filter }}"{% endif %}
+    {% if ldap_encrypt %}ldap_encrypt: {{ host.ldapsettings.ldap_encrypt }}{% endif %}
+    {% if ldap_tls_verify %}ldap_tls_verify: {{ host.ldapsettings.ldap_tls_verify }}{% endif %}
+    {% if ldap_tls_cacertfile %}ldap_tls_cacertfile: "{{ host.ldapsettings.ldap_tls_cacertfile }}"{% endif %}
+    {% if ldap_tls_depth %}ldap_tls_depth: {{ host.ldapsettings.ldap_tls_depth }}{% endif %}
+    {% if ldap_rootdn %}ldap_rootdn: "{{ host.ldapsettings.ldap_rootdn }}"{% endif %}
+    {% if ldap_password %}ldap_password: "{{ host.ldapsettings.ldap_password }}"{% endif %}
+    {% if ldap_deref_aliases %}ldap_deref_aliases: {{ host.ldapsettings.ldap_deref_aliases }}{% endif %}{% endif %}
+{% endfor %}
