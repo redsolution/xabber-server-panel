@@ -65,15 +65,12 @@ class UserListView(VhostContextView, TemplateView):
                                      vhost=vhost,
                                      context={"error": users.get("error")})
 
-        django_users = list(User.objects.filter(host=vhost).values())
         data = []
-        for user in users:
-            django_user = filter(lambda o: o['username'] == user, django_users)
-            data.append({
-                "username": user,
-                "user": django_user[0] if django_user else None,
-                "photo_url": settings.MEDIA_URL + django_user[0]["photo"] if django_user else None
-             })
+        for username in users:
+            django_user, created = User.objects.get_or_create(
+                username=username, host=vhost)
+            data.append({"username": username,
+                         "user": django_user})
 
         pagination_limit = settings.PAGINATION_PAGE_SIZE
         paginator = Paginator(data, pagination_limit)

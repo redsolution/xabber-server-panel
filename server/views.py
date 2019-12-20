@@ -305,7 +305,7 @@ class ManageLDAPView(PageContextMixin, TemplateView):
         }
 
     def get(self, request, *args, **kwargs):
-        context = self.get_context_data()
+        context = self.get_page_context()
         vhost = request.GET.get('vhost')
         vhost = VirtualHost.objects.filter(name=vhost).first()
         if vhost:

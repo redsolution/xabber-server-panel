@@ -48,7 +48,7 @@
                             <tr>
                                 <td class="table-data">
                                     {% if obj.user.photo %}
-                                        <img class="user-avatar-preview" src="{{ obj.photo_url }}" />
+                                        <img class="user-avatar-preview" src="{{ obj.photo.url }}" />
                                     {% else %}
                                         {% if obj.user %}
                                             <p class="user-avatar-preview-p" data-letters="{% get_user_initials obj.user %}"></p>
