@@ -1,5 +1,6 @@
 import re
-import ldap
+
+from ldap3 import Server, Connection, ALL
 
 from django import forms
 
@@ -324,12 +325,16 @@ class LDAPSettingsForm(BaseForm):
             self.cleaned_data.get('ldap_server_list', '').splitlines()
 
         invalid_server_list = []
-        for server in self.cleaned_data['ldap_server_list']:
+        for server_name in self.cleaned_data['ldap_server_list']:
+            server = Server(server_name, get_info=ALL)
+            conn = Connection(server)
             try:
-                ldap_obj = ldap.initialize('ldap://{}'.format(server))
-                ldap_obj.simple_bind_s()
-            except ldap.SERVER_DOWN:
-                invalid_server_list.append(server)
+                success = conn.bind()
+            except Exception:
+                invalid_server_list.append(server_name)
+            else:
+                if not success:
+                    invalid_server_list.append(server_name)
 
         if invalid_server_list:
             self.add_error('ldap_server_list', 'Invalid server list: {}.'
