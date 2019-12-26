@@ -275,5 +275,8 @@ commands:
 oauth_expire: 3600
 oauth_access: all
 
+auth_use_cache: false
+
+
 include_config_file: "{{ VHOST_FILE }}"
 include_config_file: "{{ ADMIN_ACL_FILE }}"
