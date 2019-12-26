@@ -64,7 +64,7 @@
                         <ul class="list-group list-group-flush list-group-horizontal">
                             <li class="list-group-item"><h3>Members</h3></li>
                             <li class="list-group-item"><div class="divider" style="height:24px"></div></li>
-                            <li class="list-group-item"><h4>{{ curr_page_title }}</h4></li>
+                            <li class="list-group-item"><h4>{{ title }} members</h4></li>
                         </ul>
                     </li>
                     <li class="list-group-item" style="padding: 0; float: right;">
@@ -87,7 +87,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for member in members %}
+                {% for member in data %}
                     <tr>
                         <td class="table-data">
                             {% if member.member_verbose != 'All' %}
@@ -129,9 +129,8 @@
             </tbody>
         </table>
 
-        {% with members as data %}
-            {% include 'include/pagination.html' %}
-        {% endwith %}
+
+        {% include 'include/pagination.html' %}
     </div>
 {% endblock %}
 

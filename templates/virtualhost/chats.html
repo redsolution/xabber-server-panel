@@ -10,7 +10,7 @@
                 <ul class="list-group list-group-flush list-group-horizontal">
                     <li class="list-group-item"><h1>Group chats</h1></li>
                     <li class="list-group-item"><div class="divider"></div></li>
-                    <li class="list-group-item"><h4>{% if curr_page_title %}{{ curr_page_title }}{% else %}0{% endif %} chats</h4></li>
+                    <li class="list-group-item"><h4>{{ title }} chats</h4></li>
                     <li class="list-group-item right-btn">
                         <div class="dropdown">
                             <button class="btn dropdown-toggle"
@@ -60,11 +60,10 @@
                         {% endfor %}
                     </tbody>
                 </table>
-
-                {% include 'include/pagination.html' %}
-
             </div>
         </div>
+
+        {% include 'include/pagination.html' %}
     </div>
 {% endblock %}
 

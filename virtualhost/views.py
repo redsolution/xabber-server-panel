@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 
 from xmppserverui import settings
+from xmppserverui.utils import get_pagination_data
 from xmppserverui.mixins import PageContextMixin, ServerStartedMixin, SQLAuthMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     CreateGroupForm, EditGroupForm, DeleteGroupForm, AddGroupMemberForm, \
@@ -24,16 +25,8 @@ GROUP_TAB_MEMBERS = 'group-members'
 GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 
 
-def get_page_title_old(paginator, data, hosts_count):
-    return "{}-{} of {}".format(data.start_index(),
-                                data.end_index(),
-                                paginator.count + hosts_count) \
-        if data.start_index() != data.end_index() \
-        else "{} of {}".format(data.end_index(), paginator.count + hosts_count)
-
-
-def get_page_title(paginator, data, hosts_count):
-    return str(paginator.count + hosts_count)
+# def get_page_title(paginator, data, hosts_count):
+#     return str(paginator.count + hosts_count)
 
 
 class VhostContextView(ServerStartedMixin):
@@ -58,37 +51,31 @@ class UserListView(VhostContextView, TemplateView):
         user = request.user
         vhost = self.get_vhost(request)
         users = user.api.get_registered_users({"host": vhost})
-        user_count = len(users)
 
         if "error" in users:
             return self.get_response(request,
                                      vhost=vhost,
                                      context={"error": users.get("error")})
 
-        data = []
+        django_users = User.objects.filter(host=vhost).values('username')
+        django_users = [o['username'] for o in django_users]
+        unknown_users = []
         for username in users:
-            django_user, created = User.objects.get_or_create(
-                username=username, host=vhost)
-            data.append({"username": username,
-                         "user": django_user})
+            if username not in django_users:
+                unknown_users.append(User(username=username, host=vhost))
+        User.objects.bulk_create(unknown_users)
 
-        pagination_limit = settings.PAGINATION_PAGE_SIZE
-        paginator = Paginator(data, pagination_limit)
-        paginator_page = int(request.GET.get('page', 1))
-        data = paginator.page(paginator_page)
-        page_title = '{all} of {all}'.format(all=user_count) \
-            if len(paginator.page_range) < 2 \
-            else '{first} - {last} of {all}'.format(
-            first=(paginator_page - 1) * pagination_limit + 1,
-            last=(paginator_page - 1) * pagination_limit + len(data),
-            all=user_count)
+        django_users = list(User.objects.filter(host=vhost).values())
+        data = []
+        for user in users:
+            django_user = filter(lambda o: o['username'] == user, django_users)
+            django_user = django_user[0] if django_user else None
+            if django_user:
+                data.append({"username": user, "user": django_user})
 
-        return self.get_response(request,
-                                 vhost=vhost,
-                                 context={"data": data,
-                                          "pages": paginator.page_range,
-                                          "curr_page": paginator_page,
-                                          "curr_page_title": page_title})
+        page = request.GET.get('page', 1)
+        context = get_pagination_data(data, page)
+        return self.get_response(request, vhost=vhost, context=context)
 
 
 class UserCreateView(SQLAuthMixin, TemplateView):
@@ -449,17 +436,9 @@ class GroupListView(VhostContextView, TemplateView):
         data.sort(key=lambda k:  k['group'])
         data.sort(key=lambda k: k['members'], reverse=True)
 
-        paginator = Paginator(data, settings.PAGINATION_PAGE_SIZE)
-        page = int(request.GET.get('page', 1))
-        groups = paginator.page(page)
-        page_title = get_page_title(paginator, groups, hosts_count=0)
-
-        return self.get_response(request,
-                                 vhost=vhost,
-                                 context={"group_list": groups,
-                                          "pages": paginator.page_range,
-                                          "curr_page": page,
-                                          "curr_page_title": page_title})
+        page = request.GET.get('page', 1)
+        context = get_pagination_data(data, page)
+        return self.get_response(request, vhost=vhost, context=context)
 
 
 class GroupCreateView(PageContextMixin, TemplateView):
@@ -558,17 +537,11 @@ class GroupMembersView(PageContextMixin, TemplateView):
         group = self.get_group(kwargs['group_id'])
         member_list = self.get_group_members(group)
 
-        paginator = Paginator(member_list, settings.PAGINATION_PAGE_SIZE)
-        page = int(request.GET.get('page', 1))
-        members = paginator.page(page)
-        page_title = get_page_title(paginator, members, hosts_count=self.get_adv_users_count(group))
-
-        return {"active_tab": GROUP_TAB_MEMBERS,
-                "group": group,
-                "members": members,
-                "pages": paginator.page_range,
-                "curr_page": page,
-                "curr_page_title": page_title}
+        page = request.GET.get('page', 1)
+        context = get_pagination_data(member_list, page)
+        context['group'] = group
+        context['active_tab'] = GROUP_TAB_MEMBERS
+        return context
 
     def get(self, request, *args, **kwargs):
         context = self.get_page_context(request, *args, **kwargs)
@@ -833,8 +806,6 @@ class ChatListView(VhostContextView, TemplateView):
         pagination_limit = settings.PAGINATION_PAGE_SIZE
         pagination_page = int(request.GET.get('page', 1))
 
-        chat_count = user.api.xabber_registered_chats_count(
-            {"host": vhost}).get('number')
         chats = user.api.xabber_registered_chats(
             {"host": vhost,
              "limit": pagination_limit,
@@ -853,18 +824,6 @@ class ChatListView(VhostContextView, TemplateView):
             data.append({"chat": chat,
                          "owner_id": user[0]['id'] if user else None})
 
-        page_count = int(math.ceil(float(chat_count) / pagination_limit))
-        pagination_range = xrange(1, page_count + 1)
-        page_title = '{all} of {all}'.format(all=chat_count) \
-            if len(pagination_range) < 2 \
-            else '{first} - {last} of {all}'.format(
-            first=(pagination_page - 1) * pagination_limit + 1,
-            last=(pagination_page - 1) * pagination_limit + len(data),
-            all=chat_count)
-
-        return self.get_response(request,
-                                 vhost=vhost,
-                                 context={"data": data,
-                                          "pages": pagination_range,
-                                          "curr_page": pagination_page,
-                                          "curr_page_title": page_title})
+        page = request.GET.get('page', 1)
+        context = get_pagination_data(data, page)
+        return self.get_response(request, vhost=vhost, context=context)

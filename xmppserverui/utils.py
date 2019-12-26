@@ -4,6 +4,7 @@ import subprocess
 import string
 import random
 
+from django.core.paginator import Paginator, EmptyPage
 from django.core.urlresolvers import reverse
 from django.contrib.auth import logout
 
@@ -46,6 +47,42 @@ def logout_full(request):
     if request.user.is_authenticated():
         request.user.api.logout(host=request.session['_auth_user_host'])
         logout(request)
+
+
+def get_pagination_data(data, page):
+    limit = settings.PAGINATION_PAGE_SIZE
+    total_count = len(data)
+    try:
+        page = int(page)
+    except ValueError:
+        page = 1
+
+    paginator = Paginator(data, limit)
+    try:
+        data = paginator.page(page)
+    except EmptyPage:
+        data = paginator.page(paginator.num_pages)
+
+    if paginator.num_pages <= 7:
+        page_range = paginator.page_range
+    elif page <= 3:
+        page_range = [1, 2, 3, '...', paginator.num_pages]
+    elif page >= paginator.num_pages - 2:
+        page_range = [1, '...', paginator.num_pages - 2,
+                      paginator.num_pages - 1, paginator.num_pages]
+    else:
+        page_range = [1, '...', page - 1, page, page + 1, '...',
+                      paginator.num_pages]
+
+    title = '{all} of {all}'.format(all=total_count) \
+            if len(paginator.page_range) < 2 \
+            else '{first} - {last} of {all}'.format(
+            first=(page - 1) * limit + 1,
+            last=(page - 1) * limit + len(data),
+            all=total_count)
+
+    return {"data": data, "curr_page": page, "title": title,
+            "page_range": page_range}
 
 
 def execute_ejabberd_cmd(cmd):
