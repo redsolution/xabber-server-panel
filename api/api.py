@@ -24,7 +24,9 @@ class EjabberdAPI(object):
 
     def _wrapped_call(self, method, url, status_code, data):
         try:
-            self.raw_response = method(url, json=data)
+            self.raw_response = method(url,
+                                       json=data,
+                                       timeout=settings.HTTP_REQUEST_TIMEOUT)
         except requests.exceptions.ConnectionError:
             self.status_code = 503
             raise ResponseException({'type': 'connection_error'})
@@ -140,8 +142,11 @@ class EjabberdAPI(object):
     def unregister_user(self, data, **kwargs):
         data_copy = data.copy()
         data_copy['user'] = data_copy.pop('username')
-        return self._call_method('post', '/unregister', 200, data=data_copy,
-                                 **kwargs)
+        self._call_method('post', '/unregister', 200, data=data_copy, **kwargs)
+        self.success = self.response == 0
+        if not self.success:
+            self.response = {'error': 'This user has not been deleted.'}
+        return self.response
 
     def set_vcard(self, data, **kwargs):
         data['name'] = data.get('name', '').upper()
@@ -202,7 +207,7 @@ class EjabberdAPI(object):
             if not self.success:
                 self.unregister_user({"username": username, "host": host})
                 self.success = False
-                self.response = {'error': 'Error with creating user.'}
+                self.response = {'error': 'User has not been created.'}
                 break
 
         return self.success

@@ -166,6 +166,9 @@ GENERATED_PASSWORD_MAX_LEN = 10
 
 PAGINATION_PAGE_SIZE = 30
 
+# in seconds
+HTTP_REQUEST_TIMEOUT = 5
+
 
 # Installer settings
 
