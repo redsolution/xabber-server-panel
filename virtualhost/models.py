@@ -54,6 +54,32 @@ class User(AbstractBaseUser):
     def get_short_name(self):
         return self.first_name
 
+    @property
+    def vhost(self):
+        try:
+            return VirtualHost.objects.get(name=self.host)
+        except VirtualHost.DoesNotExist:
+            return None
+
+    @property
+    def allowed_delete(self):
+        return False \
+            if (hasattr(self.vhost, 'ldapsettings') and
+                self.vhost.ldapsettings.is_enabled) \
+            else True
+
+    @property
+    def allowed_change_vcard(self):
+        return True
+
+    @property
+    def allowed_change_password(self):
+        return False \
+            if (hasattr(self.vhost, 'ldapsettings') and
+                self.vhost.ldapsettings.is_enabled and
+                not self.is_admin) \
+            else True
+
     def __unicode__(self):
         return self.full_jid
 

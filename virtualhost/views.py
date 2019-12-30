@@ -8,11 +8,11 @@ from django.http import HttpResponseRedirect, Http404, HttpResponse
 
 from xmppserverui import settings
 from xmppserverui.utils import get_pagination_data
-from xmppserverui.mixins import PageContextMixin, ServerStartedMixin, SQLAuthMixin
+from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     CreateGroupForm, EditGroupForm, DeleteGroupForm, AddGroupMemberForm, \
     DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm
-from .models import User, Group, GroupMember, GroupChat
+from .models import User, Group, GroupMember, GroupChat, VirtualHost
 
 
 USER_TAB_DETAILS = 'user-details'
@@ -33,6 +33,14 @@ class VhostContextView(ServerStartedMixin):
     def get_vhost(self, request, *args, **kwargs):
         return request.COOKIES['vhost'] if 'vhost' in request.COOKIES \
             else self.context['vhosts'].first().name
+
+    def get_vhost_obj(self, request, *args, **kwargs):
+        host_name = self.get_vhost(request)
+        try:
+            host = VirtualHost.objects.get(name=host_name)
+        except Exception as e:
+            host = None
+        return host
 
     def get_response(self, request, *args, **kwargs):
         response = self.render_to_response(kwargs['context'])
@@ -65,35 +73,51 @@ class UserListView(VhostContextView, TemplateView):
                 unknown_users.append(User(username=username, host=vhost))
         User.objects.bulk_create(unknown_users)
 
+        vhost_obj = self.get_vhost_obj(request)
+        allowed_user_change = True
+        allowed_user_delete = False \
+            if (hasattr(vhost_obj, 'ldapsettings') and
+                vhost_obj.ldapsettings.is_enabled) \
+            else True
+
         django_users = list(User.objects.filter(host=vhost).values())
         data = []
         for user in users:
             django_user = filter(lambda o: o['username'] == user, django_users)
             django_user = django_user[0] if django_user else None
             if django_user:
-                data.append({"username": user, "user": django_user})
+                data.append({"username": user,
+                             "user": django_user,
+                             "allowed_user_change": allowed_user_change,
+                             "allowed_user_delete": allowed_user_delete})
 
         page = request.GET.get('page', 1)
         context = get_pagination_data(data, page)
         return self.get_response(request, vhost=vhost, context=context)
 
 
-class UserCreateView(SQLAuthMixin, TemplateView):
+class UserCreateView(PageContextMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_create.html'
 
     def get(self, request, *args, **kwargs):
+        if not self.context['vhosts_cr']:
+            return HttpResponseRedirect(reverse('error:403'))
+
         user = request.user
-        form = RegisterUserForm(user, vhosts=self.context['vhosts'])
+        form = RegisterUserForm(user, vhosts=self.context['vhosts_cr'])
         return self.render_to_response({
             "form": form,
             "gen_pass_len": settings.GENERATED_PASSWORD_MAX_LEN
         })
 
     def post(self, request, *args, **kwargs):
+        if not self.context['vhosts_cr']:
+            return HttpResponseRedirect(reverse('error:403'))
+
         user = request.user
         form = RegisterUserForm(user, request.POST, request.FILES,
-                                vhosts=self.context['vhosts'])
+                                vhosts=self.context['vhosts_cr'])
         if form.is_valid():
             return HttpResponseRedirect(
                 reverse('virtualhost:user-created',
@@ -104,11 +128,14 @@ class UserCreateView(SQLAuthMixin, TemplateView):
         })
 
 
-class UserCreatedView(SQLAuthMixin, TemplateView):
+class UserCreatedView(PageContextMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_created.html'
 
     def get(self, request, *args, **kwargs):
+        if not self.context['vhosts_cr']:
+            return HttpResponseRedirect(reverse('error:403'))
+
         try:
             new_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
@@ -198,7 +225,7 @@ class UserDetailsView(PageContextMixin, TemplateView):
                                         "active_tab": USER_TAB_DETAILS})
 
 
-class UserSecurityView(SQLAuthMixin, TemplateView):
+class UserSecurityView(PageContextMixin, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/user_security.html'
 
@@ -207,6 +234,9 @@ class UserSecurityView(SQLAuthMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        else:
+            if not curr_user.allowed_change_password:
+                return HttpResponseRedirect(reverse('error:403'))
 
         user = request.user
         form = ChangeUserPasswordForm(user)
@@ -219,6 +249,9 @@ class UserSecurityView(SQLAuthMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        else:
+            if not curr_user.allowed_change_password:
+                return HttpResponseRedirect(reverse('error:403'))
 
         user = request.user
         form = ChangeUserPasswordForm(user, request.POST, user_to_change=curr_user)
@@ -336,6 +369,10 @@ class DeleteUserView(PageContextMixin, TemplateView):
             user_to_del = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        else:
+            if not user_to_del.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+
         user = request.user
         username = request.session.get('_auth_user_username')
         host = request.session.get('_auth_user_host')
@@ -348,6 +385,10 @@ class DeleteUserView(PageContextMixin, TemplateView):
             user_to_del = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        else:
+            if not user_to_del.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+
         user = request.user
         username = request.session.get('_auth_user_username')
         host = request.session.get('_auth_user_host')

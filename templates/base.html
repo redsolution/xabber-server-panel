@@ -71,15 +71,15 @@
                             Create
                         </button>
                         <div class="dropdown-menu">
-                            {% if not is_ldap_active %}
-                                <a class="dropdown-item large-padding" href="{% url 'virtualhost:user-create' %}">
-                                    <b>User</b>
-                                    <div class="dropdown-item-secondary-text">
-                                        Add new user account. Users can send and
-                                        receive messages, create and join group chats,
-                                        make audio and video calls.
-                                    </div>
-                                </a>
+                            {% if vhosts_cr %}
+                            <a class="dropdown-item large-padding" href="{% url 'virtualhost:user-create' %}">
+                                <b>User</b>
+                                <div class="dropdown-item-secondary-text">
+                                    Add new user account. Users can send and
+                                    receive messages, create and join group chats,
+                                    make audio and video calls.
+                                </div>
+                            </a>
                             {% endif %}
                             <a class="dropdown-item large-padding" href="{% url 'virtualhost:group-create' %}">
                                 <b>Group</b>

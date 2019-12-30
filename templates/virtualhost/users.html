@@ -81,10 +81,16 @@
                                         </i>
                                         <div class="dropdown-menu"
                                               aria-labelledby="dropdown-user-actions-2">
-                                            <a class="dropdown-item" href="{% url 'virtualhost:user-vcard' obj.user.id %}">Edit vcard</a>
-                                            <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
-                                                Delete user
-                                            </a>
+                                            {% if obj.allowed_user_change %}
+                                                <a class="dropdown-item" href="{% url 'virtualhost:user-vcard' obj.user.id %}">
+                                                    Edit vcard
+                                                </a>
+                                            {% endif %}
+                                            {% if obj.allowed_user_delete %}
+                                                <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
+                                                    Delete user
+                                                </a>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </td>

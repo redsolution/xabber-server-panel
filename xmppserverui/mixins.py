@@ -2,7 +2,7 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
 from virtualhost.models import VirtualHost, User
-from server.models import AuthBackend
+from server.models import LDAPSettings
 from server.utils import is_ejabberd_running
 from .utils import get_default_url, is_xmpp_server_installed
 
@@ -78,17 +78,23 @@ class PageContextMixin(AdminMixin):
             user = User.objects.get(username=username, host=host)
         except User.DoesNotExist:
             user = None
-        page_data = {
-            'section': getattr(self, 'page_section', '')
-        }
+
+        page_data = {'section': getattr(self, 'page_section', '')}
         page_data.update(kwargs)
+
         need_to_request_user_pass = request.user.api.token is None \
                                     and is_ejabberd_running()['success']
+
+        vhosts = VirtualHost.objects.all().order_by('id')
+        vhost_ids = [o.ldap_vhost.id for o in
+                     LDAPSettings.objects.filter(is_enabled=True)]
+        vhosts_cr = vhosts.exclude(id__in=vhost_ids)
+
         self.context = {'page': page_data,
                         'auth_user': user,
                         'need_to_request_user_pass': need_to_request_user_pass,
-                        'vhosts': VirtualHost.objects.all().order_by('id'),
-                        'is_ldap_active': AuthBackend.ldap().is_active}
+                        'vhosts': vhosts,
+                        'vhosts_cr': vhosts_cr}
 
     def fill_page_context(self, request, *args, **kwargs):
         pass
@@ -99,15 +105,6 @@ class PageContextMixin(AdminMixin):
     def render_to_response(self, context, **response_kwargs):
         self.context.update(context)
         return super(PageContextMixin, self).render_to_response(self.context, **response_kwargs)
-
-
-class SQLAuthMixin(PageContextMixin):
-    permission_methods = PageContextMixin.permission_methods + \
-                         ['is_sql_auth_backend']
-
-    def is_sql_auth_backend(self, request, *args, **kwargs):
-        if AuthBackend.ldap().is_active:
-            return HttpResponseRedirect(reverse('error:403'))
 
 
 class ServerStartedMixin(PageContextMixin):

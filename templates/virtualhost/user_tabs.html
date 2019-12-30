@@ -33,7 +33,7 @@
                         <a class="nav-link{% if active_tab == 'user-vcard' %} active{% endif %}"
                            href="{% url 'virtualhost:user-vcard' curr_user.id %}">vCard</a>
                     </li>
-                    {% if not is_ldap_active %}
+                    {% if curr_user.allowed_change_password %}
                     <li class="nav-item">
                         <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
                            href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
