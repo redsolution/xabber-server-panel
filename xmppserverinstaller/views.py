@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import socket
 
 from django.views.generic import TemplateView
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
 
 from django.conf import settings

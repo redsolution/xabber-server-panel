@@ -2,6 +2,8 @@ from django.conf.urls import url
 
 from virtualhost import views
 
+app_name = 'xmppserverui'
+
 urlpatterns = [
     url(r'^users/$', views.UserListView.as_view(), name='users'),
     url(r'^users/create/$', views.UserCreateView.as_view(), name='user-create'),

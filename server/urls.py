@@ -2,6 +2,7 @@ from django.conf.urls import url
 
 from server import views
 
+app_name = 'xmppserverui'
 
 urlpatterns = [
     url(r'^dashboard/$', views.ServerDashboardView.as_view(), name='dashboard'),

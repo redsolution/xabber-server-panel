@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .utils import is_installation_mode, check_predefined_config
 from xmppserverui.mixins import BaseMixin

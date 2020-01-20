@@ -8,12 +8,13 @@ from django.contrib.auth.models import AbstractBaseUser
 class VirtualHost(models.Model):
     name = models.CharField(max_length=256)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
 class User(AbstractBaseUser):
     username = models.CharField(max_length=256)
+    USERNAME_FIELD = 'username'
     password = models.CharField(max_length=128, null=True)
     is_admin = models.BooleanField(default=False)
     host = models.CharField(max_length=256)
@@ -80,7 +81,7 @@ class User(AbstractBaseUser):
                 not self.is_admin) \
             else True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.full_jid
 
 
@@ -104,12 +105,12 @@ class Group(models.Model):
     def is_system(self):
         return self.prefix is not None
 
-    def __unicode__(self):
+    def __str__(self):
         return self.full_jid
 
 
 class GroupMember(models.Model):
-    group = models.ForeignKey(Group)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
     username = models.CharField(max_length=256)
     host = models.CharField(max_length=256)
 
@@ -123,7 +124,7 @@ class GroupMember(models.Model):
         else:
             return 'all@{}'.format(self.host)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.full_jid
 
 
@@ -141,5 +142,5 @@ class GroupChat(models.Model):
     def full_jid(self):
         return '{}@{}'.format(self.name, self.host)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.full_jid

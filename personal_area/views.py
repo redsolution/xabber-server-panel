@@ -1,6 +1,6 @@
 from django.views.generic import TemplateView
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404
 from .mixins import *
 from virtualhost.models import *
@@ -19,7 +19,7 @@ class UserProfileDetailView(PersonalAreaContextMixin, TemplateView):
         user.api.get_vcard({"user": curr_user.username,
                             "host": curr_user.host,
                             "name": "nickname"})
-        print (user.api.success)
+        print(user.api.success)
         if user.api.success:
             nickname = user.api.response["content"]
 
@@ -27,7 +27,7 @@ class UserProfileDetailView(PersonalAreaContextMixin, TemplateView):
                              "host": curr_user.host,
                              "name": "n",
                              "subname": "given"})
-        print (user.api.success)
+        print(user.api.success)
         if user.api.success:
             first_name = user.api.response["content"]
 

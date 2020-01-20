@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from virtualhost.models import VirtualHost, User
 from server.models import LDAPSettings
@@ -35,7 +35,7 @@ class NoAuthMixin(ServerInstalledMixin):
     permission_methods = ServerInstalledMixin.permission_methods + ['is_anonymous']
 
     def is_anonymous(self, request, *args, **kwargs):
-        if not request.user.is_anonymous():
+        if not request.user.is_anonymous:
             return HttpResponseRedirect(get_default_url(request.user))
 
 
@@ -43,7 +43,7 @@ class AuthMixin(ServerInstalledMixin):
     permission_methods = ServerInstalledMixin.permission_methods + ['is_authenticated']
 
     def is_authenticated(self, request, *args, **kwargs):
-        if request.user.is_anonymous():
+        if request.user.is_anonymous:
             return HttpResponseRedirect(get_default_url(request.user))
 
 
@@ -51,7 +51,7 @@ class AdminMixin(AuthMixin):
     permission_methods = ['is_admin']
 
     def is_admin(self, request, *args, **kwargs):
-        if request.user.is_anonymous():
+        if request.user.is_anonymous:
             return HttpResponseRedirect(get_default_url(request.user))
         username = request.session.get('_auth_user_username')
         host = request.session.get('_auth_user_host')

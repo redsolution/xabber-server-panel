@@ -5,10 +5,10 @@ import string
 import random
 
 from django.core.paginator import Paginator, EmptyPage
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth import logout
 
-from xmppserverui import settings
+from django.conf import settings
 from xmppserverinstaller.utils import set_installation_mode
 
 
@@ -29,7 +29,7 @@ def is_xmpp_server_should_start():
 
 def get_default_url(user, admin=None):
     if is_xmpp_server_installed():
-        if user.is_anonymous():
+        if user.is_anonymous:
             return reverse('auth:login')
         # return reverse('server:dashboard')
         if admin is not None:
@@ -44,7 +44,7 @@ def get_default_url(user, admin=None):
 
 
 def logout_full(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         request.user.api.logout(host=request.session['_auth_user_host'])
         logout(request)
 

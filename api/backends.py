@@ -6,7 +6,7 @@ from virtualhost.models import User
 
 
 class EjabberdAPIBackend(object):
-    def authenticate(self, api=None, **kwargs):
+    def authenticate(self, request, api=None, **kwargs):
         if api is None:
             return None
         return EjabberdAccount(api) if api.authorized else None
@@ -25,7 +25,7 @@ class EjabberdAPIBackend(object):
 
 
 class DjangoUserBackend(object):
-    def authenticate(self, username, password, **kwargs):
+    def authenticate(self, request, username, password, **kwargs):
         username, host = username.split('@')
         try:
             user = User.objects.get(username=username, host=host)

@@ -12,8 +12,8 @@ characters, case folding and canonicalisation through L{stringprep<twisted.words
 """
 
 # from twisted.python.compat import _PY3, unicode
-from compat import _PY3, unicode
-from xmpp_stringprep import nodeprep, resourceprep, nameprep
+from .compat import _PY3, unicode
+from .xmpp_stringprep import nodeprep, resourceprep, nameprep
 
 class InvalidFormat(Exception):
     """

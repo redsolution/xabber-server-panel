@@ -9,7 +9,7 @@ class ConfigData(models.Model):
     db_user = models.CharField(max_length=256)
     db_user_pass = models.CharField(max_length=256, null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Server config'
 
 
@@ -25,7 +25,7 @@ class AuthBackend(models.Model):
     name = models.CharField(max_length=10, choices=BACKEND_CHOICES)
     is_active = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @classmethod
@@ -45,7 +45,7 @@ class AuthBackend(models.Model):
 #     ldap_uidattr_format = models.CharField(max_length=100, default='%u')
 #     auth = models.ForeignKey(LDAPAuth)
 #
-#     def __unicode__(self):
+#     def __str__(self):
 #         return 'LDAP Auth uuid'
 
 
@@ -99,10 +99,10 @@ class LDAPSettings(models.Model):
     ldap_uids = models.CharField(max_length=256, null=True, blank=True)
     ldap_filter = models.CharField(max_length=256, null=True, blank=True)
     ldap_dn_filter = models.CharField(max_length=256, null=True, blank=True)
-    ldap_vhost = models.OneToOneField(VirtualHost)
+    ldap_vhost = models.OneToOneField(VirtualHost, on_delete=models.CASCADE)
     is_enabled = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'LDAP Settings'
 
     @property
@@ -134,7 +134,7 @@ class LDAPSettings(models.Model):
 
 class LDAPSettingsServer(models.Model):
     server = models.CharField(max_length=50)
-    settings = models.ForeignKey(LDAPSettings)
+    settings = models.ForeignKey(LDAPSettings, on_delete=models.CASCADE)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'LDAP Settings {}'.format(self.server)

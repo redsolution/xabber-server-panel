@@ -3,7 +3,11 @@ import os
 import sys
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "xmppserverui.settings")
+    settings = 'settings'
+    if os.path.isfile('xmppserverui/local_settings.py'):
+        settings = 'local_settings'
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "xmppserverui."+settings)
     try:
         from django.core.management import execute_from_command_line
     except ImportError:

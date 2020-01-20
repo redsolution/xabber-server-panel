@@ -2,11 +2,11 @@ import math
 from datetime import datetime, timedelta
 
 from django.views.generic import TemplateView
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 
-from xmppserverui import settings
+from django.conf import settings
 from xmppserverui.utils import get_pagination_data
 from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
@@ -84,7 +84,7 @@ class UserListView(VhostContextView, TemplateView):
         data = []
         for user in users:
             django_user = filter(lambda o: o['username'] == user, django_users)
-            django_user = django_user[0] if django_user else None
+            django_user = next(django_user) if django_user else None
             if django_user:
                 data.append({"username": user,
                              "user": django_user,
@@ -283,7 +283,7 @@ class UserGroupsView(PageContextMixin, TemplateView):
                                .filter(username=user.username, host=user.host)))
         data = []
         for group in groups_on_host:
-            checked = GroupMember.objects.filter(group=group, username='@all@')
+            checked = GroupMember.objects.filter(group=group, username='@all@').exists()
             data.append({
                 'group': group.group,
                 'is_system': group.is_system,
@@ -463,11 +463,12 @@ class GroupListView(VhostContextView, TemplateView):
                 data.append({"group": g, "members": None})
             else:
                 if GroupMember.objects.filter(group=group, username="@all@").exists():
-                    count = len(filter(lambda o: o['group'] == group.id and o['host'] != group.host,
-                                          all_groups_members)) + User.objects.filter(host=group.host).count()
+                    # TODO get rid of list()
+                    count = len(list(filter(lambda o: o['group'] == group.id and o['host'] != group.host,
+                                          all_groups_members))) + User.objects.filter(host=group.host).count()
                 else:
-                    count = len(filter(lambda o: o['group'] == group.id,
-                                          all_groups_members))
+                    count = len(list(filter(lambda o: o['group'] == group.id,
+                                          all_groups_members)))
                 data.append({
                     "group": g,
                     "members": count,
@@ -781,7 +782,7 @@ class GroupSubscribersView(PageContextMixin, TemplateView):
         for member in members:
             if member['username'] == '@all@':
                 additional = User.objects.filter(host=member['host']).count() - 1
-        return len(members) + additional
+        return len(list(members)) + additional
 
     def get_displayed_groups(self, group):
         all_groups = Group.objects.filter(host=group.host)

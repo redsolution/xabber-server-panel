@@ -1,6 +1,6 @@
 import re
 
-from jid import JID, parse
+from .jid import JID, parse
 
 
 def validate_jid(value):
@@ -11,7 +11,11 @@ def validate_jid(value):
                 'error_message': e}
 
     if jid_obj.user and jid_obj.host:
-        return {"success": True,
-                "full_jid": jid_obj.full().decode('ascii')}
+        try:
+            full_jid = jid_obj.full().encode('ascii')
+            return {"success": True, "full_jid": full_jid}
+        except:
+            pass
+
     return {'success': False,
             'error_message': 'Invalid JID.'}

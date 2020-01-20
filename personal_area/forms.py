@@ -38,7 +38,7 @@ class ChangeUserPasswordForm(AuthorizedApiForm):
         username = self.user_to_change.username
         host = self.user_to_change.host
         old_password = self.cleaned_data.get('old_password')
-        if not self.user.api.check_user_password({
+        if self.user.api.check_user_password({
                 'user': username,
                 'host': host,
                 'password': old_password

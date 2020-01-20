@@ -10,7 +10,7 @@ import stringprep
 # We require Unicode version 3.2.
 from unicodedata import ucd_3_2_0 as unicodedata
 
-from compat import unichr
+from .compat import unichr
 
 from zope.interface import Interface, implementer
 

@@ -127,7 +127,7 @@ def create_admin(data):
                           data['admin_password']]
     cmd = subprocess.Popen(cmd_create_admin,
                            stdin=subprocess.PIPE,
-                           stdout=open('/dev/null', 'w'),
+                           # stdout=open('/dev/null', 'w'),
                            stderr=subprocess.STDOUT)
     cmd.communicate()
     return cmd.returncode == 0
@@ -182,7 +182,7 @@ def start_installation_process(data):
         msg = "Can't start ejabberd."
         print(msg)
         return False, msg
-    print ("Successfully started ejabberd.")
+    print("Successfully started ejabberd.")
 
     if not create_admin(data):
         msg = "Can't create admin in Xabber server database."
@@ -199,7 +199,7 @@ def start_installation_process(data):
         print(msg)
         return False, msg
 
-    print ("Successfully created admin in ejabberd.")
+    print("Successfully created admin in ejabberd.")
 
     return True, None
 

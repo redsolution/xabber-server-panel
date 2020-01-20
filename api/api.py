@@ -1,6 +1,6 @@
 import requests
 
-from xmppserverui import settings
+from django.conf import settings
 from .exceptions import ResponseException
 
 
@@ -184,9 +184,9 @@ class EjabberdAPI(object):
     def edit_user_vcard(self, data, **kwargs):
         username, host = data.get("username"), data.get("host")
         vcard = data.get('vcard', dict())
-        for key, value in vcard.iteritems():
+        for key, value in vcard.items():
             if isinstance(value, dict):
-                for nested_key, nested_value in value.iteritems():
+                for nested_key, nested_value in value.items():
                     vcard2_data = {"user": username,
                                    "host": host,
                                    "name": key,

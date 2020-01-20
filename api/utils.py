@@ -2,7 +2,7 @@ import os
 
 from django.core.exceptions import ValidationError
 
-from xmppserverui import settings
+from django.conf import settings
 
 
 # Used to save oauth token to session storage
@@ -28,7 +28,7 @@ def int_to_token(number):
 
     token = ''
     while len(hash_token) != 0:
-        char = unichr(int(hash_token[:3]))
+        char = chr(int(hash_token[:3]))
         token += char
         hash_token = hash_token[3:]
     return token

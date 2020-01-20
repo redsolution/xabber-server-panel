@@ -1,11 +1,11 @@
 import mimetypes
 
-from django.http import HttpResponsePermanentRedirect, FileResponse, HttpResponseRedirect
+from django.http import HttpResponsePermanentRedirect, FileResponse, HttpResponseRedirect, Http404
 from django.views.generic import View, TemplateView, RedirectView
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth import login
 
-from xmppserverui import settings
+from django.conf import settings
 from .utils import get_default_url, get_xabber_web_suffix
 from xmppserverui.mixins import ServerInstalledMixin
 from virtualhost.models import User
@@ -66,6 +66,10 @@ class XabberWebFirebaseMessSWView(View):
         path = settings.STATIC_ROOT + '/xabberweb/firebase-messaging-sw.js'
         content_type, encoding = mimetypes.guess_type(str(path))
         content_type = content_type or 'application/octet-stream'
-        response = FileResponse(open(path),
-                                content_type=content_type)
+        try:
+            response = FileResponse(open(path),
+                                    content_type=content_type)
+        except:
+            raise Http404
+
         return response

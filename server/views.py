@@ -1,9 +1,9 @@
 from django.views.generic import TemplateView
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404
 
-from xmppserverui import settings
+from django.conf import settings
 from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost, User, Group, GroupMember
 from virtualhost.utils import get_system_group_suffix
