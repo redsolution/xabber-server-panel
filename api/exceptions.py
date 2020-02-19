@@ -8,9 +8,11 @@ RESPONSE_EXCEPTION_MESSAGES = {
 
 
 class ResponseException(Exception):
+    def __init__(self, *args, **kwargs):
+        self.type = kwargs.get('type')
+        self.detail = kwargs.get('detail', '')
+        super.__init__(*args, **kwargs)
+
     def get_error_message(self):
-        data = self.message
-        msg_type = data.get('type')
-        msg_detail = data.get('detail') or ''
-        msg_format_str = RESPONSE_EXCEPTION_MESSAGES.get(msg_type) or '{}'
-        return msg_format_str.format(msg_detail)
+        msg_format_str = RESPONSE_EXCEPTION_MESSAGES.get(self.type) or '{}'
+        return msg_format_str.format(self.detail)

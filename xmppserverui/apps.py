@@ -8,5 +8,5 @@ import xmppserverui.utils
 class XMPPServerUIConfig(AppConfig):
     name = 'xmppserverui'
 
-    def ready(self):
-        xmppserverui.utils.start_ejabberd()
+    # def ready(self):
+    #     xmppserverui.utils.start_ejabberd()

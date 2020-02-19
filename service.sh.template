@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEBUG=true
+DEBUG=false
 
 BUNDLE_DIR='INSTALL_PATH/xmppserverui/bin'
 CONFIG_DIR='INSTALL_PATH/xmppserverui/gunicorn_conf.py'
@@ -22,8 +22,8 @@ fi
 if $DEBUG ; then 
   echo "DEBUG"
   BUNDLE_DIR='bin'
-  XMPP_SERVER_CTL_DIR='/home/igor.boldin/xabberserver/bin'
-  XMPP_SERVER_CONFIG_FILE='/home/igor.boldin/xabberserver/etc/ejabberd/ejabberd.yml'
+  XMPP_SERVER_CTL_DIR=''
+  XMPP_SERVER_CONFIG_FILE=''
   CONFIG_DIR='gunicorn_conf.py'
   PID_FILE='xabber_server.pid'
 fi
@@ -31,7 +31,7 @@ fi
 
 function run_server() {
   if pgrep -f "$BUNDLE_DIR/gunicorn xmppserverui.wsgi:application" > /dev/null 2>&1; then
-    echo "Xannre server already running"
+    echo "Xabber server already running"
   else
     if $DEBUG ; then
       $BUNDLE_DIR/gunicorn xmppserverui.wsgi:application $GUNICORN_SSL_KEY -c $CONFIG_DIR --log-file $LOG_FILE_DIR/error.log --access-logfile $LOG_FILE_DIR/access.log --log-level debug --pid $PID_FILE
