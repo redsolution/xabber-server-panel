@@ -45,6 +45,9 @@ class LoginView(NoAuthMixin, TemplateView):
             if user.exists():
                 user = user[0]
                 if user.is_admin:
+                    if not user.password:
+                        user.set_password(request.POST['password'])
+                        user.save()
                     return HttpResponseRedirect(reverse('server:dashboard'))
             return HttpResponseRedirect(reverse('personal-area:profile'))
         return self.render_to_response({"form": form, 'user_ip': user_ip})

@@ -88,7 +88,7 @@ WSGI_APPLICATION = 'xmppserverui.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'xmppserverui.sqlite3'),
+        'NAME': os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'xmppserverui.sqlite3'),
     }
 }
 
