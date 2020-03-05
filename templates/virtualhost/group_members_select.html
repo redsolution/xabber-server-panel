@@ -112,6 +112,16 @@
             return true;
         }
 
+        function uncheckMembersIfAllChecked(domain, members) {
+             $("#member_list .select-item:checked").each(function() {
+                var member = $(this).attr("data-member");
+                if (!member.startsWith('all@') && members.has(member) && domain == member.split('@')[1]) {
+                    $(this).prop("checked", false);
+                    $(this).trigger("change");
+                    }
+            });
+        }
+
         $(document).ready(function() {
             var new_members = initMembers(),
                 curr_members = initMembers();
@@ -122,10 +132,14 @@
                 var is_checked = this.checked,
                     member = $(this).attr("data-member");
 
-                if (is_checked)
+                if (is_checked) {
+                    if (member.startsWith('all@')) {
+                        uncheckMembersIfAllChecked(member.split('@')[1], curr_members);
+                        }
                     new_members.add(member);
-                else
+                } else {
                     new_members.delete(member);
+                    }
 
                 updateMembersInputField(new_members);
 
