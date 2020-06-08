@@ -212,25 +212,11 @@ def install_cmd(request, data):
             stop_ejabberd()
         return success, error_message
 
-    del_installation_mode()
+    # block installation mode
+    open(settings.INSTALLATION_LOCK, 'a').close()
+    os.chmod(settings.INSTALLATION_LOCK, 0o444)
+
     success_installation.send(sender=None,
                               request=request,
                               **data)
     return success, error_message
-
-
-def _get_installation_file():
-    current_path = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(current_path, '.ready_for_installation')
-
-
-def is_installation_mode():
-    return os.path.exists(_get_installation_file())
-
-
-def set_installation_mode():
-    open(_get_installation_file(), 'a').close()
-
-
-def del_installation_mode():
-    os.remove(_get_installation_file())

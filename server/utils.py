@@ -6,7 +6,6 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 from virtualhost.models import User, VirtualHost
-from xmppserverui.utils import is_xmpp_server_installed
 # def execute_ejabberd_cmd(cmd):
 #     cmd_ejabberd = [settings.EJABBERDCTL, ] + cmd
 #     cmd = subprocess.Popen(cmd_ejabberd,
@@ -36,7 +35,7 @@ def execute_ejabberd_cmd(cmd):
 
 
 def start_ejabberd():
-    if not is_xmpp_server_installed():
+    if not os.path.isfile(settings.INSTALLATION_LOCK):
         return None
     cmd = ['start']
     response = {"success": execute_ejabberd_cmd(cmd)}
@@ -49,7 +48,7 @@ def start_ejabberd():
 
 
 def restart_ejabberd():
-    if not is_xmpp_server_installed():
+    if not os.path.isfile(settings.INSTALLATION_LOCK):
         return None
     cmd = ['restart']
     response = {"success": execute_ejabberd_cmd(cmd)}

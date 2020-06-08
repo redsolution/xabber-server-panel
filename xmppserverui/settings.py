@@ -171,6 +171,7 @@ HTTP_REQUEST_TIMEOUT = 5
 # Installer settings
 
 PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
+INSTALLATION_LOCK = os.path.join(PROJECT_DIR, '.installation_lock')
 PSQL_SCRIPT = os.path.join(PROJECT_DIR, 'psql')
 EJABBERD_DUMP = os.path.join(PROJECT_DIR, 'pg.sql')
 EJABBERD_CONFIG_PATH = os.path.join(PROJECT_DIR, 'etc/ejabberd/')

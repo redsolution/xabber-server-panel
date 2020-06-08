@@ -28,7 +28,7 @@ class ServerInstalledMixin(BaseMixin):
 
     def is_server_installed(self, request, *args, **kwargs):
         if not is_xmpp_server_installed():
-            return HttpResponseRedirect(get_default_url(request.user))
+            return HttpResponseRedirect(reverse('installer:stepper'))
 
 
 class NoAuthMixin(ServerInstalledMixin):
@@ -48,7 +48,7 @@ class AuthMixin(ServerInstalledMixin):
 
 
 class AdminMixin(AuthMixin):
-    permission_methods = ['is_admin']
+    permission_methods = ServerInstalledMixin.permission_methods + ['is_admin']
 
     def is_admin(self, request, *args, **kwargs):
         if request.user.is_anonymous:

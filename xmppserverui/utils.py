@@ -9,7 +9,6 @@ from django.urls import reverse
 from django.contrib.auth import logout
 
 from django.conf import settings
-from xmppserverinstaller.utils import set_installation_mode
 
 
 def get_xabber_web_suffix():
@@ -17,7 +16,7 @@ def get_xabber_web_suffix():
 
 
 def is_xmpp_server_installed():
-    return os.path.isfile(os.path.join(settings.EJABBERD_CONFIG_PATH, 'ejabberd.yml'))
+    return os.path.isfile(settings.INSTALLATION_LOCK)
 
 
 def is_xmpp_server_should_start():
@@ -28,19 +27,13 @@ def is_xmpp_server_should_start():
 
 
 def get_default_url(user, admin=None):
-    if is_xmpp_server_installed():
-        if user.is_anonymous:
-            return reverse('auth:login')
-        # return reverse('server:dashboard')
-        if admin is not None:
-            if admin:
-                return reverse('server:dashboard')
-            else:
-                return reverse('personal-area:profile')
-        return reverse('personal-area:profile')
-    else:
-        set_installation_mode()
-        return reverse('installer:stepper')
+    if user.is_anonymous:
+        return reverse('auth:login')
+    # return reverse('server:dashboard')
+    if admin is not None:
+        if admin:
+            return reverse('server:dashboard')
+    return reverse('personal-area:profile')
 
 
 def logout_full(request):

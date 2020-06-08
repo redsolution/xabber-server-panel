@@ -1,7 +1,9 @@
+import os
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.conf import settings
 
-from .utils import is_installation_mode, check_predefined_config
+from .utils import check_predefined_config
 from xmppserverui.mixins import BaseMixin
 
 
@@ -9,7 +11,7 @@ class InstallationModeMixin(BaseMixin):
     permission_methods = ['check_mode']
 
     def check_mode(self, request, *args, **kwargs):
-        if not is_installation_mode():
+        if os.path.isfile(settings.INSTALLATION_LOCK):
             return HttpResponseRedirect('/')
 
 
