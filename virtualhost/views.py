@@ -861,10 +861,11 @@ class ChatListView(VhostContextView, TemplateView):
         data = []
         for chat in chats:
             owner_username, owner_host = chat["owner"].split('@')
-            user = filter(lambda o: o['username'] == owner_username
-                                    and o['host'] == owner_host, django_users)
+            user = next(filter(lambda o: o['username'] == owner_username
+                                         and o['host'] == owner_host, django_users), None)
+
             data.append({"chat": chat,
-                         "owner_id": user[0]['id'] if user else None})
+                         "owner_id": user['id'] if user else None})
 
         page = request.GET.get('page', 1)
         context = get_pagination_data(data, page)
