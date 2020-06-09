@@ -315,7 +315,7 @@ class LDAPSettingsForm(BaseForm):
         self.init_ldap_attrs()
 
     def check_required_fields(self):
-        for field in self.cleaned_data.keys():
+        for field in list(self.cleaned_data.keys()):
             if field in self.LDAP_FIELDS_REQUIRED and \
                     not self.cleaned_data[field]:
                 self.add_error(field, 'This field is required.')

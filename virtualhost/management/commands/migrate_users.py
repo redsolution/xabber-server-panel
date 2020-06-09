@@ -5,11 +5,9 @@ from api.api import EjabberdAPI
 from virtualhost.models import User
 
 
-ADMIN_USERNAME = 'admin@xmppdev01.xabber.com'
-# ADMIN_USERNAME = 'admin@c0032.soni.redsolution.ru'
-ADMIN_PASSWORD = '123'
-USERS_HOST = 'xmppdev01.xabber.com'
-# USERS_HOST = 'c0032-virt01.soni.redsolution.ru'
+ADMIN_USERNAME = ''
+ADMIN_PASSWORD = ''
+USERS_HOST = ''
 
 
 class Command(BaseCommand):
@@ -37,7 +35,7 @@ class Command(BaseCommand):
             if api.success:
                 last_name = api.response["content"]
 
-            print nickname, first_name, last_name
+            print('{} {} {}'.format(nickname, first_name, last_name))
 
             user.nickname = nickname
             user.first_name = first_name

@@ -64,6 +64,8 @@ class UserProfileChangePasswordView(PersonalAreaContextMixin, TemplateView):
         if not user:
             logout_full(request)
             return HttpResponseRedirect(reverse('auth:login'))
+        if not user.allowed_change_password:
+            return HttpResponseRedirect(reverse('error:403'))
         form = ChangeUserPasswordForm(request.user)
 
         return self.render_to_response({
@@ -76,6 +78,8 @@ class UserProfileChangePasswordView(PersonalAreaContextMixin, TemplateView):
         if not user:
             logout_full(request)
             return HttpResponseRedirect(reverse('auth:login'))
+        if not user.allowed_change_password:
+            return HttpResponseRedirect(reverse('error:403'))
         form = ChangeUserPasswordForm(request.user, request.POST, user_to_change=user)
         if form.is_valid():
             return HttpResponseRedirect(reverse('personal-area:profile'))

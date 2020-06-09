@@ -13,9 +13,16 @@ class VirtualHost(models.Model):
 
 
 class User(AbstractBaseUser):
+    SQL = 'sql'
+    LDAP = 'ldap'
+    AUTH_BACKENDS = [
+        (SQL, 'internal'),
+        (LDAP, 'LDAP')
+    ]
     username = models.CharField(max_length=256)
     USERNAME_FIELD = 'username'
     password = models.CharField(max_length=128, null=True)
+    auth_backend = models.CharField(max_length=128, choices=AUTH_BACKENDS, default=SQL)
     is_admin = models.BooleanField(default=False)
     host = models.CharField(max_length=256)
     nickname = models.CharField(max_length=100, null=True, blank=True)
@@ -64,10 +71,7 @@ class User(AbstractBaseUser):
 
     @property
     def allowed_delete(self):
-        return False \
-            if (hasattr(self.vhost, 'ldapsettings') and
-                self.vhost.ldapsettings.is_enabled) \
-            else True
+        return False if self.auth_backend == 'ldap' else True
 
     @property
     def allowed_change_vcard(self):
@@ -75,11 +79,7 @@ class User(AbstractBaseUser):
 
     @property
     def allowed_change_password(self):
-        return False \
-            if (hasattr(self.vhost, 'ldapsettings') and
-                self.vhost.ldapsettings.is_enabled and
-                not self.is_admin) \
-            else True
+        return False if self.auth_backend == 'ldap' else True
 
     def __str__(self):
         return self.full_jid

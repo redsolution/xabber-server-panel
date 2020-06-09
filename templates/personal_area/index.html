@@ -23,11 +23,13 @@
                         <tr><td>Last name</td><td>{% if curr_user.last_name %}{{ curr_user.last_name }}{% endif %}</td></tr>
                     </tbody>
                 </table>
+                {% if curr_user.allowed_change_password %}
                 <div class="btn-set">
                     <a href="{% url 'personal-area:change-password' %}">
                         <button type="button" class="btn btn-primary">Change password</button>
                     </a>
                 </div>
+                {% endif %}
             </div>
             <div class="col">
                 <div class="user-details">

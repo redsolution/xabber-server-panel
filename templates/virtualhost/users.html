@@ -40,6 +40,7 @@
                             <th scope="col">Username</th>
                             <th scope="col">Name</th>
                             <th scope="col">Created</th>
+                            <th scope="col">Auth backend</th>
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
@@ -72,6 +73,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}</td>
+                                <td class="table-data date">{{ obj.user.get_auth_backend_display }}</td>
                                 <td class="table-data dots-menu">
                                     {% if obj.user.id %}
                                     <div class="btn-group dropleft">
@@ -81,12 +83,10 @@
                                         </i>
                                         <div class="dropdown-menu"
                                               aria-labelledby="dropdown-user-actions-2">
-                                            {% if obj.allowed_user_change %}
                                                 <a class="dropdown-item" href="{% url 'virtualhost:user-vcard' obj.user.id %}">
                                                     Edit vcard
                                                 </a>
-                                            {% endif %}
-                                            {% if obj.allowed_user_delete %}
+                                            {% if obj.user.allowed_delete %}
                                                 <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
                                                     Delete user
                                                 </a>

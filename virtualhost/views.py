@@ -69,28 +69,26 @@ class UserListView(VhostContextView, TemplateView):
         django_users = User.objects.filter(host=vhost).values('username')
         django_users = [o['username'] for o in django_users]
         unknown_users = []
-        for username in users:
-            if username not in django_users:
-                unknown_users.append(User(username=username, host=vhost))
+        for user in users:
+            if user['name'] not in django_users:
+                unknown_users.append(User(username=user['name'], host=vhost, auth_backend=user['auth']))
         User.objects.bulk_create(unknown_users)
 
-        vhost_obj = self.get_vhost_obj(request)
-        allowed_user_change = True
-        allowed_user_delete = False \
-            if (hasattr(vhost_obj, 'ldapsettings') and
-                vhost_obj.ldapsettings.is_enabled) \
-            else True
+        # vhost_obj = self.get_vhost_obj(request)
+        # allowed_user_change = True
+        # allowed_user_delete = False \
+        #     if (hasattr(vhost_obj, 'ldapsettings') and
+        #         vhost_obj.ldapsettings.is_enabled) \
+        #     else True
 
-        django_users = list(User.objects.filter(host=vhost).values())
+        django_users = User.objects.filter(host=vhost)
         data = []
         for user in users:
-            django_user = filter(lambda o: o['username'] == user, django_users)
+            django_user = filter(lambda o: o.username == user['name'], django_users)
             django_user = next(django_user, None)
             if django_user:
-                data.append({"username": user,
-                             "user": django_user,
-                             "allowed_user_change": allowed_user_change,
-                             "allowed_user_delete": allowed_user_delete})
+                data.append({"username": user['name'],
+                             "user": django_user})
 
         page = request.GET.get('page', 1)
         context = get_pagination_data(data, page)
