@@ -3,7 +3,7 @@ import re
 from ldap3 import Server, Connection, ALL
 
 from django import forms
-
+from .fields import CertFileField
 from virtualhost.models import User, VirtualHost
 from .models import LDAPSettings
 
@@ -351,3 +351,15 @@ class LDAPSettingsForm(BaseForm):
     def after_clean(self, cleaned_data):
         data = {k: cleaned_data[k] for k in self.LDAP_FIELDS}
         LDAPSettings.create_or_update(data)
+
+
+class DeleteCertFileForm(BaseForm):
+    file = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.HiddenInput(),
+    )
+
+
+class UploadCertFileForm(BaseForm):
+    file = CertFileField(max_upload_size=102400)  # 100KB

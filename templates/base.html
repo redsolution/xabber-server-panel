@@ -14,6 +14,11 @@
         <link rel="stylesheet" href="{% static 'bootstrap/4.3.1/css/bootstrap-toggle.min.css' %}"/>
         <link rel="stylesheet" href="{% static 'xmppserverui/css/styles.css' %}"/>
         {% block css %}{% endblock %}
+        <script src="{% static 'jquery/js/jquery-3.3.1.min.js' %}"></script>
+        <script src="{% static 'jquery/js/jquery.cookie.js' %}"></script>
+        <script src="{% static 'popper/js/popper.min.js' %}"></script>
+        <script src="{% static 'bootstrap/4.3.1/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'bootstrap/4.3.1/js/bootstrap-toggle.min.js' %}"></script>
 
         <title>Xabber Server</title>
         <!--<title>{% block title %}{% endblock %}</title>-->
@@ -196,11 +201,7 @@
         </div>
     </div>
     {% endblock %}
-        <script src="{% static 'jquery/js/jquery-3.3.1.min.js' %}"></script>
-        <script src="{% static 'jquery/js/jquery.cookie.js' %}"></script>
-        <script src="{% static 'popper/js/popper.min.js' %}"></script>
-        <script src="{% static 'bootstrap/4.3.1/js/bootstrap.min.js' %}"></script>
-        <script src="{% static 'bootstrap/4.3.1/js/bootstrap-toggle.min.js' %}"></script>
+
         <script>
             $(document).ready(function() {
                 $(".dropdown-menu a").click(function() {
