@@ -97,6 +97,7 @@ class RegisterUserForm(AuthorizedApiForm):
         regex = re.compile(r'^[a-zA-Z0-9$@$!%*?&#^-_. +]+$')
         if not regex.match(self.cleaned_data['username']):
             self.add_error('username', 'This username contains unsupported characters.')
+        self.cleaned_data['username'] = self.cleaned_data['username'].lower()
         return self.cleaned_data
 
     def after_clean(self, cleaned_data):
