@@ -238,8 +238,8 @@ class CreateGroupForm(AuthorizedApiForm):
     group = forms.CharField(
         max_length=100,
         required=True,
-        label='Group',
-        widget=forms.TextInput(attrs={'placeholder': 'Group identifier', 'autofocus': ''})
+        label='Circle',
+        widget=forms.TextInput(attrs={'placeholder': 'Circle identifier', 'autofocus': ''})
     )
     host = forms.ChoiceField(
         required=True,
@@ -281,15 +281,15 @@ class CreateGroupForm(AuthorizedApiForm):
 
     def before_clean(self):
         if self.cleaned_data['group'].lower() == 'all':
-            self.add_error('group', 'This group name is forbidden.')
+            self.add_error('group', 'This circle name is forbidden.')
         regex = re.compile(r'^[a-zA-Z0-9$@$!%*?&#^-_. +]+$')
         if not regex.match(self.cleaned_data['group']):
-            self.add_error('group', 'This group name contains unsupported characters.')
+            self.add_error('group', 'This circle name contains unsupported characters.')
         elif Group.objects\
                 .filter(group=self.cleaned_data['group'],
                         host=self.cleaned_data['host'])\
                 .exists():
-            self.add_error(None, 'Group with this name and host already exist.')
+            self.add_error(None, 'Circle with this name and host already exist.')
 
     def after_clean(self, cleaned_data):
         self.new_group = Group.objects.create(**cleaned_data)
@@ -298,9 +298,9 @@ class CreateGroupForm(AuthorizedApiForm):
 class EditGroupForm(CreateGroupForm):
     displayed_groups = forms.CharField(
         required=False,
-        label='Visible groups',
+        label='Visible circles',
         widget=forms.Textarea(attrs={'rows': 4}),
-        help_text="Enter group names separated by ; or , signs."
+        help_text="Enter circle names separated by ; or , signs."
     )
 
     def __init__(self, *args, **kwargs):

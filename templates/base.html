@@ -41,11 +41,11 @@
                             </a>
                             <a href="{% url 'virtualhost:groups' %}"
                                class="list-group-item {% if page.section == 'vhosts-groups' %}active{% endif %}">
-                                Groups
+                                Circles
                             </a>
                             <a href="{% url 'virtualhost:chats' %}"
                                class="list-group-item {% if page.section == 'vhosts-chats' %}active{% endif %}">
-                                Group chats
+                                Groups
                             </a>
                             <!--<a href="#" class="list-group-item">File sharing</a>-->
                             <a href="{% url 'server:settings' %}"
@@ -82,9 +82,9 @@
                             </a>
                             {% endif %}
                             <a class="dropdown-item large-padding" href="{% url 'virtualhost:group-create' %}">
-                                <b>Group</b>
+                                <b>Circle</b>
                                 <div class="dropdown-item-secondary-text">
-                                    Groups are used to manage shared contact
+                                    Circles are used to manage shared contact
                                     lists, user permissions and resource quotas.
                                 </div>
                             </a>
@@ -102,7 +102,7 @@
                         <form class="navbar-search-form">
                             <input class="form-control"
                                    type="search"
-                                   placeholder="Search for Users, Groups, Groupchats, Domains, ..."
+                                   placeholder="Search for Users, Circles, Groups, Domains, ..."
                                    aria-label="Search">
                         </form>
                         {% if auth_user %}

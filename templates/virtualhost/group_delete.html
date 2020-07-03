@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete group{% endblock %}
+{% block title %}Delete circle{% endblock %}
 
 {% block main_content %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
                 <ul class="list-group list-group-flush list-group-horizontal">
-                    <li class="list-group-item"><h1>Delete group</h1></li>
+                    <li class="list-group-item"><h1>Delete circle</h1></li>
                 </ul>
             </div>
         </div>
 
         <div class="row no-gutters">
             <div class="col page-content">
-                <p>Group <b>{{ group }}</b> will deleted on server. Are you sure?</p>
+                <p>Circle <b>{{ group }}</b> will deleted on server. Are you sure?</p>
 
                 <form method="post" action="{% url 'virtualhost:group-delete' group.id %}">
                     {% csrf_token %}
@@ -30,7 +30,7 @@
                         <a href="{% url 'virtualhost:groups' %}">
                             <button type="button" class="btn btn-secondary">Cancel</button>
                         </a>
-                        <button type="submit" class="btn btn-primary">Delete group</button>
+                        <button type="submit" class="btn btn-primary">Delete circle</button>
                     </div>
                 </form>
             </div>

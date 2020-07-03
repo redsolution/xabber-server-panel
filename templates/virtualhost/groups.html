@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 {% load xmppserverui_tags %}
 
-{% block title %}Groups{% endblock %}
+{% block title %}Circles{% endblock %}
 
 {% block main_content %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
                 <ul class="list-group list-group-flush list-group-horizontal">
-                    <li class="list-group-item"><h1>Groups</h1></li>
+                    <li class="list-group-item"><h1>Circles</h1></li>
                     <li class="list-group-item"><div class="divider"></div></li>
-                    <li class="list-group-item"><h4>{{ title }} groups</h4></li>
+                    <li class="list-group-item"><h4>{{ title }} circles</h4></li>
                     <li class="list-group-item right-btn">
                          <div class="dropdown">
                             <button class="btn dropdown-toggle"
@@ -37,8 +37,8 @@
                     <thead>
                         <tr>
                             <th scope="col">#</th>
-                            <th scope="col">Group identifier</th>
-                            <th scope="col">Group name</th>
+                            <th scope="col">Circle identifier</th>
+                            <th scope="col">Circle name</th>
                             <th scope="col">Members count</th>
                             <th scope="col">Actions</th>
                         </tr>
@@ -72,7 +72,7 @@
                                         <div class="dropdown-menu"
                                               aria-labelledby="dropdown-user-actions-2">
                                             <a class="dropdown-item" href="{% url 'virtualhost:group-delete' group.id %}">
-                                                Delete group
+                                                Delete circle
                                             </a>
                                         </div>
                                     </div>
