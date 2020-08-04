@@ -32,6 +32,7 @@ listen:
       "/bosh": mod_bosh
       "/upload": mod_http_upload
       "/api": mod_http_api
+      "/images": mod_http_fileserver
     web_admin: true
     captcha: true
   -
@@ -41,6 +42,7 @@ listen:
     request_handlers:
       "/wss": ejabberd_http_ws
       "/upload": mod_http_upload
+      "/images": mod_http_fileserver
     tls: true
 
 auth_password_format: scram
@@ -73,10 +75,7 @@ acl:
       - "::FFFF:127.0.0.1/128"
 
 shaper_rules:
-  max_user_sessions: 10
-  max_user_offline_messages:
-    - 5000: admin
-    - 100
+  max_user_sessions: 64
   c2s_shaper:
     - none: admin
     - normal
@@ -212,16 +211,21 @@ modules:
   mod_client_state: {}
   mod_configure: {}
   mod_disco: {}
-  mod_irc: {}
   mod_bosh: {}
   mod_http_upload:
     docroot: "{{ PROJECT_DIR }}/user_images"
-    get_url: "https://{% if HTTP_HOST %}{{ HTTP_HOST }}{% else %}@HOST@:5443{% endif %}/upload"
-    put_url: "https://{% if HTTP_HOST %}{{ HTTP_HOST }}{% else %}@HOST@:5443{% endif %}/upload"
+    get_url: "{% if HTTP_HOST %}http://@HOST@:5280{{ HTTP_HOST }}{% else %}https://@HOST@:5443{% endif %}/upload"
+    put_url: "{% if HTTP_HOST %}http://@HOST@:5280{{ HTTP_HOST }}{% else %}https://@HOST@:5443{% endif %}/upload"
     custom_headers:
       "Access-Control-Allow-Origin": "*"
       "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS, DELETE"
       "Access-Control-Allow-Headers": "Content-Type, Origin, X-Requested-With"
+
+  mod_http_fileserver:
+    docroot: "{{ PROJECT_DIR }}/user_images"
+    accesslog: "{{ PROJECT_DIR }}/access.log"
+  mod_groupchat_vcard:
+    get_url: "{% if HTTP_HOST %}http://@HOST@:5280{{ HTTP_HOST }}{% else %}https://@HOST@:5443{% endif %}/images"
 
   mod_last: {}
   mod_mam:
@@ -248,6 +252,7 @@ modules:
         access_model: whitelist
   mod_push: {}
   mod_push_keepalive: {}
+  mod_xabber_push: {}
   mod_roster: {}
   mod_shared_roster: {}
   mod_stats: {}
