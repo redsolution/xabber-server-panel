@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     'virtualhost',
     'server',
+    'xmppserverui',
 
     'xmppserverinstaller',
     'personal_area'
