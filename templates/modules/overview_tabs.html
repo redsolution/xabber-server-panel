@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Modules{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Modules settings</h1></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col tabs">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'modules' %} active{% endif %}"
+                           href="{% url 'modules:modules-list' %}">Modules</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    {% block tab_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -25,6 +25,7 @@ from .views import *
 urlpatterns = [
     url(r'^auth/', include('auth.urls', namespace='auth')),
     url(r'^admin/server/', include('server.urls', namespace='server')),
+    url(r'^admin/modules/', include('modules_installation.urls', namespace='modules')),
     url(r'^admin/virtualhost/', include('virtualhost.urls', namespace='virtualhost')),
     url(r'^admin/installation/', include('xmppserverinstaller.urls', namespace='installer')),
     url(r'^admin/error/', include('error.urls', namespace='error')),

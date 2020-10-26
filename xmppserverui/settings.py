@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'virtualhost',
     'server',
     'xmppserverui',
-
+    'modules_installation',
     'xmppserverinstaller',
     'personal_area'
 ]
@@ -189,3 +189,11 @@ EJABBERD_EVERYBODY_DEFAULT_GROUP_NAME = "All"
 EJABBERD_EVERYBODY_DEFAULT_GROUP_DESCRIPTION = "Contains all users on this virtual host"
 
 PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
+
+# Modules initialization
+MODULES_DIR = os.path.join(BASE_DIR, 'modules')
+for folder in os.listdir(MODULES_DIR):
+    folder_path = os.path.join(MODULES_DIR, folder)
+    if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
+        new_app_name = "modules." + folder
+        INSTALLED_APPS += (new_app_name,)
