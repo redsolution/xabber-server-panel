@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^admin/installation/', include('xmppserverinstaller.urls', namespace='installer')),
     url(r'^admin/error/', include('error.urls', namespace='error')),
     url(r'^admin/$', DefaultView.as_view()),
-    url(r'^admin', DefaultView.as_view()),
+    url(r'^admin', DefaultView.as_view(), name="admin_page"),
     url(r'^profile/', include('personal_area.urls', namespace='personal-area')),
     url(r'^$', XabberWebView.as_view(), name='xabber-web'),
     url(r'^firebase-messaging-sw.js', XabberWebFirebaseMessSWView.as_view()),
