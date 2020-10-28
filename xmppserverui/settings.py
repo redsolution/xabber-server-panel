@@ -192,8 +192,8 @@ PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 
 # Modules initialization
 MODULES_DIR = os.path.join(BASE_DIR, 'modules')
-for folder in os.listdir(MODULES_DIR):
-    folder_path = os.path.join(MODULES_DIR, folder)
-    if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
-        new_app_name = "modules." + folder
-        INSTALLED_APPS += (new_app_name,)
+if os.path.exists(MODULES_DIR):
+    for folder in os.listdir(MODULES_DIR):
+        folder_path = os.path.join(MODULES_DIR, folder)
+        if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
+            INSTALLED_APPS += ("modules." + folder,)
