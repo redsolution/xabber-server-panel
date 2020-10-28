@@ -57,10 +57,9 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
         return self.render_to_response({"form": form})
 
     def handle_uploaded_file(self, f):
-        path = os.path.join(settings.BASE_DIR, 'modules')
         try:
             tar = tarfile.open(fileobj=f.file, mode='r:gz')
-            tar.extractall(path)
+            tar.extractall(settings.MODULES_DIR)
             tar.close()
         except tarfile.ReadError:
             return 'Module files cannot be extracted from this file'
