@@ -3,4 +3,4 @@ from server.forms import BaseForm
 
 
 class UploadModuleFileForm(BaseForm):
-    file = ModuleFileField(max_upload_size=512000)  # 500KB
+    file = ModuleFileField(max_upload_size=52428800)  # 50MB

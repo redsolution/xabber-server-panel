@@ -9,7 +9,7 @@ register = template.Library()
 def get_modules():
     list = []
 
-    for module in settings.MODULES_NAMES:
+    for module in settings.MODULES_SPECS:
         list.append({
             'name': module['name'],
             'url': reverse('modules:%s:info' % module['name'])

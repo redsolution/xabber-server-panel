@@ -1,4 +1,4 @@
-{% extends 'modules/overview_tabs.html' %}
+{% extends 'server/overview_tabs.html' %}
 
 {% block title %}Modules{% endblock %}
 
@@ -20,22 +20,17 @@
                         <td class="col-sm-5 table-data align-top" >
                             {{ module.name }}
                         </td>
-                        <td class="col-sm-5 table-data">
-                                 {% for name in module.info.names %}
-                                 {{ name }}<br/>
-                                 {% endfor %}
-                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
-<!--        <div class="row" style="padding-bottom: 16px; margin-top: 24px">-->
-<!--            <div class="col-sm-9">-->
-<!--            </div>-->
-<!--            <div class="col-sm-3">-->
-<!--                <a class="btn btn-primary" style="float: right" href="{% url 'modules:upload-module' %}">Upload module</a>-->
-<!--            </div>-->
-<!--        </div>-->
+        <div class="row" style="padding-bottom: 16px; margin-top: 24px">
+            <div class="col-sm-9">
+            </div>
+            <div class="col-sm-3">
+                <a class="btn btn-primary" style="float: right" href="{% url 'modules:upload-module' %}">Upload module</a>
+            </div>
+        </div>
     </div>
 {% endblock %}

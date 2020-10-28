@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import json
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -193,13 +193,12 @@ PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 # Modules initialization
 MODULES_DIR_NAME = 'modules'
 MODULES_DIR = os.path.join(BASE_DIR, MODULES_DIR_NAME)
-MODULES_NAMES = []
+MODULES_SPECS = []
 for folder in os.listdir(MODULES_DIR):
     folder_path = os.path.join(MODULES_DIR, folder)
     if os.path.isdir(folder_path):
         new_app_name = MODULES_DIR_NAME + "." + folder
-        MODULES_NAMES.append({
-            'full_name': new_app_name,
-            'name': folder
-        })
+        with open(os.path.join(folder_path, 'conf.json')) as conf:
+            data = json.load(conf)
+            MODULES_SPECS.append(data)
         INSTALLED_APPS += (new_app_name,)

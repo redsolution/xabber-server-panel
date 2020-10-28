@@ -8,6 +8,7 @@ from django.conf import settings
 from django.apps import apps
 from django.core import management
 
+from modules_installation.templatetags.modules_tags import get_modules
 from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost
 from .forms import UploadModuleFileForm
@@ -15,31 +16,26 @@ from .forms import UploadModuleFileForm
 
 SETTINGS_TAB_MODULES = 'modules'
 
-# def get_modules():
-#     list = []
-#     for folder in os.listdir(os.path.join(settings.BASE_DIR, 'modules')):
-#         list.append({'name': folder})
-#     return list
-#
-#
-# class ManageModulesView(PageContextMixin, TemplateView):
-#     page_section = 'modules'
-#     template_name = 'modules/modules_list.html'
-#
-#     def get(self, request, *args, **kwargs):
-#         modules = get_modules()
-#
-#         vhosts = VirtualHost.objects.all()
-#         context = {
-#             'modules': modules,
-#             'virtual_hosts': vhosts,
-#             'active_tab': SETTINGS_TAB_MODULES
-#         }
-#
-#         return self.render_to_response(context)
+
+class ManageModulesView(PageContextMixin, TemplateView):
+    page_section = 'modules'
+    template_name = 'modules/modules_list.html'
+
+    def get(self, request, *args, **kwargs):
+        modules = get_modules()
+        print(modules)
+
+        vhosts = VirtualHost.objects.all()
+        context = {
+            'modules': modules,
+            'virtual_hosts': vhosts,
+            'active_tab': SETTINGS_TAB_MODULES
+        }
+
+        return self.render_to_response(context)
 
 class UploadModuleFileView(PageContextMixin, TemplateView):
-    page_section = 'modules'
+    page_section = 'modules_upload'
     template_name = 'modules/upload_module.html'
 
     def get(self, request, *args, **kwargs):
@@ -53,8 +49,11 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
         form = UploadModuleFileForm(request.POST, request.FILES)
         if form.is_valid():
             print(request.FILES['file'])
-            self.handle_uploaded_file(request.FILES['file'])
-            return HttpResponseRedirect(reverse('modules:modules-list'))
+            error = self.handle_uploaded_file(request.FILES['file'])
+            if error:
+                return self.render_to_response({"form": form, 'error': error})
+            else:
+                return HttpResponseRedirect(reverse('modules:modules-list'))
         return self.render_to_response({"form": form})
 
     def handle_uploaded_file(self, f):
@@ -63,9 +62,8 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
             tar = tarfile.open(fileobj=f.file, mode='r:gz')
             tar.extractall(path)
             tar.close()
-        except:
-            # добавить текст ошибки
-            pass
+        except tarfile.ReadError:
+            return 'Module files cannot be extracted from this file'
 
         for folder in os.listdir(settings.MODULES_DIR):
             folder_path = os.path.join(settings.MODULES_DIR, folder)
@@ -84,5 +82,6 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                         management.call_command('migrate', folder, interactive=False)
                     except:
                         pass
+        return ''
 
 

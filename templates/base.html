@@ -58,14 +58,12 @@
                                 Settings
                             </a>
                             <div>Modules</div>
-                            <a href="{% url 'modules:upload-module' %}"
-                               class="list-group-item {% if page.section == 'server' %}active{% endif %}">
-                                Upload Module
-                            </a>
                             {% get_modules as modules %}
                             {% for module in modules %}
                                 <a href="{{ module.url }}"
-                                   class="list-group-item {% if page.section == 'modules' %}active{% endif %}">
+                                   class="list-group-item
+<!--                                    {% if page.section == 'modules' %}active{% endif %}-->
+                                    ">
                                     {{ module.name }}
                                 </a>
                             {% endfor %}

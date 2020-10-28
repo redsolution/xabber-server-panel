@@ -7,6 +7,14 @@
         <div class="row no-gutters">
             <div class="col breadcrumbs">
                 <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'server:settings' %}">Settings</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
                     <li class="list-group-item"><h1>Add module</h1></li>
                 </ul>
             </div>
@@ -23,6 +31,7 @@
                     {{ form.file }}
                      <div class="col-sm-12 non-field-error">
                             {{ form.file.errors}}
+                            {{ error }}
                      </div>
                     {% for error in form.non_field_errors %}
                         <div class="form-group row" style="margin-bottom: 24px;">
