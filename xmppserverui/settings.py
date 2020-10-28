@@ -191,9 +191,15 @@ EJABBERD_EVERYBODY_DEFAULT_GROUP_DESCRIPTION = "Contains all users on this virtu
 PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 
 # Modules initialization
-MODULES_DIR = os.path.join(BASE_DIR, 'modules')
+MODULES_DIR_NAME = 'modules'
+MODULES_DIR = os.path.join(BASE_DIR, MODULES_DIR_NAME)
+MODULES_NAMES = []
 for folder in os.listdir(MODULES_DIR):
     folder_path = os.path.join(MODULES_DIR, folder)
-    if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
-        new_app_name = "modules." + folder
+    if os.path.isdir(folder_path):
+        new_app_name = MODULES_DIR_NAME + "." + folder
+        MODULES_NAMES.append({
+            'full_name': new_app_name,
+            'name': folder
+        })
         INSTALLED_APPS += (new_app_name,)

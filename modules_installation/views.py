@@ -15,24 +15,28 @@ from .forms import UploadModuleFileForm
 
 SETTINGS_TAB_MODULES = 'modules'
 
-
-class ManageModulesView(PageContextMixin, TemplateView):
-    page_section = 'modules'
-    template_name = 'modules/modules_list.html'
-
-    def get(self, request, *args, **kwargs):
-        modules = []
-        for folder in os.listdir(os.path.join(settings.BASE_DIR, 'modules')):
-            modules.append({'name': folder})
-
-        vhosts = VirtualHost.objects.all()
-        context = {
-            'modules': modules,
-            'virtual_hosts': vhosts,
-            'active_tab': SETTINGS_TAB_MODULES
-        }
-
-        return self.render_to_response(context)
+# def get_modules():
+#     list = []
+#     for folder in os.listdir(os.path.join(settings.BASE_DIR, 'modules')):
+#         list.append({'name': folder})
+#     return list
+#
+#
+# class ManageModulesView(PageContextMixin, TemplateView):
+#     page_section = 'modules'
+#     template_name = 'modules/modules_list.html'
+#
+#     def get(self, request, *args, **kwargs):
+#         modules = get_modules()
+#
+#         vhosts = VirtualHost.objects.all()
+#         context = {
+#             'modules': modules,
+#             'virtual_hosts': vhosts,
+#             'active_tab': SETTINGS_TAB_MODULES
+#         }
+#
+#         return self.render_to_response(context)
 
 class UploadModuleFileView(PageContextMixin, TemplateView):
     page_section = 'modules'
@@ -60,6 +64,7 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
             tar.extractall(path)
             tar.close()
         except:
+            # добавить текст ошибки
             pass
 
         for folder in os.listdir(settings.MODULES_DIR):

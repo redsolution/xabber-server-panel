@@ -14,12 +14,12 @@
 
         <div class="row no-gutters">
             <div class="col tabs">
-                <ul class="nav nav-tabs">
-                    <li class="nav-item">
-                        <a class="nav-link{% if active_tab == 'modules' %} active{% endif %}"
-                           href="{% url 'modules:modules-list' %}">Modules</a>
-                    </li>
-                </ul>
+<!--                <ul class="nav nav-tabs">-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link{% if active_tab == 'modules' %} active{% endif %}"-->
+<!--                           href="{% url 'modules:modules-list' %}">Modules</a>-->
+<!--                    </li>-->
+<!--                </ul>-->
 
                 <div class="tab-content">
                     {% block tab_content %}{% endblock %}
