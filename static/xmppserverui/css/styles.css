@@ -83,6 +83,13 @@ a:hover {
     padding: 16px 0;
 }
 
+.left-content .nav-menu .list-group-item-inactive {
+    background-color: #212121;
+    border: none;
+    color: #727277;
+    padding: 11px 24px;
+}
+
 .left-content .nav-menu .list-group-item {
     background-color: #212121;
     border: none;

@@ -69,7 +69,7 @@
                                class="list-group-item {% if page.section == 'server' %}active{% endif %}">
                                 Settings
                             </a>
-                            <div>Modules</div>
+                            <div class="list-group-item-inactive">Modules</div>
                             {% get_modules as modules %}
                             {% for module in modules %}
                                 <a href="{{ module.url }}"
