@@ -82,8 +82,8 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                             apps.clear_cache()
                             apps.populate(settings.INSTALLED_APPS)
 
-                                management.call_command('migrate', folder, interactive=False)
-                            except:
-                                pass
+                            management.call_command('migrate', folder, interactive=False)
+                        except:
+                            pass
 
 

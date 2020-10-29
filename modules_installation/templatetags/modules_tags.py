@@ -32,7 +32,6 @@ def get_menu_subitems():
                     })
         if 'create_items' in module:
             for subitem in module['create_items']:
-                print(subitem)
                 subitems.append({
                     'menu_item': 'create',
                     'subitem': subitem['name'],
