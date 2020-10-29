@@ -1,7 +1,7 @@
 import os
 import tarfile
 from collections import OrderedDict
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404
 from django.conf import settings
@@ -12,9 +12,13 @@ from modules_installation.templatetags.modules_tags import get_modules
 from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost
 from .forms import UploadModuleFileForm
-
+from .mixins import ModuleAccessMixin
 
 SETTINGS_TAB_MODULES = 'modules'
+
+
+class BasePluginView(ModuleAccessMixin, View):
+    pass
 
 
 class ManageModulesView(PageContextMixin, TemplateView):
@@ -33,6 +37,7 @@ class ManageModulesView(PageContextMixin, TemplateView):
         }
 
         return self.render_to_response(context)
+
 
 class UploadModuleFileView(PageContextMixin, TemplateView):
     page_section = 'modules_upload'
@@ -57,30 +62,28 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
         return self.render_to_response({"form": form})
 
     def handle_uploaded_file(self, f):
-        try:
-            tar = tarfile.open(fileobj=f.file, mode='r:gz')
-            tar.extractall(settings.MODULES_DIR)
-            tar.close()
-        except tarfile.ReadError:
-            return 'Module files cannot be extracted from this file'
+        if os.path.exists(settings.MODULES_DIR):
+            try:
+                tar = tarfile.open(fileobj=f.file, mode='r:gz')
+                tar.extractall(settings.MODULES_DIR)
+                tar.close()
+            except tarfile.ReadError:
+                return 'Module files cannot be extracted from this file'
 
-        for folder in os.listdir(settings.MODULES_DIR):
-            folder_path = os.path.join(settings.MODULES_DIR, folder)
-            if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
-                new_app_name = "modules." + folder
-                if not apps.is_installed(new_app_name):
-                    try:
-                        apps.app_configs = OrderedDict()
-                        settings.INSTALLED_APPS += (new_app_name,)
-                        apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
-                        apps.clear_cache()
-                        apps.populate(settings.INSTALLED_APPS)
+            for folder in os.listdir(settings.MODULES_DIR):
+                folder_path = os.path.join(settings.MODULES_DIR, folder)
+                if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
+                    new_app_name = "modules." + folder
+                    if not apps.is_installed(new_app_name):
+                        try:
+                            apps.app_configs = OrderedDict()
+                            settings.INSTALLED_APPS += (new_app_name,)
+                            apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
+                            apps.clear_cache()
+                            apps.populate(settings.INSTALLED_APPS)
 
-                        management.call_command('makemigrations', folder, interactive=False)
-
-                        management.call_command('migrate', folder, interactive=False)
-                    except:
-                        pass
-        return ''
+                                management.call_command('migrate', folder, interactive=False)
+                            except:
+                                pass
 
 
