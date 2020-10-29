@@ -62,14 +62,14 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
         return self.render_to_response({"form": form})
 
     def handle_uploaded_file(self, f):
-        if os.path.exists(settings.MODULES_DIR):
-            try:
-                tar = tarfile.open(fileobj=f.file, mode='r:gz')
-                tar.extractall(settings.MODULES_DIR)
-                tar.close()
-            except tarfile.ReadError:
-                return 'Module files cannot be extracted from this file'
+        try:
+            tar = tarfile.open(fileobj=f.file, mode='r:gz')
+            tar.extractall(settings.MODULES_DIR)
+            tar.close()
+        except tarfile.ReadError:
+            return 'Module files cannot be extracted from this file'
 
+        if os.path.exists(settings.MODULES_DIR):
             for folder in os.listdir(settings.MODULES_DIR):
                 folder_path = os.path.join(settings.MODULES_DIR, folder)
                 if os.path.isdir(folder_path) and os.path.isfile(os.path.join(folder_path,  '__init__.py')):
@@ -85,5 +85,5 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                             management.call_command('migrate', folder, interactive=False)
                         except:
                             pass
-
+            return ''
 
