@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 {% load xmppserverui_tags modules_tags %}
-
+{% get_menu_subitems as subitems %}
 
 <html lang="en">
     <head>
@@ -40,10 +40,22 @@
                         <div class="list-group list-group-flush">
                             <a href="{% url 'server:dashboard' %}"
                                class="list-group-item {% if page.section == 'dashboard' %}active{% endif %}">Dashboard</a>
+                            {% for subitem in subitems %}
+                                {% if subitem.menu_item == 'dashboard' %}
+                                    <a href="{{ subitem.url }}"
+                                       class="list-group-item">{{ subitem.subitem }}</a>
+                                {% endif %}
+                            {% endfor %}
                             <a href="{% url 'virtualhost:users' %}"
                                class="list-group-item {% if page.section == 'vhosts-users' %}active{% endif %}">
                                 Users
                             </a>
+                            {% for subitem in subitems %}
+                                {% if subitem.menu_item == 'users' %}
+                                    <a href="{{ subitem.url }}"
+                                       class="list-group-item">{{ subitem.subitem }}</a>
+                                {% endif %}
+                            {% endfor %}
                             <a href="{% url 'virtualhost:groups' %}"
                                class="list-group-item {% if page.section == 'vhosts-groups' %}active{% endif %}">
                                 Circles
@@ -103,6 +115,16 @@
                                     lists, user permissions and resource quotas.
                                 </div>
                             </a>
+                            {% for subitem in subitems %}
+                                {% if subitem.menu_item == 'create' %}
+                                    <a class="dropdown-item large-padding" href="{{ subitem.url }}">
+                                        <b>{{ subitem.subitem }}</b>
+                                        <div class="dropdown-item-secondary-text">
+                                            {{ subitem.subitem }}
+                                        </div>
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
                             <!--<a class="dropdown-item large-padding" href="#">-->
                                 <!--<b>Group chat</b><br/>-->
                                 <!--<span class="dropdown-item-secondary-text">-->
