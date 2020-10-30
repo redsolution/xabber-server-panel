@@ -65,7 +65,12 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
     def handle_uploaded_file(self, f):
         try:
             tar = tarfile.open(fileobj=f.file, mode='r:gz')
-            tar.extractall(settings.MODULES_DIR)
+            subdir_and_files = []
+            for member in tar.getmembers():
+                if member.path.startswith('panel/'):
+                    member.path = member.path[len('panel/'):]
+                    subdir_and_files.append(member)
+            tar.extractall(settings.MODULES_DIR, members=subdir_and_files)
             tar.close()
         except tarfile.ReadError:
             return 'Module files cannot be extracted from this file'
