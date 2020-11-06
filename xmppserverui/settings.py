@@ -199,7 +199,10 @@ if os.path.exists(MODULES_DIR):
         folder_path = os.path.join(MODULES_DIR, folder)
         if os.path.isdir(folder_path):
             new_app_name = MODULES_DIR_NAME + "." + folder
-            with open(os.path.join(folder_path, 'conf.json')) as conf:
-                data = json.load(conf)
-                MODULES_SPECS.append(data)
-            INSTALLED_APPS += (new_app_name,)
+            try:
+                with open(os.path.join(folder_path, 'conf.json')) as conf:
+                    data = json.load(conf)
+                    MODULES_SPECS.append(data)
+                INSTALLED_APPS += (new_app_name,)
+            except FileNotFoundError:
+                continue
