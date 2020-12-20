@@ -252,7 +252,8 @@ modules:
         access_model: whitelist
   mod_push: {}
   mod_push_keepalive: {}
-  mod_xabber_push: {}
+  mod_xabber_push:
+    use_cache: false
   mod_roster: {}
   mod_shared_roster: {}
   mod_stats: {}
