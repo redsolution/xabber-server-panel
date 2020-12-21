@@ -2,11 +2,8 @@ import os
 import time
 import subprocess
 
-from OpenSSL import crypto
-from cryptography import x509
 from django.template.loader import render_to_string
 from django.conf import settings
-from datetime import datetime
 
 from virtualhost.models import User, VirtualHost
 # def execute_ejabberd_cmd(cmd):
@@ -109,35 +106,3 @@ def update_vhosts_config():
     file.write(render_to_string(template, {'vhosts': vhosts}))
     file.close()
 
-
-def get_cert_info(cert_file):
-    bin_data = cert_file.read_bytes()
-
-    try:
-        crypto.load_privatekey(crypto.FILETYPE_PEM, bin_data)
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, bin_data)
-        cn = cert.get_subject().CN
-        not_after = datetime.strptime(cert.get_notAfter().decode().replace('Z', '+0000'), '%Y%m%d%H%M%S%z')
-        not_before = datetime.strptime(cert.get_notBefore().decode().replace('Z', '+0000'), '%Y%m%d%H%M%S%z')
-    except:
-        return {}
-    cert = cert.to_cryptography()
-    try:
-        ext = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
-    except:
-        ext = None
-    if ext:
-        names = [
-            name
-            for name in ext.get_values_for_type(x509.DNSName)
-            if name is not None
-        ]
-        names.extend(
-            str(name) for name in ext.get_values_for_type(x509.IPAddress)
-        )
-    else:
-        names = []
-
-    if not names:
-        names = [cn]
-    return {'names': names, 'not_after': not_after, 'not_before': not_before}
