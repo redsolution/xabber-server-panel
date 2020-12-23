@@ -212,7 +212,7 @@
             account_settings.push(jid);
             localStorage.setItem(accounts_storage_name, JSON.stringify(accounts));
             localStorage.setItem(account_settings_storage_name, JSON.stringify(account_settings));
-            localStorage.setItem('xabber-storage-v8-dev-accounts-' + jid, JSON.stringify({enabled: true, jid: jid, auth_type: 'x-token', x_token: {token: token}, password: null}));
+            localStorage.setItem(accounts_storage_name + '-' + jid, JSON.stringify({enabled: true, jid: jid, auth_type: 'x-token', x_token: {token: token}, password: null}));
         {% endif %}
     xabber.start();
     });
