@@ -6,6 +6,7 @@ import json
 from django.template.loader import get_template, render_to_string
 from django.conf import settings
 
+from server.models import Configuration
 from .signals import success_installation
 
 
@@ -76,6 +77,8 @@ def create_config(data):
     config_file = open(os.path.join(settings.EJABBERD_CONFIG_PATH, 'ejabberd.yml'), "w+")
     config_file.write(config_template.render(context=data))
     config_file.close()
+    entry = Configuration(pk=1, config=config_template.render(context=data))
+    entry.save()
     update_admins_config(data)
     update_vhosts_config(data)
 

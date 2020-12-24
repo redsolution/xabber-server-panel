@@ -26,9 +26,9 @@ SECRET_KEY = '1y+xp2ic@04=_t5293l69k%)8c(ika!h3zk&qmqcn9uep088-v'
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
-
+AUTH_USER_MODEL = 'virtualhost.User'
 APPEND_SLASH = True
-
+LOGIN_URL = '/profile/'
 # Application definition
 
 INSTALLED_APPS = [

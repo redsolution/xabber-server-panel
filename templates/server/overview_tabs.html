@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}Settings{% endblock %}
 
 {% block main_content %}
+{% check_user_perms 'virtualhost.view_user' as virtualhost_view_user_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
@@ -19,10 +20,12 @@
                         <a class="nav-link{% if active_tab == 'vhosts' %} active{% endif %}"
                            href="{% url 'server:vhosts-list' %}">Virtual hosts</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link{% if active_tab == 'admins' %} active{% endif %}"
-                           href="{% url 'server:admins-list' %}">Administrators</a>
-                    </li>
+                    {% if virtualhost_view_user_perm %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if active_tab == 'admins' %} active{% endif %}"
+                               href="{% url 'server:admins-list' %}">Administrators</a>
+                        </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link{% if active_tab == 'auth_backends' %} active{% endif %}"
                            href="{% url 'server:manage-ldap' %}">LDAP Configuration</a>

@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}{{ group }}{% endblock %}
 
 {% block main_content %}
+{% check_user_perms 'virtualhost.view_user' as virtualhost_view_user_perm %}
+{% check_user_perms 'virtualhost.add_user' as virtualhost_add_user_perm %}
+{% check_user_perms 'virtualhost.change_user' 'True' as virtualhost_change_user_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
@@ -29,10 +32,12 @@
                         <a class="nav-link{% if active_tab == 'group-details' %} active{% endif %}"
                            href="{% url 'virtualhost:group-details' group.id %}">Details</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link{% if active_tab == 'group-members' %} active{% endif %}"
-                           href="{% url 'virtualhost:group-members' group.id %}">Members</a>
-                    </li>
+                    {% if virtualhost_view_user_perm and virtualhost_add_user_perm and virtualhost_change_user_perm %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if active_tab == 'group-members' %} active{% endif %}"
+                               href="{% url 'virtualhost:group-members' group.id %}">Members</a>
+                        </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link{% if active_tab == 'group-subscriptions' %} active{% endif %}"
                            href="{% url 'virtualhost:group-subscriptions' group.id %}">Shared contacts</a>

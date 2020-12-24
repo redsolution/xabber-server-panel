@@ -1,0 +1,115 @@
+{% extends 'virtualhost/user_tabs.html' %}
+
+{% block title %}Circles for {{ curr_user }}{% endblock %}
+
+{% block tab_content %}
+<div class="tab-pane fade show active">
+    <div class="row no-gutters">
+        <div class="col page-content">
+            <form method="post" action="{% url 'virtualhost:user-permissions' curr_user.id %}">
+                {% csrf_token %}
+
+                <div class="row form-group {% if field.errors %}invalid{% endif %}">
+                    <div class="col-sm-12">
+                        <ul class="list-perm" id="v_perms_list">
+                            {% regroup perms by content_type.app_label as perms_by_type %}
+                            {% for type in perms_by_type %}
+                                {% if not type.grouper == 'admin' and not type.grouper == 'auth' and not type.grouper == 'sessions' and not type.grouper == 'contenttypes' %}
+                                    <p>{{ type.grouper}}</p>
+                                    {% for perm in type.list %}
+                                        <li class="list-group-item">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox"
+                                                     class="custom-control-input select-item"
+                                                     id="select-perm-{{ perm.id }}"
+                                                     data-id="{{ perm.id }}"
+                                                     {% if perm in user_perms %}checked{% endif %}
+                                                     {% if not perm.codename in auth_user_perms and not auth_user.is_admin %}disabled{% endif %}
+                                                >
+                                                <label class="custom-control-label"
+                                                     for="select-perm-{{ perm.id }}">
+
+                                                     {{ perm.name }}
+                                                </label>
+                                            </div>
+                                        </li>
+                                        {% if forloop.counter|divisibleby:4 %}
+                                        <br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+
+                        <input type="hidden" name="displayed_perms" />
+                    </div>
+                </div>
+
+                <div class="row form-btn-block">
+                    <div class="col-sm-12">
+                        <button type="submit" id="btn_save_perms"
+                                class="btn btn-primary" disabled>Save</button>
+                        <span id="selected_counts" class="selected-counts-text">
+                            <span id="selected_counter">0</span> selected
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+
+    <script>
+        function updateVPermsInputField(perms) {
+            var perms_string = Array.from(perms).join(';');
+            $('input[name=displayed_perms]').val(perms_string);
+        }
+
+        function equalSet(as, bs) {
+            if (as.size !== bs.size) return false;
+            for (var a of as) if (!bs.has(a)) return false;
+            return true;
+        }
+
+        function initVPerms() {
+            var perms = new Set();
+            $("#v_perms_list .select-item:checked").each(function() {
+                var perm = $(this).attr("data-id");
+                perms.add(perm);
+            });
+            updateVPermsInputField(perms);
+            return perms;
+        }
+
+        $(document).ready(function() {
+            var new_perms = initVPerms(),
+                curr_perms = initVPerms();
+
+            $("#v_perms_list").on("change", ".select-item", function(event) {
+                event.preventDefault();
+                var is_checked = this.checked,
+                    perm = $(this).attr("data-id");
+
+                if (is_checked)
+                    new_perms.add(perm);
+                else
+                    new_perms.delete(perm);
+
+                updateVPermsInputField(new_perms);
+
+                if (equalSet(new_perms, curr_perms)) {
+                    $("#btn_save_perms").prop('disabled', true);
+                    $("#selected_counts").hide();
+                } else {
+                    $("#btn_save_perms").prop('disabled', false);
+                    $("#selected_counter").text(new_perms.size);
+                    $("#selected_counts").show();
+                }
+            });
+        });
+    </script>
+{% endblock %}

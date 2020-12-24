@@ -1,8 +1,28 @@
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
+from django.contrib import auth
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
-from django.contrib.auth.models import AbstractBaseUser
+
+def _user_has_perm(user, perm, obj, vhost):
+    """
+    A backend can raise `PermissionDenied` to short-circuit permission checking.
+    """
+    for backend in auth.get_backends():
+        if not hasattr(backend, 'has_perm'):
+            continue
+        try:
+            if vhost:
+                if backend.has_perm(user, perm, obj) and user.host == vhost:
+                    return True
+            else:
+                if backend.has_perm(user, perm, obj):
+                    return True
+        except PermissionDenied:
+            return False
+    return False
 
 
 class VirtualHost(models.Model):
@@ -12,7 +32,7 @@ class VirtualHost(models.Model):
         return self.name
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     SQL = 'sql'
     LDAP = 'ldap'
     AUTH_BACKENDS = [
@@ -83,6 +103,21 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.full_jid
+
+    def has_perm(self, perm, obj=None, vhost=None):
+        """
+        Return True if the user has the specified permission. Query all
+        available auth backends, but return immediately if any backend returns
+        True. Thus, a user who has permission from a single auth backend is
+        assumed to have permission in general. If an object is provided, check
+        permissions for that object.
+        """
+        # # Active superusers have all permissions.
+        if self.is_active and self.is_superuser or self.is_active and self.is_admin:
+            return True
+
+        # Otherwise we need to check the backends.
+        return _user_has_perm(self, perm, obj, vhost)
 
 
 class Group(models.Model):

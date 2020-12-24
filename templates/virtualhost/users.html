@@ -4,6 +4,8 @@
 {% block title %}Users{% endblock %}
 
 {% block main_content %}
+{% check_user_perms 'virtualhost.change_user' 'True' as virtualhost_edit_user_perm %}
+{% check_user_perms 'virtualhost.delete_user' 'True' as virtualhost_delete_user_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
@@ -41,7 +43,9 @@
                             <th scope="col">Name</th>
                             <th scope="col">Created</th>
                             <th scope="col">Auth backend</th>
-                            <th scope="col">Actions</th>
+                            {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
+                                <th scope="col">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -75,26 +79,30 @@
                                 <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}</td>
                                 <td class="table-data date">{{ obj.user.get_auth_backend_display }}</td>
                                 <td class="table-data dots-menu">
+                                    {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
                                     {% if obj.user.id %}
-                                    <div class="btn-group dropleft">
-                                        <i class="mdi mdi-24px mdi-dots-vertical" role="button"
-                                           id="dropdown-user-actions" data-toggle="dropdown"
-                                           aria-haspopup="true" aria-expanded="false">
-                                        </i>
-                                        <div class="dropdown-menu"
-                                              aria-labelledby="dropdown-user-actions-2">
-                                                <a class="dropdown-item" href="{% url 'virtualhost:user-vcard' obj.user.id %}">
-                                                    Edit vcard
-                                                </a>
-                                            {% if obj.user.allowed_delete %}
-                                                <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
-                                                    Delete user
-                                                </a>
-                                            {% endif %}
+                                        <div class="btn-group dropleft">
+                                            <i class="mdi mdi-24px mdi-dots-vertical" role="button"
+                                               id="dropdown-user-actions" data-toggle="dropdown"
+                                               aria-haspopup="true" aria-expanded="false">
+                                            </i>
+                                                <div class="dropdown-menu"
+                                                      aria-labelledby="dropdown-user-actions-2">
+                                                    {% if virtualhost_edit_user_perm %}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-vcard' obj.user.id %}">
+                                                            Edit vcard
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if obj.user.allowed_delete and virtualhost_delete_user_perm %}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
+                                                            Delete user
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
+                                    {% endif %}
                                 </td>
-                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>

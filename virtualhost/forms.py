@@ -2,6 +2,8 @@ import base64
 from django import forms
 import re
 
+from django.contrib.auth.models import Permission
+
 from api.forms import AuthorizedApiForm
 from api.utils import file_size_validator, file_extension_validator
 from .models import User, Group, GroupMember, VirtualHost
@@ -104,6 +106,7 @@ class RegisterUserForm(AuthorizedApiForm):
         cleaned_data.pop('vcard')
         self.new_user = User.objects.create(**cleaned_data)
         if cleaned_data['is_admin'] is True:
+            self.new_user.user_permissions.set(Permission.objects.filter())
             update_ejabberd_config()
 
 

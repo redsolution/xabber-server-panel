@@ -50,3 +50,21 @@ def get_user_initials(user):
         return user["username"][0:2]
     else:
         return user[0:2]
+
+
+@register.simple_tag(takes_context=True)
+def check_user_perms(context, content_type_app_label, vhost_check=False):
+    username = context.get('request').session.get('_auth_user_username')
+    host = context.get('request').session.get('_auth_user_host')
+    vhost = context.get('request').COOKIES.get('vhost')
+    try:
+        user = User.objects.get(username=username, host=host)
+        if vhost_check and vhost:
+            if user.has_perm(content_type_app_label, vhost=vhost):
+                return True
+        else:
+            if user.has_perm(content_type_app_label):
+                return True
+        return False
+    except User.DoesNotExist:
+        return None

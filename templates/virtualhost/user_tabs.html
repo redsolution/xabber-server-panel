@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}{{ curr_user }}{% endblock %}
 
 {% block main_content %}
+{% check_user_perms 'virtualhost.change_user' 'True' as virtualhost_change_user_perm %}
+{% check_user_perms 'virtualhost.view_group' as virtualhost_view_group_perm %}
+{% check_user_perms 'virtualhost.change_group' 'True' as virtualhost_change_group_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
@@ -29,19 +32,27 @@
                         <a class="nav-link{% if active_tab == 'user-details' %} active{% endif %}"
                            href="{% url 'virtualhost:user-details' curr_user.id %}">Details</a>
                     </li>
+                    {% if virtualhost_change_user_perm %}
                     <li class="nav-item">
                         <a class="nav-link{% if active_tab == 'user-vcard' %} active{% endif %}"
                            href="{% url 'virtualhost:user-vcard' curr_user.id %}">vCard</a>
                     </li>
-                    {% if curr_user.allowed_change_password %}
-                    <li class="nav-item">
-                        <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
-                           href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
-                    </li>
+                        {% if curr_user.allowed_change_password %}
+                            <li class="nav-item">
+                                <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
+                                   href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
+                            </li>
+                        {% endif %}
+                        {% if virtualhost_view_group_perm and virtualhost_change_group_perm %}
+                            <li class="nav-item">
+                                <a class="nav-link{% if active_tab == 'user-groups' %} active{% endif %}"
+                                   href="{% url 'virtualhost:user-groups' curr_user.id %}">Circles</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link{% if active_tab == 'user-groups' %} active{% endif %}"
-                           href="{% url 'virtualhost:user-groups' curr_user.id %}">Circles</a>
+                        <a class="nav-link{% if active_tab == 'user-permissions' %} active{% endif %}"
+                           href="{% url 'virtualhost:user-permissions' curr_user.id %}">Permissions</a>
                     </li>
                 </ul>
 

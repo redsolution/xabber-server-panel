@@ -1,6 +1,7 @@
 import math
 from datetime import datetime, timedelta
 
+from django.contrib.auth.models import Permission
 from django.db.models import Count
 from django.views.generic import TemplateView
 from django.urls import reverse
@@ -20,6 +21,7 @@ USER_TAB_DETAILS = 'user-details'
 USER_TAB_VCARD = 'user-vcard'
 USER_TAB_SECURITY = 'user-security'
 USER_TAB_GROUPS = 'user-groups'
+USER_TAB_PERMISSIONS = 'user-permissions'
 
 GROUP_TAB_DETAILS = 'group-details'
 GROUP_TAB_MEMBERS = 'group-members'
@@ -868,3 +870,41 @@ class ChatListView(VhostContextView, TemplateView):
         page = request.GET.get('page', 1)
         context = get_pagination_data(data, page)
         return self.get_response(request, vhost=vhost, context=context)
+
+
+class UserPermissionsView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-users'
+    template_name = 'virtualhost/user_permissions.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            curr_user = User.objects.get(id=kwargs["user_id"])
+            print(curr_user.host)
+        except User.DoesNotExist:
+            raise Http404
+        return self.render_to_response({"curr_user": curr_user,
+                                        "active_tab": USER_TAB_PERMISSIONS,
+                                        "perms": Permission.objects.filter(),
+                                        "user_perms": curr_user.user_permissions.all(),
+                                        })
+
+    def post(self, request, *args, **kwargs):
+        username = request.session.get('_auth_user_username')
+        host = request.session.get('_auth_user_host')
+        try:
+            user = User.objects.get(username=username, host=host)
+            curr_user = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+
+        post_data = request.POST.copy()
+        post_data.pop('displayed_perms')
+        form_perm_list = request.POST.get('displayed_perms').split(';')
+        if user.has_perms(form_perm_list) or user.is_admin or user.is_superuser:
+            curr_user.user_permissions.set(form_perm_list)
+
+        return self.render_to_response({"curr_user": curr_user,
+                                        "active_tab": USER_TAB_PERMISSIONS,
+                                        "perms": Permission.objects.filter(),
+                                        "user_perms": curr_user.user_permissions.all(),
+                                        })
