@@ -858,7 +858,15 @@ class ChatListView(VhostContextView, TemplateView):
         django_users = list(User.objects.all().values())
         data = []
         for chat in chats:
-            owner_username, owner_host = chat["owner"].split('@')
+            if len(chat["owner"].split('@')) == 2:
+                owner_username, owner_host = chat["owner"].split('@')
+            elif len(chat["owner"].split('@')) == 1:
+                owner_username = chat["owner"]
+                owner_host = ".".join(owner_username.split('.')[1:])
+            else:
+                return self.get_response(request,
+                                         vhost=vhost,
+                                         context={"error": chats.get("error")})
             user = next(filter(lambda o: o['username'] == owner_username
                                          and o['host'] == owner_host, django_users), None)
 
