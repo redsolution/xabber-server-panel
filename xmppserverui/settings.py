@@ -173,10 +173,10 @@ HTTP_REQUEST_TIMEOUT = 5
 
 PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
 INSTALLATION_LOCK = os.path.join(PROJECT_DIR, '.installation_lock')
-PSQL_SCRIPT = os.path.join(PROJECT_DIR, 'psql')
-EJABBERD_DUMP = os.path.join(PROJECT_DIR, 'pg.sql')
-EJABBERD_CONFIG_PATH = os.path.join(PROJECT_DIR, 'etc/ejabberd/')
-EJABBERDCTL = os.path.join(PROJECT_DIR, 'bin/ejabberdctl')
+PSQL_SCRIPT = os.path.join(PROJECT_DIR, 'utils/psql/psql')
+EJABBERD_DUMP = os.path.join(PROJECT_DIR, 'utils/psql/pg.sql')
+EJABBERD_CONFIG_PATH = os.path.join(PROJECT_DIR, 'xmppserver/etc/ejabberd/')
+EJABBERDCTL = os.path.join(PROJECT_DIR, 'xmppserver/bin/ejabberdctl')
 EJABBERD_SHOULD_RELOAD = False
 EJABBERD_STATE = os.path.join(PROJECT_DIR, 'server_state')
 EJABBERD_STATE_ON = 1
