@@ -201,6 +201,7 @@ modules:
   mod_groupchat_domains: {}
   mod_groupchat_block: {}
   mod_groupchat_messages: {}
+  mod_groupchat_default_restrictions: {}
   mod_adhoc: {}
   mod_admin_extra: {}
   mod_announce:
