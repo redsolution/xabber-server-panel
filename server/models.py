@@ -146,3 +146,7 @@ class Configuration(models.Model):
     def save(self, *args, **kwargs):
         self.__class__.objects.exclude(id=self.id).delete()
         super(Configuration, self).save(*args, **kwargs)
+
+
+class Dashboard(models.Model):
+    pass

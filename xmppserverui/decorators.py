@@ -35,7 +35,7 @@ def custom_user_passes_test(test_func, login_url=None, redirect_field_name=REDIR
     return decorator
 
 
-def custom_permission_required(perm, login_url=None, raise_exception=False, vhost_check=False):
+def custom_permission_required(perm, login_url=None, raise_exception=False):
 
     def check_perms(request, user):
         if perm == 'is_admin' and user.is_admin:
@@ -46,13 +46,8 @@ def custom_permission_required(perm, login_url=None, raise_exception=False, vhos
             perms = (perm,)
         else:
             perms = perm
-        vhost = request.COOKIES.get('vhost')
-        if vhost_check and vhost:
-            if user.has_perms(perms, vhost):
-                return True
-        else:
-            if user.has_perms(perms):
-                return True
+        if user.has_perms(perms):
+            return True
         # In case the 403 handler should be called raise the exception
         if raise_exception:
             raise PermissionDenied

@@ -6,7 +6,7 @@ from django.contrib import auth
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 
-def _user_has_perm(user, perm, obj, vhost):
+def _user_has_perm(user, perm, obj):
     """
     A backend can raise `PermissionDenied` to short-circuit permission checking.
     """
@@ -14,12 +14,8 @@ def _user_has_perm(user, perm, obj, vhost):
         if not hasattr(backend, 'has_perm'):
             continue
         try:
-            if vhost:
-                if backend.has_perm(user, perm, obj) and user.host == vhost:
-                    return True
-            else:
-                if backend.has_perm(user, perm, obj):
-                    return True
+            if backend.has_perm(user, perm, obj):
+                return True
         except PermissionDenied:
             return False
     return False
@@ -104,7 +100,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.full_jid
 
-    def has_perm(self, perm, obj=None, vhost=None):
+    def has_perm(self, perm, obj=None):
         """
         Return True if the user has the specified permission. Query all
         available auth backends, but return immediately if any backend returns
@@ -117,7 +113,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
 
         # Otherwise we need to check the backends.
-        return _user_has_perm(self, perm, obj, vhost)
+        return _user_has_perm(self, perm, obj)
 
 
 class Group(models.Model):
@@ -179,3 +175,7 @@ class GroupChat(models.Model):
 
     def __str__(self):
         return self.full_jid
+
+
+class UserPassword(models.Model):
+    pass

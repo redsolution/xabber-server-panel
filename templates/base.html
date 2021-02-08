@@ -33,8 +33,10 @@
                     </div>
                     <div class="nav-menu">
                         <div class="list-group list-group-flush">
-                            {% check_user_perms 'server.view_configuration' as server_configuration_perms %}
-                            {% if server_configuration_perms %}
+                            <a href="{% url 'personal-area:profile' %}"
+                               class="list-group-item {% if page.section == 'personal-area' %}active{% endif %}">Profile </a>
+                            {% check_user_perms 'server.view_dashboard' as server_dashboard_perms %}
+                            {% if server_dashboard_perms %}
                             <a href="{% url 'server:dashboard' %}"
                                class="list-group-item {% if page.section == 'dashboard' %}active{% endif %}">Dashboard </a>
                             {% endif %}
@@ -88,7 +90,7 @@
                         {% check_user_perms 'virtualhost.add_user' as virtualhost_add_user_perm %}
                         {% check_user_perms 'virtualhost.add_group' as virtualhost_add_group_perm %}
                         <div class="dropdown-menu">
-                            {% if vhosts_cr and virtualhost_add_user_perm and virtualhost_user_perms %}
+                            {% if virtualhost_add_user_perm and virtualhost_user_perms %}
                             <a class="dropdown-item large-padding" href="{% url 'virtualhost:user-create' %}">
                                 <b>User</b>
                                 <div class="dropdown-item-secondary-text">

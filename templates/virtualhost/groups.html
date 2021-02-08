@@ -4,8 +4,8 @@
 {% block title %}Circles{% endblock %}
 
 {% block main_content %}
-{% check_user_perms 'virtualhost.delete_group' 'True' as virtualhost_delete_group_perm %}
-{% check_user_perms 'virtualhost.change_group' 'True' as virtualhost_change_group_perm %}
+{% check_user_perms 'virtualhost.delete_group' as virtualhost_delete_group_perm %}
+{% check_user_perms 'virtualhost.change_group' as virtualhost_change_group_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
@@ -13,6 +13,7 @@
                     <li class="list-group-item"><h1>Circles</h1></li>
                     <li class="list-group-item"><div class="divider"></div></li>
                     <li class="list-group-item"><h4>{{ title }} circles</h4></li>
+                    {% if auth_user.is_admin %}
                     <li class="list-group-item right-btn">
                          <div class="dropdown">
                             <button class="btn dropdown-toggle"
@@ -29,6 +30,7 @@
                             </div>
                         </div>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

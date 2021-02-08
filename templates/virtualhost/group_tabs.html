@@ -5,7 +5,7 @@
 {% block main_content %}
 {% check_user_perms 'virtualhost.view_user' as virtualhost_view_user_perm %}
 {% check_user_perms 'virtualhost.add_user' as virtualhost_add_user_perm %}
-{% check_user_perms 'virtualhost.change_user' 'True' as virtualhost_change_user_perm %}
+{% check_user_perms 'virtualhost.change_user' as virtualhost_change_user_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">

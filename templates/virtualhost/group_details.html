@@ -4,7 +4,7 @@
 {% block title %}Edit {{ group }} details{% endblock %}
 
 {% block tab_content %}
-{% check_user_perms 'virtualhost.delete_group' 'True' as virtualhost_delete_group_perm %}
+{% check_user_perms 'virtualhost.delete_group' as virtualhost_delete_group_perm %}
 <div class="tab-pane fade show active">
     <div class="row no-gutters">
         <div class="col page-content">
@@ -23,6 +23,15 @@
                 {% with form.description as field %}
                     {% include 'include/input_field.html' %}
                 {% endwith %}
+
+                {% for error in form.non_field_errors %}
+                    <div class="form-group row">
+                        <div class="col-sm-3"></div>
+                        <div class="col-sm-9 non-field-error">
+                            {{ error }}
+                        </div>
+                    </div>
+                 {% endfor %}
 
                 <div class="row form-group">
                     <div class="col-sm-3"></div>

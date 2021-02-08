@@ -30,9 +30,9 @@ def get_default_url(user, admin=None):
     if user.is_anonymous:
         return reverse('auth:login')
     # return reverse('server:dashboard')
-    if admin is not None:
-        if admin:
-            return reverse('server:dashboard')
+    # if admin is not None:
+    #     if admin:
+    #         return reverse('server:dashboard')
     return reverse('personal-area:profile')
 
 

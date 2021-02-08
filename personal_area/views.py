@@ -19,7 +19,6 @@ class UserProfileDetailView(PersonalAreaContextMixin, TemplateView):
         user.api.get_vcard({"user": curr_user.username,
                             "host": curr_user.host,
                             "name": "nickname"})
-        print(user.api.success)
         if user.api.success:
             nickname = user.api.response["content"]
 
@@ -27,7 +26,6 @@ class UserProfileDetailView(PersonalAreaContextMixin, TemplateView):
                              "host": curr_user.host,
                              "name": "n",
                              "subname": "given"})
-        print(user.api.success)
         if user.api.success:
             first_name = user.api.response["content"]
 

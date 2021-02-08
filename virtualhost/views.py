@@ -27,6 +27,63 @@ GROUP_TAB_DETAILS = 'group-details'
 GROUP_TAB_MEMBERS = 'group-members'
 GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 
+EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes']
+EXCLUDED_PERMISSIONS_MODELS = [
+    'authbackend', 'configdata', 'configuration', 'ldapsettings','ldapsettingsserver', 'serverconfig',
+    'serverconfiguration', 'groupmember', "virtualhost"
+                               ]
+EXCLUDED_PERMISSIONS_CODENAMES = [
+    'add_dashboard', 'change_dashboard', 'delete_dashboard', 'add_groupchat','change_groupchat', 'delete_groupchat',
+    'add_userpassword', 'delete_userpassword', "view_userpassword"
+                                  ]
+
+PERMISSIONS_DICT = {
+    'virtualhost.view_user': ['xabber_registered_users','get_vcard','get_vcard2'],
+    'virtualhost.view_groupchat': 'xabber_registered_chats',
+    'server.view_dashboard': ['xabber_registered_users_count', 'xabber_num_online_users'],
+    'virtualhost.add_user': ['xabberuser_set_vcard', 'xabberuser_set_vcard2', 'register', 'unregister'],
+    'virtualhost.delete_user': 'unregister',
+    'virtualhost.change_user': ['xabberuser_set_vcard', 'xabberuser_set_vcard2'],
+    'virtualhost.change_userpassword': 'change_password',
+    'virtualhost.add_group': 'srg_create',
+    'virtualhost.delete_group': 'srg_delete',
+    'virtualhost.change_group': ['srg_user_add', 'srg_user_del', 'srg_create'],
+}
+
+
+def set_api_permissions(user, curr_user, perms_list):
+
+    django_perms_list = ['{0}.{1}'.format(p.content_type.app_label, p.codename) for p in perms_list]
+    commands = []
+    if not curr_user.is_admin:
+        for perm in django_perms_list:
+            try:
+                if isinstance(PERMISSIONS_DICT[perm], list):
+                    for command in PERMISSIONS_DICT[perm]:
+                        commands += [command]
+                else:
+                    commands += [PERMISSIONS_DICT[perm]]
+            except KeyError:
+                pass
+        user.api.xabber_set_permissions(
+            {
+                "user": curr_user.username,
+                "host": curr_user.host,
+                "set_admin": 'false',
+                "commands": ','.join(set(commands)),
+            }
+        )
+    else:
+        user.api.xabber_set_permissions(
+            {
+                "user": curr_user.username,
+                "host": curr_user.host,
+                "set_admin": 'true',
+                "commands": '',
+            }
+        )
+
+
 
 # def get_page_title(paginator, data, hosts_count):
 #     return str(paginator.count + hosts_count)
@@ -34,8 +91,8 @@ GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 
 class VhostContextView(ServerStartedMixin):
     def get_vhost(self, request, *args, **kwargs):
-        return request.COOKIES['vhost'] if 'vhost' in request.COOKIES \
-            else self.context['vhosts'].first().name
+        return request.COOKIES['vhost'] if 'vhost' in request.COOKIES and self.context['auth_user'].is_admin \
+            else request.session.get('_auth_user_host')
 
     def get_vhost_obj(self, request, *args, **kwargs):
         host_name = self.get_vhost(request)
@@ -61,7 +118,7 @@ class UserListView(VhostContextView, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         vhost = self.get_vhost(request)
-        users = user.api.get_registered_users({"host": vhost})
+        users = user.api.xabber_registered_users({"host": vhost})
 
         if "error" in users:
             return self.get_response(request,
@@ -94,6 +151,7 @@ class UserListView(VhostContextView, TemplateView):
 
         page = request.GET.get('page', 1)
         context = get_pagination_data(data, page)
+        context = {**context, **self.context}
         return self.get_response(request, vhost=vhost, context=context)
 
 
@@ -106,7 +164,15 @@ class UserCreateView(PageContextMixin, TemplateView):
             return HttpResponseRedirect(reverse('error:403'))
 
         user = request.user
-        form = RegisterUserForm(user, vhosts=self.context['vhosts_cr'])
+        if self.context['auth_user'].is_admin:
+            form = RegisterUserForm(user, vhosts=self.context['vhosts_cr'])
+        else:
+            try:
+                host = VirtualHost.objects.get(name=self.context['auth_user'].host)
+                form = RegisterUserForm(user, vhosts=[host])
+            except VirtualHost.DoesNotExist:
+                raise Http404
+
         return self.render_to_response({
             "form": form,
             "gen_pass_len": settings.GENERATED_PASSWORD_MAX_LEN
@@ -117,8 +183,14 @@ class UserCreateView(PageContextMixin, TemplateView):
             return HttpResponseRedirect(reverse('error:403'))
 
         user = request.user
-        form = RegisterUserForm(user, request.POST, request.FILES,
-                                vhosts=self.context['vhosts_cr'])
+        if self.context['auth_user'].is_admin:
+            form = RegisterUserForm(user, request.POST, request.FILES, vhosts=self.context['vhosts_cr'])
+        else:
+            try:
+                host = VirtualHost.objects.get(name=self.context['auth_user'].host)
+                form = RegisterUserForm(user, request.POST, request.FILES, vhosts=[host])
+            except VirtualHost.DoesNotExist:
+                raise Http404
         if form.is_valid():
             return HttpResponseRedirect(
                 reverse('virtualhost:user-created',
@@ -215,7 +287,7 @@ class UserDetailsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-
+        self.check_host(curr_user.host)
         nickname, first_name, last_name = self._get_vcard(request, curr_user)
         curr_user.nickname = nickname
         curr_user.first_name = first_name
@@ -238,7 +310,7 @@ class UserSecurityView(PageContextMixin, TemplateView):
         else:
             if not curr_user.allowed_change_password:
                 return HttpResponseRedirect(reverse('error:403'))
-
+        self.check_host(curr_user.host)
         user = request.user
         form = ChangeUserPasswordForm(user)
         return self.render_to_response({"curr_user": curr_user,
@@ -253,7 +325,7 @@ class UserSecurityView(PageContextMixin, TemplateView):
         else:
             if not curr_user.allowed_change_password:
                 return HttpResponseRedirect(reverse('error:403'))
-
+        self.check_host(curr_user.host)
         user = request.user
         form = ChangeUserPasswordForm(user, request.POST, user_to_change=curr_user)
         if form.is_valid():
@@ -301,6 +373,7 @@ class UserGroupsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        self.check_host(curr_user.host)
 
         groups = self.get_groups_list(curr_user)
         return self.render_to_response({"curr_user": curr_user,
@@ -312,6 +385,7 @@ class UserGroupsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        self.check_host(curr_user.host)
 
         user = request.user
         post_data = request.POST.copy()
@@ -373,6 +447,7 @@ class DeleteUserView(PageContextMixin, TemplateView):
         else:
             if not user_to_del.allowed_delete:
                 return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_del.host)
 
         user = request.user
         username = request.session.get('_auth_user_username')
@@ -389,6 +464,7 @@ class DeleteUserView(PageContextMixin, TemplateView):
         else:
             if not user_to_del.allowed_delete:
                 return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_del.host)
 
         user = request.user
         username = request.session.get('_auth_user_username')
@@ -412,6 +488,7 @@ class UserVcardView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        self.check_host(curr_user.host)
         user = request.user
         data = {"nickname": curr_user.nickname,
                 "first_name": curr_user.first_name,
@@ -429,6 +506,7 @@ class UserVcardView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        self.check_host(curr_user.host)
         user = request.user
         post_data = request.POST.copy()
         post_data.update({"username": curr_user.username,
@@ -480,6 +558,7 @@ class GroupListView(VhostContextView, TemplateView):
 
         page = request.GET.get('page', 1)
         context = get_pagination_data(data, page)
+        context = {**context, **self.context}
         return self.get_response(request, vhost=vhost, context=context)
 
 
@@ -489,12 +568,26 @@ class GroupCreateView(PageContextMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        form = CreateGroupForm(user, vhosts=self.context['vhosts'])
+        if self.context['auth_user'].is_admin:
+            form = CreateGroupForm(user, vhosts=self.context['vhosts_cr'])
+        else:
+            try:
+                host = VirtualHost.objects.get(name=self.context['auth_user'].host)
+                form = CreateGroupForm(user, vhosts=[host])
+            except VirtualHost.DoesNotExist:
+                raise Http404
         return self.render_to_response({"form": form})
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        form = CreateGroupForm(user, request.POST, vhosts=self.context['vhosts'])
+        if self.context['auth_user'].is_admin:
+            form = CreateGroupForm(user, request.POST,  vhosts=self.context['vhosts_cr'])
+        else:
+            try:
+                host = VirtualHost.objects.get(name=self.context['auth_user'].host)
+                form = CreateGroupForm(user, request.POST,  vhosts=[host])
+            except VirtualHost.DoesNotExist:
+                raise Http404
         if form.is_valid():
             return HttpResponseRedirect(
                 reverse('virtualhost:group-details',
@@ -519,12 +612,14 @@ class DeleteGroupView(PageContextMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         group = self.get_group(kwargs['group_id'])
+        self.check_host(group.host)
         user = request.user
         form = DeleteGroupForm(user)
         return self.render_to_response({"group": group, "form": form})
 
     def post(self, request, *args, **kwargs):
         group = self.get_group(kwargs['group_id'])
+        self.check_host(group.host)
         user = request.user
         post_data = request.POST.copy()
         post_data.update({"group": group.group, "host": group.host})
@@ -577,6 +672,7 @@ class GroupMembersView(PageContextMixin, TemplateView):
 
     def get_page_context(self, request, *args, **kwargs):
         group = self.get_group(kwargs['group_id'])
+        self.check_host(group.host)
         member_list = self.get_group_members(group)
 
         page = request.GET.get('page', 1)
@@ -643,6 +739,7 @@ class GroupMembersSelectView(PageContextMixin, TemplateView):
 
     def get_page_context(self, request, *args, **kwargs):
         group = self.get_group(kwargs['group_id'])
+        self.check_host(group.host)
         return {
             "active_tab": GROUP_TAB_MEMBERS,
             "group": group,
@@ -736,6 +833,7 @@ class GroupDetailsView(PageContextMixin, TemplateView):
 
     def get_page_context(self, request, *args, **kwargs):
         group = self.get_group(kwargs["group_id"])
+        self.check_host(group.host)
         return {"active_tab": GROUP_TAB_DETAILS,
                 "group": group}
 
@@ -809,6 +907,7 @@ class GroupSubscribersView(PageContextMixin, TemplateView):
 
     def get_page_context(self, request, *args, **kwargs):
         group = self.get_group(kwargs["group_id"])
+        self.check_host(group.host)
         return {"active_tab": GROUP_TAB_SUBSCRIPTIONS,
                 "group": group,
                 "displayed_groups": self.get_displayed_groups(group)}
@@ -887,20 +986,21 @@ class UserPermissionsView(PageContextMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         try:
             curr_user = User.objects.get(id=kwargs["user_id"])
-            print(curr_user.host)
         except User.DoesNotExist:
             raise Http404
-        return self.render_to_response({"curr_user": curr_user,
-                                        "active_tab": USER_TAB_PERMISSIONS,
-                                        "perms": Permission.objects.filter(),
-                                        "user_perms": curr_user.user_permissions.all(),
-                                        })
+        return self.render_to_response({
+            "curr_user": curr_user,
+            "active_tab": USER_TAB_PERMISSIONS,
+            "perms": Permission.objects.all().exclude(
+                content_type__model__in=EXCLUDED_PERMISSIONS_MODELS).exclude(
+                content_type__app_label__in=EXCLUDED_PERMISSIONS_APPS).exclude(
+                codename__in=EXCLUDED_PERMISSIONS_CODENAMES),
+            "user_perms": curr_user.user_permissions.all(),
+            })
 
     def post(self, request, *args, **kwargs):
-        username = request.session.get('_auth_user_username')
-        host = request.session.get('_auth_user_host')
+        user = self.context['auth_user']
         try:
-            user = User.objects.get(username=username, host=host)
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
@@ -910,9 +1010,14 @@ class UserPermissionsView(PageContextMixin, TemplateView):
         form_perm_list = request.POST.get('displayed_perms').split(';')
         if user.has_perms(form_perm_list) or user.is_admin or user.is_superuser:
             curr_user.user_permissions.set(form_perm_list)
+            set_api_permissions(request.user, curr_user, curr_user.user_permissions.all())
 
-        return self.render_to_response({"curr_user": curr_user,
-                                        "active_tab": USER_TAB_PERMISSIONS,
-                                        "perms": Permission.objects.filter(),
-                                        "user_perms": curr_user.user_permissions.all(),
-                                        })
+        return self.render_to_response({
+            "curr_user": curr_user,
+            "active_tab": USER_TAB_PERMISSIONS,
+            "perms": Permission.objects.exclude(
+                content_type__model__in=EXCLUDED_PERMISSIONS_MODELS).exclude(
+                content_type__app_label__in=EXCLUDED_PERMISSIONS_APPS).exclude(
+                codename__in=EXCLUDED_PERMISSIONS_CODENAMES),
+            "user_perms": curr_user.user_permissions.all(),
+            })

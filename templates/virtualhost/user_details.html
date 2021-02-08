@@ -4,7 +4,7 @@
 {% block title %}Details for {{ curr_user }}{% endblock %}
 
 {% block tab_content %}
-{% check_user_perms 'virtualhost.delete_user' 'True' as virtualhost_delete_user_perm %}
+{% check_user_perms 'virtualhost.delete_user' as virtualhost_delete_user_perm %}
 <div class="tab-pane fade show active">
     <div class="user-details">
         <div class="user-avatar-container">

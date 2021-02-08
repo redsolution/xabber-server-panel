@@ -115,9 +115,9 @@ class EjabberdAPI(object):
         return self._call_method('post', '/registered_vhosts', 200, data=data,
                                  **kwargs)
 
-    def get_registered_users(self, data, **kwargs):
-        return self._call_method('post', '/registered_users', 200, data=data,
-                                 **kwargs)
+    def xabber_set_permissions(self, data, **kwargs):
+        return self._call_method('post', '/xabber_set_permissions', 200,
+                                 data=data, **kwargs)
 
     def xabber_registered_users(self, data, **kwargs):
         return self._call_method('post', '/xabber_registered_users', 200,
@@ -150,13 +150,13 @@ class EjabberdAPI(object):
 
     def set_vcard(self, data, **kwargs):
         data['name'] = data.get('name', '').upper()
-        return self._call_method('post', '/set_vcard', 200, data=data,
+        return self._call_method('post', '/xabberuser_set_vcard', 200, data=data,
                                  **kwargs)
 
     def set_vcard2(self, data, **kwargs):
         data['name'] = data.get('name', '').upper()
         data['subname'] = data.get('subname', '').upper()
-        return self._call_method('post', '/set_vcard2', 200, data=data,
+        return self._call_method('post', '/xabberuser_set_vcard2', 200, data=data,
                                  **kwargs)
 
     def get_vcard(self, data, **kwargs):

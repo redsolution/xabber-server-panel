@@ -14,30 +14,26 @@
                         <ul class="list-perm" id="v_perms_list">
                             {% regroup perms by content_type.app_label as perms_by_type %}
                             {% for type in perms_by_type %}
-                                {% if not type.grouper == 'admin' and not type.grouper == 'auth' and not type.grouper == 'sessions' and not type.grouper == 'contenttypes' %}
-                                    <p>{{ type.grouper}}</p>
-                                    {% for perm in type.list %}
-                                        <li class="list-group-item">
-                                            <div class="custom-control custom-checkbox">
-                                                <input type="checkbox"
-                                                     class="custom-control-input select-item"
-                                                     id="select-perm-{{ perm.id }}"
-                                                     data-id="{{ perm.id }}"
-                                                     {% if perm in user_perms %}checked{% endif %}
-                                                     {% if not perm.codename in auth_user_perms and not auth_user.is_admin %}disabled{% endif %}
-                                                >
-                                                <label class="custom-control-label"
-                                                     for="select-perm-{{ perm.id }}">
+                                <p>{{ type.grouper}}</p>
+                                {% for perm in type.list %}
+                                    <li class="list-group-item">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox"
+                                                 class="custom-control-input select-item"
+                                                 id="select-perm-{{ perm.id }}"
+                                                 data-id="{{ perm.id }}"
+                                                 {% if perm in user_perms %}checked{% endif %}
+                                                 {% if not perm.codename in auth_user_perms and not auth_user.is_admin %}disabled{% endif %}
+                                            >
+                                            <label class="custom-control-label"
+                                                 for="select-perm-{{ perm.id }}">
 
-                                                     {{ perm.name }}
-                                                </label>
-                                            </div>
-                                        </li>
-                                        {% if forloop.counter|divisibleby:4 %}
-                                        <br>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
+                                                 {{ perm.name }}
+                                            </label>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                                <br>
                             {% endfor %}
                         </ul>
 

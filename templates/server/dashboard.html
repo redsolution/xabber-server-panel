@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}Dashboard{% endblock %}
 
 {% block main_content %}
@@ -22,6 +22,8 @@
                          <span style="color:red;">stopped</span>
                     {% endif %}
                 </div>
+                {% check_user_perms 'is_admin' as user_is_admin %}
+                {% if user_is_admin %}
                 <form method="post" action="{% url 'server:dashboard' %}"
                       id="change_server_status_form">
                     {% csrf_token %}
@@ -43,6 +45,7 @@
                         <input name="action" type="hidden"/>
                     </div>
                 </form>
+                {% endif %}
             </div>
         </div>
 

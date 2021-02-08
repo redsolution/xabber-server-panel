@@ -24,15 +24,29 @@ class ServerDashboardView(PageContextMixin, TemplateView):
     def get_hosts_stat(self, request):
         user = request.user
         data = []
-        for host in VirtualHost.objects.all():
-            user_count = user.api.xabber_registered_users_count(
-                {"host": host.name}).get('number')
-            online_user_count = user.api.stats_host(
-                {"host": host.name, "name": "onlineusers"}).get('users')
-            host_data = {"name": host.name,
-                         "registeredusers": user_count,
-                         "onlineusers": online_user_count}
-            data.append(host_data)
+        if self.context['auth_user'].is_admin:
+            for host in VirtualHost.objects.all():
+                user_count = user.api.xabber_registered_users_count(
+                    {"host": host.name}).get('number')
+                online_user_count = user.api.stats_host(
+                    {"host": host.name, "name": "onlineusers"}).get('users')
+                host_data = {"name": host.name,
+                             "registeredusers": user_count,
+                             "onlineusers": online_user_count}
+                data.append(host_data)
+        else:
+            try:
+                host = VirtualHost.objects.get(name=self.context['auth_user'].host)
+                user_count = user.api.xabber_registered_users_count(
+                    {"host": host.name}).get('number')
+                online_user_count = user.api.stats_host(
+                    {"host": host.name, "name": "onlineusers"}).get('users')
+                host_data = {"name": host.name,
+                             "registeredusers": user_count,
+                             "onlineusers": online_user_count}
+                data.append(host_data)
+            except VirtualHost.DoesNotExist:
+                raise Http404
         data.append({"name": "",
                      "registeredusers": sum([o["registeredusers"]
                                              for o in data if o['registeredusers']]),
@@ -49,19 +63,24 @@ class ServerDashboardView(PageContextMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        action = request.POST.get('action')
-        if action == 'start_server':
-            start_ejabberd()
-        elif action == 'restart_server':
-            restart_ejabberd()
-        elif action == 'stop_server':
-            stop_ejabberd()
+        user = self.context['auth_user']
+        if user.is_admin:
+            action = request.POST.get('action')
+            if action == 'start_server':
+                start_ejabberd()
+            elif action == 'restart_server':
+                restart_ejabberd()
+            elif action == 'stop_server':
+                stop_ejabberd()
 
-        is_ejabberd_started = is_ejabberd_running()['success']
-        vhosts_data = self.get_hosts_stat(request)
-        context = {"is_ejabberd_started": is_ejabberd_started,
-                   "vhosts_data": vhosts_data}
-        return self.render_to_response(context)
+            is_ejabberd_started = is_ejabberd_running()['success']
+            vhosts_data = self.get_hosts_stat(request)
+            context = {"is_ejabberd_started": is_ejabberd_started,
+                       "vhosts_data": vhosts_data}
+            return self.render_to_response(context)
+        else:
+            return HttpResponseRedirect(reverse('personal-area:profile'))
+
 
 
 class ServerStoppedStubView(PageContextMixin, TemplateView):
@@ -122,6 +141,15 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
         for admin in users_to_add:
             if len(admin) is 0:
                 continue
+            name, host = admin.split('@')
+            user.api.xabber_set_permissions(
+                {
+                    "user": name,
+                    "host": host,
+                    "set_admin": 'true',
+                    "commands": '',
+                }
+            )
             post_data['user'] = admin
             form = SelectAdminForm(post_data, action='add')
             if not form.is_valid():
@@ -131,6 +159,15 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
         for admin in users_to_del:
             if len(admin) is 0:
                 continue
+            name, host = admin.split('@')
+            user.api.xabber_set_permissions(
+                {
+                    "user": name,
+                    "host": host,
+                    "set_admin": 'false',
+                    "commands": '',
+                }
+            )
             post_data['user'] = admin
             form = SelectAdminForm(post_data, action='delete')
             if not form.is_valid():

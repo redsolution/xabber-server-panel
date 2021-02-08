@@ -53,15 +53,13 @@ def get_user_initials(user):
 
 
 @register.simple_tag(takes_context=True)
-def check_user_perms(context, content_type_app_label, vhost_check=False):
+def check_user_perms(context, content_type_app_label):
     username = context.get('request').session.get('_auth_user_username')
     host = context.get('request').session.get('_auth_user_host')
-    vhost = context.get('request').COOKIES.get('vhost')
     try:
         user = User.objects.get(username=username, host=host)
-        if vhost_check and vhost:
-            if user.has_perm(content_type_app_label, vhost=vhost):
-                return True
+        if content_type_app_label == 'is_admin' and user.is_admin:
+            return True
         else:
             if user.has_perm(content_type_app_label):
                 return True
