@@ -646,3 +646,15 @@ body {
     color: #fff;
     text-decoration: none;
 }
+
+.wrap {
+    display: flex;
+}
+
+.left {
+    width: 185px;
+}
+
+.right {
+    width:80%
+}

@@ -40,10 +40,13 @@
                            href="{% url 'virtualhost:user-vcard' curr_user.id %}">vCard</a>
                     </li>
                         {% if curr_user.allowed_change_password and virtualhost_change_user_password_perm %}
-                            <li class="nav-item">
-                                <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
-                                   href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
-                            </li>
+                            {% if curr_user.is_admin and not auth_user.is_admin %}
+                            {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-link{% if active_tab == 'user-security' %} active{% endif %}"
+                                       href="{% url 'virtualhost:user-security' curr_user.id %}">Security</a>
+                                </li>
+                            {% endif %}
                         {% endif %}
                         {% if virtualhost_view_group_perm and virtualhost_change_group_perm %}
                             <li class="nav-item">

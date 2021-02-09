@@ -317,7 +317,7 @@ class UserSecurityView(PageContextMixin, TemplateView):
         except User.DoesNotExist:
             raise Http404
         else:
-            if not curr_user.allowed_change_password:
+            if not curr_user.allowed_change_password or curr_user.is_admin and not self.context['auth_user'].is_admin:
                 return HttpResponseRedirect(reverse('error:403'))
         self.check_host(curr_user.host)
         user = request.user

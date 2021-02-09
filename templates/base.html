@@ -21,8 +21,8 @@
     <body>
     {% block body_container %}
     <div class="container main-container h-100">
-        <div class="row no-gutters h-100">
-            <div class="col-md-2">
+        <div class="wrap no-gutters h-100">
+            <div class="left">
                 <div class="left-content h-100">
                     <div class="logo">
                         <a href="{% url 'server:dashboard' %}">
@@ -79,7 +79,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-10">
+            <div class="right">
                 <div class="top-content">
                     <nav class="navbar">
                         <button type="button" class="navbar-create-btn btn btn-primary dropdown-toggle"
