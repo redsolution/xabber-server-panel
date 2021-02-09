@@ -106,7 +106,6 @@ class RegisterUserForm(AuthorizedApiForm):
         cleaned_data.pop('vcard')
         self.new_user = User.objects.create(**cleaned_data)
         if cleaned_data['is_admin'] is True:
-            self.new_user.user_permissions.set(Permission.objects.filter())
             update_ejabberd_config()
 
 

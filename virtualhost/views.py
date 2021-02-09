@@ -192,6 +192,15 @@ class UserCreateView(PageContextMixin, TemplateView):
             except VirtualHost.DoesNotExist:
                 raise Http404
         if form.is_valid():
+            if form.cleaned_data['is_admin'] is True:
+                user.api.xabber_set_permissions(
+                    {
+                        "user": form.cleaned_data['username'],
+                        "host": form.cleaned_data['host'],
+                        "set_admin": 'true',
+                        "commands": '',
+                    }
+                )
             return HttpResponseRedirect(
                 reverse('virtualhost:user-created',
                         kwargs={'user_id': form.new_user.id}))
@@ -1007,7 +1016,10 @@ class UserPermissionsView(PageContextMixin, TemplateView):
 
         post_data = request.POST.copy()
         post_data.pop('displayed_perms')
-        form_perm_list = request.POST.get('displayed_perms').split(';')
+        if request.POST.get('displayed_perms'):
+            form_perm_list = request.POST.get('displayed_perms').split(';')
+        else:
+            form_perm_list = []
         if user.has_perms(form_perm_list) or user.is_admin or user.is_superuser:
             curr_user.user_permissions.set(form_perm_list)
             set_api_permissions(request.user, curr_user, curr_user.user_permissions.all())
