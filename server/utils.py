@@ -82,18 +82,8 @@ def is_ejabberd_running():
 
 
 def update_ejabberd_config():
-    update_admins_config()
     update_vhosts_config()
     reload_ejabberd_config()
-
-
-def update_admins_config():
-    template = 'ejabberd/admin_acl_template.yml'
-    admins = User.objects.filter(is_admin=True).order_by('username')
-    file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
-                             settings.EJABBERD_ADMINS_CONFIG_FILE), 'w+')
-    file.write(render_to_string(template, {'admins': admins}))
-    file.close()
 
 
 def update_vhosts_config():

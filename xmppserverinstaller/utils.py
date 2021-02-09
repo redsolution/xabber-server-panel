@@ -51,15 +51,6 @@ def migrate_db(data):
     return cmd.returncode == 0
 
 
-def update_admins_config(data):
-    template = 'ejabberd/admin_acl_template.yml'
-    admins = (data['admin_username'], )
-    file = open(os.path.join(settings.EJABBERD_CONFIG_PATH,
-                             settings.EJABBERD_ADMINS_CONFIG_FILE), 'w+')
-    file.write(render_to_string(template, {'admins': admins}))
-    file.close()
-
-
 def update_vhosts_config(data):
     template = 'ejabberd/vhosts_template.yml'
     vhosts = (data['xmpp_host'], )
@@ -72,14 +63,12 @@ def update_vhosts_config(data):
 def create_config(data):
     data['PROJECT_DIR'] = settings.PROJECT_DIR
     data['VHOST_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_VHOSTS_CONFIG_FILE)
-    data['ADMIN_ACL_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_ADMINS_CONFIG_FILE)
     config_template = get_template('ejabberd/base_config.yml')
     config_file = open(os.path.join(settings.EJABBERD_CONFIG_PATH, 'ejabberd.yml'), "w+")
     config_file.write(config_template.render(context=data))
     config_file.close()
     entry = Configuration(pk=1, config=config_template.render(context=data))
     entry.save()
-    update_admins_config(data)
     update_vhosts_config(data)
 
 
@@ -128,6 +117,23 @@ def create_admin(data):
                           data['admin_username'],
                           data['xmpp_host'],
                           data['admin_password']]
+    cmd = subprocess.Popen(cmd_create_admin,
+                           stdin=subprocess.PIPE,
+                           # stdout=open('/dev/null', 'w'),
+                           stderr=subprocess.STDOUT)
+    cmd.communicate()
+    return cmd.returncode == 0
+
+
+def set_created_user_as_admin(data):
+    while not check_status():
+        print('waiting for 1 second...')
+        time.sleep(1)
+
+    cmd_create_admin = [settings.EJABBERDCTL, 'xabber_set_permissions',
+                          data['admin_username'],
+                          data['xmpp_host'],
+                          'true', '']
     cmd = subprocess.Popen(cmd_create_admin,
                            stdin=subprocess.PIPE,
                            # stdout=open('/dev/null', 'w'),
@@ -189,6 +195,11 @@ def start_installation_process(data):
 
     if not create_admin(data):
         msg = "Can't create admin in Xabber server database."
+        print(msg)
+        return False, msg
+
+    if not set_created_user_as_admin(data):
+        msg = "Can't set created user as admin in Xabber server database."
         print(msg)
         return False, msg
 
