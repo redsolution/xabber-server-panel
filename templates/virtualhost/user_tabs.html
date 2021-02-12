@@ -55,7 +55,7 @@
                             </li>
                         {% endif %}
                     {% endif %}
-                    {% if change_perms_perm %}
+                    {% if change_perms_perm and not curr_user.is_admin %}
                         <li class="nav-item">
                             <a class="nav-link{% if active_tab == 'user-permissions' %} active{% endif %}"
                                href="{% url 'virtualhost:user-permissions' curr_user.id %}">Permissions</a>

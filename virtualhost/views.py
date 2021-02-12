@@ -6,7 +6,7 @@ from django.db.models import Count
 from django.views.generic import TemplateView
 from django.urls import reverse
 from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect, Http404, HttpResponse
+from django.http import HttpResponseRedirect, Http404, HttpResponse, QueryDict
 
 from django.conf import settings
 from xmppserverui.utils import get_pagination_data
@@ -187,12 +187,15 @@ class UserCreateView(PageContextMixin, TemplateView):
             form = RegisterUserForm(user, request.POST, request.FILES, vhosts=self.context['vhosts_cr'])
         else:
             try:
+                data = QueryDict.copy(request.POST)
+                if 'is_admin' in data:
+                    del data['is_admin']
                 host = VirtualHost.objects.get(name=self.context['auth_user'].host)
-                form = RegisterUserForm(user, request.POST, request.FILES, vhosts=[host])
+                form = RegisterUserForm(user, data, request.FILES, vhosts=[host])
             except VirtualHost.DoesNotExist:
                 raise Http404
         if form.is_valid():
-            if form.cleaned_data['is_admin'] is True:
+            if form.cleaned_data['is_admin'] is True and self.context['auth_user'].is_admin:
                 user.api.xabber_set_permissions(
                     {
                         "user": form.cleaned_data['username'],
@@ -997,6 +1000,8 @@ class UserPermissionsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        if curr_user.is_admin:
+            return HttpResponseRedirect(reverse('error:403'))
         return self.render_to_response({
             "curr_user": curr_user,
             "active_tab": USER_TAB_PERMISSIONS,
@@ -1013,6 +1018,8 @@ class UserPermissionsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
+        if curr_user.is_admin:
+            return HttpResponseRedirect(reverse('error:403'))
 
         post_data = request.POST.copy()
         post_data.pop('displayed_perms')
