@@ -35,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         (SQL, 'internal'),
         (LDAP, 'LDAP')
     ]
-    username = models.CharField(max_length=256)
+    username = models.CharField(max_length=256, unique=True)
     USERNAME_FIELD = 'username'
     password = models.CharField(max_length=128, null=True)
     auth_backend = models.CharField(max_length=128, choices=AUTH_BACKENDS, default=SQL)
