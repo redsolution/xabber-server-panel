@@ -39,6 +39,7 @@ EXCLUDED_PERMISSIONS_CODENAMES = [
 
 PERMISSIONS_DICT = {
     'virtualhost.view_user': ['xabber_registered_users','get_vcard','get_vcard2'],
+    'virtualhost.view_group': 'srg_list',
     'virtualhost.view_groupchat': 'xabber_registered_chats',
     'server.view_dashboard': ['xabber_registered_users_count', 'xabber_num_online_users'],
     'virtualhost.add_user': ['xabberuser_set_vcard', 'xabberuser_set_vcard2', 'register', 'unregister'],
