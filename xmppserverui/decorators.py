@@ -35,7 +35,7 @@ def custom_user_passes_test(test_func, login_url=None, redirect_field_name=REDIR
     return decorator
 
 
-def custom_permission_required(perm, login_url=None, raise_exception=False):
+def custom_permission_required(perm, login_url=None, raise_exception=False, check_any=False):
 
     def check_perms(request, user):
         if perm == 'is_admin' and user.is_admin:
@@ -45,7 +45,12 @@ def custom_permission_required(perm, login_url=None, raise_exception=False):
         if isinstance(perm, str):
             perms = (perm,)
         else:
-            perms = perm
+            if check_any:
+                for permission in perm:
+                    if user.has_perms((permission,)):
+                        return True
+            else:
+                perms = perm
         if user.has_perms(perms):
             return True
         # In case the 403 handler should be called raise the exception

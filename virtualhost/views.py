@@ -112,6 +112,71 @@ class VhostContextView(ServerStartedMixin):
         return response
 
 
+class SearchView(VhostContextView, TemplateView):
+    template_name = 'virtualhost/search.html'
+
+    def get(self, request, *args, **kwargs):
+        vhost = self.get_vhost(request)
+        if request.GET.get('search'):
+            search_name = request.GET.get('search')
+            user = request.user
+            users = user.api.xabber_registered_users({"host": vhost})
+            groups = user.api.get_groups({"host": vhost})
+            chats = user.api.xabber_registered_chats({"host": vhost, "limit": 200, "page": 1})
+            data_users = []
+            data_groups = []
+            data_chats = []
+            if "error" not in users:
+                django_users = User.objects.filter(username__contains=search_name, host=vhost)
+                for user in users:
+                    django_user = filter(lambda o: o.username == user['name'], django_users)
+                    django_user = next(django_user, None)
+                    if django_user:
+                        data_users.append({"username": user['name'], "user": django_user})
+            if "error" not in groups:
+                all_groups = Group.objects.filter(group__contains=search_name, host=vhost)
+                groups_members_count = GroupMember.objects.values('group__group').annotate(dcount=Count('group'))
+                for g in groups:
+                    group = filter(lambda o: o.group == g, all_groups)
+                    group = next(group, None)
+                    if group:
+                        count = next(filter(lambda o: o['group__group'] == group.group, groups_members_count),
+                                     {'group__group': 'null', 'dcount': 0})['dcount']
+                        if GroupMember.objects.filter(group=group, username="@all@").exists():
+                            # TODO get rid of list()
+                            count += User.objects.filter(host=group.host).count() - 1
+
+                        data_groups.append({
+                            "group": g,
+                            "members": count,
+                            "name": group.name if group.name else '',
+                            "id": group.id
+                        })
+                data_groups.sort(key=lambda k:  k['group'])
+                data_groups.sort(key=lambda k: k['members'], reverse=True)
+            if "error" not in chats:
+                django_users = list(User.objects.all().values())
+                for chat in chats:
+                    if search_name in chat['name']:
+                        if len(chat["owner"].split('@')) == 2:
+                            owner_username, owner_host = chat["owner"].split('@')
+                        elif len(chat["owner"].split('@')) == 1:
+                            owner_username = chat["owner"]
+                            owner_host = ".".join(owner_username.split('.')[1:])
+                        else:
+                            pass
+                        user = next(filter(lambda o: o['username'] == owner_username
+                                                     and o['host'] == owner_host, django_users), None)
+
+                        data_chats.append({"chat": chat, "owner_id": user['id'] if user else None})
+            context = {'data_users': data_users, 'data_groups': data_groups, 'data_chats': data_chats}
+            context = {**context, **self.context}
+            return self.get_response(request, vhost=vhost, context=context)
+        else:
+            return HttpResponseRedirect(reverse('personal-area:profile'))
+
+
+
 class UserListView(VhostContextView, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/users.html'

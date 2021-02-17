@@ -62,8 +62,8 @@
                             </a>
                             {% endif %}
                             <!--<a href="#" class="list-group-item">File sharing</a>-->
-                            {% check_user_perms 'virtualhost.view_virtualhost' as virtualhost_virtualhost_perms %}
-                            {% if virtualhost_virtualhost_perms %}
+                            {% check_user_perms 'is_admin' as virtualhost_setting_perms %}
+                            {% if virtualhost_setting_perms %}
                             <a href="{% url 'server:settings' %}"
                                class="list-group-item {% if page.section == 'server' %}active{% endif %}">
                                 Settings
@@ -120,12 +120,14 @@
                                 <!--</span>-->
                             <!--</a>-->
                         </div>
-                        <form class="navbar-search-form">
-                            <input class="form-control"
-                                   type="search"
-                                   placeholder="Search for Users, Circles, Groups, Domains, ..."
-                                   aria-label="Search">
-                        </form>
+                        {% if virtualhost_user_perms or virtualhost_group_perms or virtualhost_groupchat_perms %}
+                            <form action="{% url 'virtualhost:search'%}" method="GET" class="navbar-search-form">
+                                <input class="form-control" name="search"
+                                       type="search"
+                                       placeholder="Search for Users, Circles, Groups, Domains, ..."
+                                       aria-label="Search">
+                            </form>
+                        {% endif %}
                         {% if auth_user %}
                             <div class="dropdown dropdown-right">
                                 {% if auth_user.photo %}

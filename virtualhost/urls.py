@@ -5,6 +5,7 @@ from xmppserverui.decorators import custom_permission_required
 app_name = 'xmppserverui'
 
 urlpatterns = [
+    url(r'^search/$', custom_permission_required(('virtualhost.view_user', 'virtualhost.view_group', 'virtualhost.view_groupchat'), check_any=True)(views.SearchView.as_view()), name='search'),
     url(r'^users/$', custom_permission_required('virtualhost.view_user')(views.UserListView.as_view()), name='users'),
     url(r'^users/create/$', custom_permission_required(('virtualhost.view_user', 'virtualhost.add_user'))(views.UserCreateView.as_view()), name='user-create'),
     url(r'^users/(?P<user_id>[0-9]+)/created/$', custom_permission_required('virtualhost.view_user')(views.UserCreatedView.as_view()), name='user-created'),
