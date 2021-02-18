@@ -118,7 +118,7 @@ class SearchView(VhostContextView, TemplateView):
     def get(self, request, *args, **kwargs):
         vhost = self.get_vhost(request)
         if request.GET.get('search'):
-            search_name = request.GET.get('search')
+            search_name = request.GET.get('search').rstrip().lstrip()
             user = request.user
             users = user.api.xabber_registered_users({"host": vhost})
             groups = user.api.get_groups({"host": vhost})
