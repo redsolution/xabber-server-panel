@@ -1094,7 +1094,16 @@ class UserPermissionsView(PageContextMixin, TemplateView):
         else:
             form_perm_list = []
         if user.has_perms(form_perm_list) or user.is_admin or user.is_superuser:
-            curr_user.user_permissions.set(form_perm_list)
+            perms = Permission.objects.filter(id__in=form_perm_list)
+            view_perms = []
+            for perm in perms:
+                try:
+                    view_perm = Permission.objects.get(codename='view_'+perm.content_type.model, content_type=perm.content_type)
+                    if view_perm:
+                        view_perms += [str(view_perm.id)]
+                except Permission.DoesNotExist:
+                    pass
+            curr_user.user_permissions.set(form_perm_list + view_perms)
             set_api_permissions(request.user, curr_user, curr_user.user_permissions.all())
 
         return self.render_to_response({
