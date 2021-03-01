@@ -66,3 +66,7 @@ def check_user_perms(context, content_type_app_label):
         return False
     except User.DoesNotExist:
         return None
+
+@register.filter
+def human_readable_text(self):
+    return self.replace('_', ' ')

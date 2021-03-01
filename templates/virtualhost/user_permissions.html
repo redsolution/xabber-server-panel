@@ -1,5 +1,5 @@
 {% extends 'virtualhost/user_tabs.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}Permissions for {{ curr_user }}{% endblock %}
 
 {% block tab_content %}
@@ -45,7 +45,11 @@
                         <ul class="list-perm" id="v_perms_list">
                             {% regroup perms by content_type.app_label as perms_by_type %}
                             {% for type in perms_by_type %}
-                                <p>{{ type.grouper}}</p>
+                                {% if type.grouper == 'virtualhost' and not curr_user.is_admin %}
+                                    <p>{{ curr_user.host}}</p>
+                                {% else %}
+                                    <p>{{ type.grouper}}</p>
+                                {% endif %}
                                 {% for perm in type.list %}
                                     <li class="list-group-item">
                                         <div class="custom-control custom-checkbox">
@@ -59,7 +63,7 @@
                                             <label class="custom-control-label"
                                                  for="select-perm-{{ perm.id }}">
 
-                                                 {{ perm.name }}
+                                                 {{ perm.codename|human_readable_text }}
                                             </label>
                                         </div>
                                     </li>
