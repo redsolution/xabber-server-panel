@@ -124,6 +124,7 @@ a:hover {
 
 .top-content .navbar {
     padding: 0;
+    height: 40px;
     justify-content: normal;
 }
 

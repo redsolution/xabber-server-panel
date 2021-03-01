@@ -1066,8 +1066,6 @@ class UserPermissionsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        if curr_user.is_admin:
-            return HttpResponseRedirect(reverse('error:403'))
         return self.render_to_response({
             "curr_user": curr_user,
             "active_tab": USER_TAB_PERMISSIONS,
@@ -1084,11 +1082,14 @@ class UserPermissionsView(PageContextMixin, TemplateView):
             curr_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        if curr_user.is_admin:
-            return HttpResponseRedirect(reverse('error:403'))
-
         post_data = request.POST.copy()
         post_data.pop('displayed_perms')
+        if request.POST.get('admin_setting'):
+            curr_user.is_admin = True
+            curr_user.save()
+        else:
+            curr_user.is_admin = False
+            curr_user.save()
         if request.POST.get('displayed_perms'):
             form_perm_list = request.POST.get('displayed_perms').split(';')
         else:

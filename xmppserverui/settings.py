@@ -28,7 +28,7 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL = 'virtualhost.User'
 APPEND_SLASH = True
-LOGIN_URL = '/profile/'
+LOGIN_URL = '/auth/login/'
 # Application definition
 
 INSTALLED_APPS = [

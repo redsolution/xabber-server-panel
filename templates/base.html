@@ -82,44 +82,46 @@
             <div class="right">
                 <div class="top-content">
                     <nav class="navbar">
-                        <button type="button" class="navbar-create-btn btn btn-primary dropdown-toggle"
-                                data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            Create
-                        </button>
                         {% check_user_perms 'virtualhost.add_user' as virtualhost_add_user_perm %}
                         {% check_user_perms 'virtualhost.add_group' as virtualhost_add_group_perm %}
-                        <div class="dropdown-menu">
-                            {% if virtualhost_add_user_perm and virtualhost_user_perms %}
-                            <a class="dropdown-item large-padding" href="{% url 'virtualhost:user-create' %}">
-                                <b>User</b>
-                                <div class="dropdown-item-secondary-text">
-                                    Add new user account. Users can send and
-                                    receive messages, create and join group chats,
-                                    make audio and video calls.
-                                </div>
-                            </a>
-                            {% endif %}
-                            {% if virtualhost_add_group_perm and virtualhost_group_perms %}
-                            <a class="dropdown-item large-padding" href="{% url 'virtualhost:group-create' %}">
-                                <b>Circle</b>
-                                <div class="dropdown-item-secondary-text">
-                                    Circles are used to manage shared contact
-                                    lists, user permissions and resource quotas.
-                                </div>
-                            </a>
-                            {% endif %}
-                            <!--<a class="dropdown-item large-padding" href="#">-->
-                                <!--<b>Group chat</b><br/>-->
-                                <!--<span class="dropdown-item-secondary-text">-->
-                                    <!--Duis aute irure dolor in reprehenderit in-->
-                                    <!--voluptate velit esse cillum dolore eu fugiat-->
-                                    <!--nulla pariatur. Excepteur sint occaecat-->
-                                    <!--cupidatat non proident, sunt in culpa qui-->
-                                    <!--officia deserunt mollit anim id est laborum.-->
-                                <!--</span>-->
-                            <!--</a>-->
-                        </div>
+                        {% if virtualhost_add_user_perm and virtualhost_user_perms or virtualhost_add_group_perm and virtualhost_group_perms %}
+                            <button type="button" class="navbar-create-btn btn btn-primary dropdown-toggle"
+                                    data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">
+                                Create
+                            </button>
+                            <div class="dropdown-menu">
+                                {% if virtualhost_add_user_perm and virtualhost_user_perms %}
+                                <a class="dropdown-item large-padding" href="{% url 'virtualhost:user-create' %}">
+                                    <b>User</b>
+                                    <div class="dropdown-item-secondary-text">
+                                        Add new user account. Users can send and
+                                        receive messages, create and join group chats,
+                                        make audio and video calls.
+                                    </div>
+                                </a>
+                                {% endif %}
+                                {% if virtualhost_add_group_perm and virtualhost_group_perms %}
+                                <a class="dropdown-item large-padding" href="{% url 'virtualhost:group-create' %}">
+                                    <b>Circle</b>
+                                    <div class="dropdown-item-secondary-text">
+                                        Circles are used to manage shared contact
+                                        lists, user permissions and resource quotas.
+                                    </div>
+                                </a>
+                                {% endif %}
+                                <!--<a class="dropdown-item large-padding" href="#">-->
+                                    <!--<b>Group chat</b><br/>-->
+                                    <!--<span class="dropdown-item-secondary-text">-->
+                                        <!--Duis aute irure dolor in reprehenderit in-->
+                                        <!--voluptate velit esse cillum dolore eu fugiat-->
+                                        <!--nulla pariatur. Excepteur sint occaecat-->
+                                        <!--cupidatat non proident, sunt in culpa qui-->
+                                        <!--officia deserunt mollit anim id est laborum.-->
+                                    <!--</span>-->
+                                <!--</a>-->
+                            </div>
+                        {% endif %}
                         {% if virtualhost_user_perms or virtualhost_group_perms or virtualhost_groupchat_perms %}
                             <form action="{% url 'virtualhost:search'%}" method="GET" class="navbar-search-form">
                                 <input class="form-control" name="search"

@@ -1,6 +1,6 @@
 {% extends 'virtualhost/user_tabs.html' %}
 
-{% block title %}Circles for {{ curr_user }}{% endblock %}
+{% block title %}Permissions for {{ curr_user }}{% endblock %}
 
 {% block tab_content %}
 <div class="tab-pane fade show active">
@@ -9,8 +9,39 @@
             <form method="post" action="{% url 'virtualhost:user-permissions' curr_user.id %}">
                 {% csrf_token %}
 
+
+
+
+<!--                <div class="row form-group {% if field.errors %}invalid{% endif %}">-->
+<!--                    <div class="col-sm-12">-->
+<!--                        <li class="list-group-item">-->
+<!--                            <div class="custom-control custom-checkbox">-->
+<!--                                <input type="checkbox" class="custom-control-input select-item" id="admin_setting" name="admin_setting" />-->
+<!--                                <label class="custom-control-label"-->
+<!--                                     for="admin_setting">-->
+<!--                                     Админ-->
+<!--                                </label>-->
+<!--                            </div>-->
+<!--                        </li>-->
+<!--                    </div>-->
+<!--                </div>-->
+
                 <div class="row form-group {% if field.errors %}invalid{% endif %}">
                     <div class="col-sm-12">
+                        <ul class="list-perm" id="admin_settings">
+                            <li class="list-group-item">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input select-item"
+                                           {% if curr_user.is_admin %}checked{% endif %}
+                                           id="admin_setting"
+                                           name="admin_setting" />
+                                    <label class="custom-control-label"
+                                         for="admin_setting">
+                                         Is Admin
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
                         <ul class="list-perm" id="v_perms_list">
                             {% regroup perms by content_type.app_label as perms_by_type %}
                             {% for type in perms_by_type %}
@@ -84,6 +115,10 @@
         $(document).ready(function() {
             var new_perms = initVPerms(),
                 curr_perms = initVPerms();
+
+            $("#admin_settings").on("change", ".select-item", function(event) {
+                $("#btn_save_perms").prop('disabled', false);
+            });
 
             $("#v_perms_list").on("change", ".select-item", function(event) {
                 event.preventDefault();

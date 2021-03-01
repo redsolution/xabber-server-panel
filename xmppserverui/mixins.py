@@ -60,7 +60,7 @@ class AdminMixin(AuthMixin):
         if user.exists():
             user = user[0]
             if not user.get_all_permissions() and not user.is_admin:
-                return HttpResponseRedirect(reverse('personal-area:profile'))
+                return HttpResponseRedirect(reverse('xabber-web'))
 
 
 class PageContextMixin(AdminMixin):

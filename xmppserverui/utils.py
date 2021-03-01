@@ -33,7 +33,7 @@ def get_default_url(user, admin=None):
     # if admin is not None:
     #     if admin:
     #         return reverse('server:dashboard')
-    return reverse('personal-area:profile')
+    return reverse('xabber-web')
 
 
 def logout_full(request):
