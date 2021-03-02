@@ -29,6 +29,7 @@
                 <div class="row form-group {% if field.errors %}invalid{% endif %}">
                     <div class="col-sm-12">
                         <ul class="list-perm" id="admin_settings">
+                            <p>Server</p>
                             <li class="list-group-item">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input select-item"
@@ -37,38 +38,30 @@
                                            name="admin_setting" />
                                     <label class="custom-control-label"
                                          for="admin_setting">
-                                         Is Admin
+                                         Administrator
                                     </label>
                                 </div>
                             </li>
                         </ul>
                         <ul class="list-perm" id="v_perms_list">
-                            {% regroup perms by content_type.app_label as perms_by_type %}
-                            {% for type in perms_by_type %}
-                                {% if type.grouper == 'virtualhost' and not curr_user.is_admin %}
-                                    <p>{{ curr_user.host}}</p>
-                                {% else %}
-                                    <p>{{ type.grouper}}</p>
-                                {% endif %}
-                                {% for perm in type.list %}
-                                    <li class="list-group-item">
-                                        <div class="custom-control custom-checkbox">
-                                            <input type="checkbox"
-                                                 class="custom-control-input select-item"
-                                                 id="select-perm-{{ perm.id }}"
-                                                 data-id="{{ perm.id }}"
-                                                 {% if perm in user_perms %}checked{% endif %}
-                                                 {% if not perm.codename in auth_user_perms and not auth_user.is_admin %}disabled{% endif %}
-                                            >
-                                            <label class="custom-control-label"
-                                                 for="select-perm-{{ perm.id }}">
+                            <p>{{ curr_user.host}}</p>
+                            {% for perm in perms %}
+                                <li class="list-group-item">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox"
+                                             class="custom-control-input select-item"
+                                             id="select-perm-{{ perm.id }}"
+                                             data-id="{{ perm.id }}"
+                                             {% if perm in user_perms %}checked{% endif %}
+                                             {% if not perm.codename in auth_user_perms and not auth_user.is_admin %}disabled{% endif %}
+                                        >
+                                        <label class="custom-control-label"
+                                             for="select-perm-{{ perm.id }}">
 
-                                                 {{ perm.codename|human_readable_text }}
-                                            </label>
-                                        </div>
-                                    </li>
-                                {% endfor %}
-                                <br>
+                                             {{ perm.codename|human_readable_text }}
+                                        </label>
+                                    </div>
+                                </li>
                             {% endfor %}
                         </ul>
 
@@ -119,9 +112,22 @@
         $(document).ready(function() {
             var new_perms = initVPerms(),
                 curr_perms = initVPerms();
+            if ($('#admin_setting').is(':checked')){
+                $("#v_perms_list *").prop('disabled',true);
+            }
+            else {
+                $("#v_perms_list *").prop('disabled',false);
+            };
 
             $("#admin_settings").on("change", ".select-item", function(event) {
+                var admin_is_checked = this.checked;
                 $("#btn_save_perms").prop('disabled', false);
+                if (admin_is_checked){
+                    $("#v_perms_list *").prop('disabled',true);
+                }
+                else {
+                    $("#v_perms_list *").prop('disabled',false);
+                };
             });
 
             $("#v_perms_list").on("change", ".select-item", function(event) {
