@@ -82,6 +82,8 @@ class UserProfileChangePasswordView(PersonalAreaContextMixin, TemplateView):
             return HttpResponseRedirect(reverse('error:403'))
         form = ChangeUserPasswordForm(request.user, request.POST, user_to_change=user)
         if form.is_valid():
+            user.set_password(request.POST['password'])
+            user.save()
             return HttpResponseRedirect(reverse('personal-area:profile'))
         return self.render_to_response({"curr_user": user,
                                         "form": form})

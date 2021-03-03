@@ -255,6 +255,8 @@ class UserSecurityView(PageContextMixin, TemplateView):
         user = request.user
         form = ChangeUserPasswordForm(user, request.POST, user_to_change=curr_user)
         if form.is_valid():
+            curr_user.set_password(request.POST['password'])
+            curr_user.save()
             return HttpResponseRedirect(reverse('virtualhost:user-details', kwargs={"user_id": curr_user.id}))
         return self.render_to_response({"curr_user": curr_user,
                                         "active_tab": USER_TAB_SECURITY,
