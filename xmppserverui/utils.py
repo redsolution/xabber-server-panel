@@ -26,13 +26,13 @@ def is_xmpp_server_should_start():
     return server_state == settings.EJABBERD_STATE_ON
 
 
-def get_default_url(user, admin=None):
+def get_default_url(user, django_user=None):
     if user.is_anonymous:
         return reverse('auth:login')
     # return reverse('server:dashboard')
-    # if admin is not None:
-    #     if admin:
-    #         return reverse('server:dashboard')
+    if django_user:
+        if django_user.is_admin or django_user.get_all_permissions():
+            return reverse('personal-area:profile')
     return reverse('xabber-web')
 
 

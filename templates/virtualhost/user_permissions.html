@@ -1,5 +1,5 @@
 {% extends 'virtualhost/user_tabs.html' %}
-{% load xmppserverui_tags %}
+{% load virtualhost_tags %}
 {% block title %}Permissions for {{ curr_user }}{% endblock %}
 
 {% block tab_content %}
@@ -58,7 +58,7 @@
                                         <label class="custom-control-label"
                                              for="select-perm-{{ perm.id }}">
 
-                                             {{ perm.codename|human_readable_text }}
+                                             {{ perm.codename|get_first_part }} {{ perm.content_type.model|model_renaming }}
                                         </label>
                                     </div>
                                 </li>
