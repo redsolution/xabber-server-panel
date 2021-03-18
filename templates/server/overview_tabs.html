@@ -30,6 +30,10 @@
                         <a class="nav-link{% if active_tab == 'auth_backends' %} active{% endif %}"
                            href="{% url 'server:manage-ldap' %}">LDAP Configuration</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if active_tab == 'modules' %} active{% endif %}"
+                           href="{% url 'server:modules-list' %}">Modules</a>
+                    </li>
                 </ul>
 
                 <div class="tab-content">

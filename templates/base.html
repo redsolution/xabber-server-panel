@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
-{% load xmppserverui_tags %}
-
+{% load xmppserverui_tags modules_tags %}
+{% get_menu_subitems as subitems %}
 
 <html lang="en">
     <head>
@@ -39,6 +39,12 @@
                             {% if server_dashboard_perms %}
                             <a href="{% url 'server:dashboard' %}"
                                class="list-group-item {% if page.section == 'dashboard' %}active{% endif %}">Dashboard </a>
+                            {% for subitem in subitems %}
+                                {% if subitem.menu_item == 'dashboard' %}
+                                    <a href="{{ subitem.url }}"
+                                       class="list-group-item">{{ subitem.subitem }}</a>
+                                {% endif %}
+                            {% endfor %}
                             {% endif %}
                             {% check_user_perms 'virtualhost.view_user' as virtualhost_user_perms %}
                             {% if virtualhost_user_perms %}
@@ -46,6 +52,12 @@
                                class="list-group-item {% if page.section == 'vhosts-users' %}active{% endif %}">
                                 Users
                             </a>
+                            {% for subitem in subitems %}
+                                {% if subitem.menu_item == 'users' %}
+                                    <a href="{{ subitem.url }}"
+                                       class="list-group-item">{{ subitem.subitem }}</a>
+                                {% endif %}
+                            {% endfor %}
                             {% endif %}
                             {% check_user_perms 'virtualhost.view_group' as virtualhost_group_perms %}
                             {% if virtualhost_group_perms %}
@@ -69,6 +81,16 @@
                                 Settings
                             </a>
                             {% endif %}
+                            <div class="list-group-item-inactive">Modules</div>
+                            {% get_modules as modules %}
+                            {% for module in modules %}
+                                <a href="{{ module.url }}"
+                                   class="list-group-item
+<!--                                    {% if page.section == 'modules' %}active{% endif %}-->
+                                    ">
+                                    {{ module.name }}
+                                </a>
+                            {% endfor %}
                         </div>
                     </div>
                     <div class="copyright">
@@ -110,6 +132,16 @@
                                     </div>
                                 </a>
                                 {% endif %}
+                                {% for subitem in subitems %}
+                                    {% if subitem.menu_item == 'create' %}
+                                        <a class="dropdown-item large-padding" href="{{ subitem.url }}">
+                                            <b>{{ subitem.subitem }}</b>
+                                            <div class="dropdown-item-secondary-text">
+                                                {{ subitem.subitem }}
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
                                 <!--<a class="dropdown-item large-padding" href="#">-->
                                     <!--<b>Group chat</b><br/>-->
                                     <!--<span class="dropdown-item-secondary-text">-->

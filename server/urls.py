@@ -1,5 +1,6 @@
 from django.conf.urls import url
 
+from modules_installation.views import ManageModulesView, UploadModuleFileView
 from server import views
 from xmppserverui.decorators import custom_permission_required
 
@@ -8,6 +9,8 @@ app_name = 'xmppserverui'
 urlpatterns = [
     url(r'^dashboard/$', custom_permission_required('server.view_dashboard')(views.ServerDashboardView.as_view()), name='dashboard'),
     url(r'^stopped/$', views.ServerStoppedStubView.as_view(), name='stopped-stub'),
+    url(r'^modules/$', custom_permission_required('is_admin')(ManageModulesView.as_view()), name='modules-list'),
+    url(r'^add/modules/$', custom_permission_required('is_admin')(UploadModuleFileView.as_view()), name='upload-module'),
     url(r'^settings/$',  custom_permission_required('is_admin')(views.ServerVhostsListView.as_view()), name='settings'),
     url(r'^settings/vhosts/$', custom_permission_required('is_admin')(views.ServerVhostsListView.as_view()), name='vhosts-list'),
     url(r'^settings/admins/$', custom_permission_required('is_admin')(views.ServerAdminsListView.as_view()), name='admins-list'),
