@@ -12,6 +12,7 @@ from django.apps import apps
 from django.core import management
 from django.shortcuts import redirect
 from modules_installation.templatetags.modules_tags import get_modules
+from virtualhost.views import update_module_permissions
 from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost
 from .forms import UploadModuleFileForm
@@ -92,6 +93,7 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                                 settings.MODULES_SPECS.append(data)
                             management.call_command('migrate', folder, interactive=False)
                             management.call_command('collectstatic', '--noinput', interactive=False)
+                            update_module_permissions()
                         except:
                             return ''
             return ''

@@ -1,6 +1,6 @@
 import math
 from datetime import datetime, timedelta
-
+from importlib import import_module
 from django.contrib.auth.models import Permission
 from django.db.models import Count
 from django.views.generic import TemplateView
@@ -50,6 +50,22 @@ PERMISSIONS_DICT = {
     'virtualhost.delete_group': 'srg_delete',
     'virtualhost.change_group': ['srg_user_add', 'srg_user_del', 'srg_create'],
 }
+
+
+def update_module_permissions():
+    for module_name in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
+        try:
+            module = import_module(module_name + ".apps")
+            config = getattr(module, 'ModuleConfig')
+            EXCLUDED_PERMISSIONS_MODELS.extend(getattr(config, 'EXCLUDED_PERMISSIONS_MODELS'))
+            EXCLUDED_PERMISSIONS_CODENAMES.extend(getattr(config, 'EXCLUDED_PERMISSIONS_CODENAMES'))
+        except ImportError:
+            print('Module', module_name, 'does not exist')
+        except AttributeError:
+            print('Module', module_name, 'app config is improperly configured')
+
+
+update_module_permissions()
 
 
 def set_api_permissions(user, curr_user, perms_list):
