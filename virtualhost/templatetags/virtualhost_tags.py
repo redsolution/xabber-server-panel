@@ -4,6 +4,7 @@ register = template.Library()
 RENAMING_MODELS_NAMES = {
     'group': 'circle',
     'groupchat': 'group',
+    'userpassword': 'user password',
 }
 
 @register.filter
