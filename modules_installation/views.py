@@ -89,15 +89,12 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                             apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
                             apps.clear_cache()
                             apps.populate(settings.INSTALLED_APPS)
-                            with open(os.path.join(folder_path, 'conf.json')) as conf:
-                                data = json.load(conf)
-                                settings.MODULES_SPECS.append(data)
                             management.call_command('migrate', folder, interactive=False)
                             management.call_command('collectstatic', '--noinput', interactive=False)
                             update_module_permissions()
                             update_module_permissions_names()
                         except:
-                            return ''
+                            return 'Something went wrong during the installation of this module'
             return ''
 
 
