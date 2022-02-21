@@ -16,7 +16,6 @@ from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm
 from .models import User, Group, GroupMember, GroupChat, VirtualHost
 
-
 USER_TAB_DETAILS = 'user-details'
 USER_TAB_VCARD = 'user-vcard'
 USER_TAB_SECURITY = 'user-security'
@@ -29,26 +28,26 @@ GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 
 EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes']
 EXCLUDED_PERMISSIONS_MODELS = [
-    'authbackend', 'configdata', 'configuration', 'ldapsettings','ldapsettingsserver', 'serverconfig',
+    'authbackend', 'configdata', 'configuration', 'ldapsettings', 'ldapsettingsserver', 'serverconfig',
     'serverconfiguration', 'groupmember', "virtualhost"
-                               ]
+]
 EXCLUDED_PERMISSIONS_CODENAMES = [
-    'add_dashboard', 'change_dashboard', 'delete_dashboard', 'add_groupchat','change_groupchat', 'delete_groupchat',
+    'add_dashboard', 'change_dashboard', 'delete_dashboard', 'add_groupchat', 'change_groupchat', 'delete_groupchat',
     'add_userpassword', 'delete_userpassword', "view_userpassword"
-                                  ]
+]
 
 PERMISSIONS_DICT = {
-    'virtualhost.view_user': ['xabber_registered_users','get_vcard','get_vcard2'],
-    'virtualhost.view_group': 'srg_list',
-    'virtualhost.view_groupchat': 'xabber_registered_chats',
-    'server.view_dashboard': ['xabber_registered_users_count', 'xabber_num_online_users'],
-    'virtualhost.add_user': ['xabberuser_set_vcard', 'xabberuser_set_vcard2', 'register', 'unregister'],
-    'virtualhost.delete_user': 'unregister',
-    'virtualhost.change_user': ['xabberuser_set_vcard', 'xabberuser_set_vcard2'],
-    'virtualhost.change_userpassword': 'change_password',
-    'virtualhost.add_group': 'srg_create',
-    'virtualhost.delete_group': 'srg_delete',
-    'virtualhost.change_group': ['srg_user_add', 'srg_user_del', 'srg_create'],
+    'virtualhost.view_user': {'user': 'read'},
+    'virtualhost.view_group': {'circles': 'read'},
+    'virtualhost.view_groupchat': {'groups': 'read'},
+    'server.view_dashboard': {'server': 'read'},
+    'virtualhost.add_user': {'user': 'write'},
+    'virtualhost.delete_user': {'user': 'write'},
+    'virtualhost.change_user': {'user': 'write'},
+    'virtualhost.change_userpassword': {'user': 'write'},
+    'virtualhost.add_group': {'circles': 'write'},
+    'virtualhost.delete_group': {'circles': 'write'},
+    'virtualhost.change_group': {'circles': 'write'},
 }
 
 
@@ -69,7 +68,6 @@ update_module_permissions()
 
 
 def set_api_permissions(user, curr_user, perms_list):
-
     django_perms_list = ['{0}.{1}'.format(p.content_type.app_label, p.codename) for p in perms_list]
     commands = []
     if not curr_user.is_admin:
@@ -82,24 +80,31 @@ def set_api_permissions(user, curr_user, perms_list):
                     commands += [PERMISSIONS_DICT[perm]]
             except KeyError:
                 pass
+        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'user', 'server']}
+        sorted_perms = sorted(commands, key=lambda i: list(i.values()))
+        for perm in sorted_perms:
+            key, value = perm.popitem()
+            perms_dict[key] = value
         user.api.xabber_set_permissions(
             {
-                "user": curr_user.username,
+                "username": curr_user.username,
                 "host": curr_user.host,
-                "set_admin": 'false',
-                "commands": ','.join(set(commands)),
+                "permissions": perms_dict,
+            }
+        )
+        user.api.xabber_del_admin(
+            {
+                "username": curr_user.username,
+                "host": curr_user.host,
             }
         )
     else:
-        user.api.xabber_set_permissions(
+        user.api.xabber_set_admin(
             {
-                "user": curr_user.username,
+                "username": curr_user.username,
                 "host": curr_user.host,
-                "set_admin": 'true',
-                "commands": '',
             }
         )
-
 
 
 # def get_page_title(paginator, data, hosts_count):
@@ -168,7 +173,7 @@ class SearchView(VhostContextView, TemplateView):
                             "name": group.name if group.name else '',
                             "id": group.id
                         })
-                data_groups.sort(key=lambda k:  k['group'])
+                data_groups.sort(key=lambda k: k['group'])
                 data_groups.sort(key=lambda k: k['members'], reverse=True)
             if "error" not in chats:
                 django_users = list(User.objects.all().values())
@@ -192,7 +197,6 @@ class SearchView(VhostContextView, TemplateView):
             return HttpResponseRedirect(reverse('personal-area:profile'))
 
 
-
 class UserListView(VhostContextView, TemplateView):
     page_section = 'vhosts-users'
     template_name = 'virtualhost/users.html'
@@ -200,7 +204,7 @@ class UserListView(VhostContextView, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         vhost = self.get_vhost(request)
-        users = user.api.xabber_registered_users({"host": vhost})
+        users = user.api.xabber_registered_users({"host": vhost}).get('users')
 
         if "error" in users:
             return self.get_response(request,
@@ -211,8 +215,8 @@ class UserListView(VhostContextView, TemplateView):
         django_users = [o['username'] for o in django_users]
         unknown_users = []
         for user in users:
-            if user['name'] not in django_users:
-                unknown_users.append(User(username=user['name'], host=vhost, auth_backend=user['auth']))
+            if user['username'] not in django_users:
+                unknown_users.append(User(username=user['username'], host=vhost, auth_backend=user['backend']))
         User.objects.bulk_create(unknown_users)
 
         # vhost_obj = self.get_vhost_obj(request)
@@ -225,10 +229,10 @@ class UserListView(VhostContextView, TemplateView):
         django_users = User.objects.filter(host=vhost)
         data = []
         for user in users:
-            django_user = filter(lambda o: o.username == user['name'], django_users)
+            django_user = filter(lambda o: o.username == user['username'], django_users)
             django_user = next(django_user, None)
             if django_user:
-                data.append({"username": user['name'],
+                data.append({"username": user['username'],
                              "user": django_user})
 
         page = request.GET.get('page', 1)
@@ -278,12 +282,10 @@ class UserCreateView(PageContextMixin, TemplateView):
                 raise Http404
         if form.is_valid():
             if form.cleaned_data['is_admin'] is True and self.context['auth_user'].is_admin:
-                user.api.xabber_set_permissions(
+                user.api.xabber_set_admin(
                     {
-                        "user": form.cleaned_data['username'],
-                        "host": form.cleaned_data['host'],
-                        "set_admin": 'true',
-                        "commands": '',
+                        "username": form.cleaned_data['username'],
+                        "host": form.cleaned_data['host']
                     }
                 )
             return HttpResponseRedirect(
@@ -308,7 +310,7 @@ class UserCreatedView(PageContextMixin, TemplateView):
         except User.DoesNotExist:
             raise Http404
         user_pass = new_user.password
-        new_user.password=None
+        new_user.password = None
         new_user.save()
 
         return self.render_to_response({
@@ -353,27 +355,19 @@ class UserDetailsView(PageContextMixin, TemplateView):
     def _get_vcard(self, request, curr_user):
         user = request.user
         nickname, first_name, last_name = None, None, None
-
-        user.api.get_vcard({"user": curr_user.username,
-                            "host": curr_user.host,
-                            "name": "nickname"})
+        vcard = user.api.get_vcard({"username": curr_user.username,
+                                    "host": curr_user.host})
         if user.api.success:
-            nickname = user.api.response["content"]
-
-        user.api.get_vcard2({"user": curr_user.username,
-                             "host": curr_user.host,
-                             "name": "n",
-                             "subname": "given"})
-        if user.api.success:
-            first_name = user.api.response["content"]
-
-        user.api.get_vcard2({"user": curr_user.username,
-                             "host": curr_user.host,
-                             "name": "n",
-                             "subname": "family"})
-        if user.api.success:
-            last_name = user.api.response["content"]
-
+            if vcard.get('vcard'):
+                nickname = vcard.get('vcard').get('nickname')
+            try:
+                first_name = vcard['vcard']['n']['given']
+            except KeyError:
+                pass
+            try:
+                last_name = vcard['vcard']['n']['family']
+            except KeyError:
+                pass
         return nickname, first_name, last_name
 
     def get(self, request, *args, **kwargs):
@@ -566,7 +560,7 @@ class DeleteUserView(PageContextMixin, TemplateView):
         post_data = request.POST.copy()
         post_data.update({"username": user_to_del.username,
                           "host": user_to_del.host})
-        form = UnregisterUserForm(user, post_data,  username=username, host=host)
+        form = UnregisterUserForm(user, post_data, username=username, host=host)
         if form.is_valid():
             return HttpResponseRedirect(reverse('virtualhost:users'))
         return self.render_to_response({"user_to_del": user_to_del,
@@ -621,7 +615,8 @@ class GroupListView(VhostContextView, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         vhost = self.get_vhost(request)
-        groups = user.api.get_groups({"host": vhost})
+        groups = user.api.get_groups({"host": vhost}).get('circles')
+
         if "error" in groups:
             return self.get_response(request,
                                      vhost=vhost,
@@ -631,10 +626,11 @@ class GroupListView(VhostContextView, TemplateView):
         data = []
         for g in groups:
             # group = filter(lambda o: o['group'] == g, all_groups)
-            group = all_groups.filter(group=g)[0]
+            group = all_groups.filter(group=g)
             if not group:
-                data.append({"group": g, "members": None})
+                data.append({"group": g, "members": 0})
             else:
+                group = group[0]
                 count = next(filter(lambda o: o['group__group'] == group.group, groups_members_count),
                              {'group__group': 'null', 'dcount': 0})['dcount']
                 if GroupMember.objects.filter(group=group, username="@all@").exists():
@@ -647,7 +643,7 @@ class GroupListView(VhostContextView, TemplateView):
                     "name": group.name if group.name else '',
                     "id": group.id
                 })
-        data.sort(key=lambda k:  k['group'])
+        data.sort(key=lambda k: k['group'])
         data.sort(key=lambda k: k['members'], reverse=True)
 
         page = request.GET.get('page', 1)
@@ -675,11 +671,11 @@ class GroupCreateView(PageContextMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         user = request.user
         if self.context['auth_user'].is_admin:
-            form = CreateGroupForm(user, request.POST,  vhosts=self.context['vhosts_cr'])
+            form = CreateGroupForm(user, request.POST, vhosts=self.context['vhosts_cr'])
         else:
             try:
                 host = VirtualHost.objects.get(name=self.context['auth_user'].host)
-                form = CreateGroupForm(user, request.POST,  vhosts=[host])
+                form = CreateGroupForm(user, request.POST, vhosts=[host])
             except VirtualHost.DoesNotExist:
                 raise Http404
         if form.is_valid():
@@ -709,18 +705,18 @@ class DeleteGroupView(PageContextMixin, TemplateView):
         self.check_host(group.host)
         user = request.user
         form = DeleteGroupForm(user)
-        return self.render_to_response({"group": group, "form": form})
+        return self.render_to_response({"circle": group, "form": form})
 
     def post(self, request, *args, **kwargs):
         group = self.get_group(kwargs['group_id'])
         self.check_host(group.host)
         user = request.user
         post_data = request.POST.copy()
-        post_data.update({"group": group.group, "host": group.host})
+        post_data.update({"circle": group.group, "host": group.host})
         form = DeleteGroupForm(user, post_data)
         if form.is_valid():
             return HttpResponseRedirect(reverse('virtualhost:groups'))
-        return self.render_to_response({"group": group, "form": form})
+        return self.render_to_response({"circle": group, "form": form})
 
 
 class GroupMembersView(PageContextMixin, TemplateView):
@@ -979,18 +975,17 @@ class GroupSubscribersView(PageContextMixin, TemplateView):
     def get_displayed_groups(self, group):
         all_groups = Group.objects.filter(host=group.host)
         all_groups_members = list(GroupMember.objects.all().values('group', 'username', 'host'))
-        displayed_groups = [g for g in group.displayed_groups.split('\\n')] \
-            if group.displayed_groups else []
+        displayed_groups = group.displayed_groups
         result = []
         for g in all_groups:
             if g.is_system:
                 result.append({'group': g.group,
-                                  'group_verbose': 'All',
-                                  'secondary_verbose': '({})'.format(g.host),
-                                  'checked': g.group in displayed_groups,
-                                  'system': True,
-                                  'members_ext': '@all@ %s' % g.host,
-                                  'members': self.count_group_members(all_groups_members, g.pk)})
+                               'group_verbose': 'All',
+                               'secondary_verbose': '({})'.format(g.host),
+                               'checked': g.group in displayed_groups,
+                               'system': True,
+                               'members_ext': '@all@ %s' % g.host,
+                               'members': self.count_group_members(all_groups_members, g.pk)})
             else:
                 result.append({'group': g.group,
                                'checked': g.group in displayed_groups,
@@ -1044,7 +1039,7 @@ class ChatListView(VhostContextView, TemplateView):
         chats = user.api.xabber_registered_chats(
             {"host": vhost,
              "limit": pagination_limit,
-             "page": pagination_page})
+             "page": pagination_page}).get('groups')
         if "error" in chats:
             return self.get_response(request,
                                      vhost=vhost,
@@ -1115,7 +1110,8 @@ class UserPermissionsView(PageContextMixin, TemplateView):
             view_perms = []
             for perm in perms:
                 try:
-                    view_perm = Permission.objects.get(codename='view_'+perm.content_type.model, content_type=perm.content_type)
+                    view_perm = Permission.objects.get(codename='view_' + perm.content_type.model,
+                                                       content_type=perm.content_type)
                     if view_perm:
                         view_perms += [str(view_perm.id)]
                 except Permission.DoesNotExist:
@@ -1131,4 +1127,4 @@ class UserPermissionsView(PageContextMixin, TemplateView):
                 content_type__app_label__in=EXCLUDED_PERMISSIONS_APPS).exclude(
                 codename__in=EXCLUDED_PERMISSIONS_CODENAMES),
             "user_perms": curr_user.user_permissions.all(),
-            })
+        })

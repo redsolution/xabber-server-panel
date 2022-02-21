@@ -15,26 +15,20 @@ class UserProfileDetailView(PersonalAreaContextMixin, TemplateView):
     def _get_vcard(self, request, curr_user):
         user = request.user
         nickname, first_name, last_name = None, None, None
-
-        user.api.get_vcard({"user": curr_user.username,
-                            "host": curr_user.host,
-                            "name": "nickname"})
+        vcard = user.api.get_vcard({"username": curr_user.username,
+                                    "host": curr_user.host})
         if user.api.success:
-            nickname = user.api.response["content"]
+            if vcard.get('vcard'):
+                nickname = vcard.get('vcard').get('nickname')
+        try:
+            first_name = vcard['vcard']['n']['given']
+        except KeyError:
+            pass
+        try:
+            last_name = vcard['vcard']['n']['family']
+        except KeyError:
+            pass
 
-        user.api.get_vcard2({"user": curr_user.username,
-                             "host": curr_user.host,
-                             "name": "n",
-                             "subname": "given"})
-        if user.api.success:
-            first_name = user.api.response["content"]
-
-        user.api.get_vcard2({"user": curr_user.username,
-                             "host": curr_user.host,
-                             "name": "n",
-                             "subname": "family"})
-        if user.api.success:
-            last_name = user.api.response["content"]
         return nickname, first_name, last_name
 
     def get(self, request, *args, **kwargs):
@@ -83,4 +77,3 @@ class UserProfileChangePasswordView(PersonalAreaContextMixin, TemplateView):
             return HttpResponseRedirect(reverse('personal-area:profile'))
         return self.render_to_response({"curr_user": user,
                                         "form": form})
-

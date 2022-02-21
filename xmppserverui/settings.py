@@ -151,7 +151,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Project settings
 
-EJABBERD_API_URL = 'http://127.0.0.1:5280/api'
+EJABBERD_API_URL = 'http://127.0.0.1:5280/panel'
 EJABBERD_API_TOKEN_TTL = 60 * 60 * 24 * 365
 EJABBERD_API_SCOPES = 'sasl_auth'
 
@@ -198,3 +198,4 @@ if os.path.exists(MODULES_DIR):
         if os.path.isdir(folder_path):
             new_app_name = MODULES_DIR_NAME + "." + folder
             INSTALLED_APPS += (new_app_name,)
+

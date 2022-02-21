@@ -130,10 +130,9 @@ def set_created_user_as_admin(data):
         print('waiting for 1 second...')
         time.sleep(1)
 
-    cmd_create_admin = [settings.EJABBERDCTL, 'xabber_set_permissions',
+    cmd_create_admin = [settings.EJABBERDCTL, 'panel_set_admin',
                           data['admin_username'],
-                          data['xmpp_host'],
-                          'true', '']
+                          data['xmpp_host']]
     cmd = subprocess.Popen(cmd_create_admin,
                            stdin=subprocess.PIPE,
                            # stdout=open('/dev/null', 'w'),

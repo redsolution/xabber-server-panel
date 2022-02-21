@@ -14,12 +14,12 @@
 
         <div class="row no-gutters">
             <div class="col page-content">
-                <p>Circle <b>{{ group }}</b> will deleted on server. Are you sure?</p>
+                <p>Circle <b>{{ circle }}</b> will deleted on server. Are you sure?</p>
 
-                <form method="post" action="{% url 'virtualhost:group-delete' group.id %}">
+                <form method="post" action="{% url 'virtualhost:group-delete' circle.id %}">
                     {% csrf_token %}
 
-                    {% with form.group as field %}
+                    {% with form.circle as field %}
                         {% include 'include/input_field.html' %}
                     {% endwith %}
                     {% with form.host as field %}

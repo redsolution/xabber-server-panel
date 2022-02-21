@@ -27,9 +27,9 @@ class ServerDashboardView(PageContextMixin, TemplateView):
         if self.context['auth_user'].is_admin:
             for host in VirtualHost.objects.all():
                 user_count = user.api.xabber_registered_users_count(
-                    {"host": host.name}).get('number')
+                    {"host": host.name}).get('count')
                 online_user_count = user.api.stats_host(
-                    {"host": host.name, "name": "onlineusers"}).get('users')
+                    {"host": host.name}).get('count')
                 host_data = {"name": host.name,
                              "registeredusers": user_count,
                              "onlineusers": online_user_count}
@@ -38,9 +38,9 @@ class ServerDashboardView(PageContextMixin, TemplateView):
             try:
                 host = VirtualHost.objects.get(name=self.context['auth_user'].host)
                 user_count = user.api.xabber_registered_users_count(
-                    {"host": host.name}).get('number')
+                    {"host": host.name}).get('count')
                 online_user_count = user.api.stats_host(
-                    {"host": host.name, "name": "onlineusers"}).get('users')
+                    {"host": host.name}).get('count')
                 host_data = {"name": host.name,
                              "registeredusers": user_count,
                              "onlineusers": online_user_count}
@@ -80,7 +80,6 @@ class ServerDashboardView(PageContextMixin, TemplateView):
             return self.render_to_response(context)
         else:
             return HttpResponseRedirect(reverse('personal-area:profile'))
-
 
 
 class ServerStoppedStubView(PageContextMixin, TemplateView):
@@ -142,12 +141,10 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
             if len(admin) is 0:
                 continue
             name, host = admin.split('@')
-            user.api.xabber_set_permissions(
+            user.api.xabber_set_admin(
                 {
-                    "user": name,
-                    "host": host,
-                    "set_admin": 'true',
-                    "commands": '',
+                    "username": name,
+                    "host": host
                 }
             )
             post_data['user'] = admin
@@ -160,12 +157,10 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
             if len(admin) is 0:
                 continue
             name, host = admin.split('@')
-            user.api.xabber_set_permissions(
+            user.api.xabber_del_admin(
                 {
-                    "user": name,
+                    "username": name,
                     "host": host,
-                    "set_admin": 'false',
-                    "commands": '',
                 }
             )
             post_data['user'] = admin
@@ -210,13 +205,13 @@ class AddVirtualHostView(PageContextMixin, TemplateView):
             'host': hostname,
             'name': settings.EJABBERD_EVERYBODY_DEFAULT_GROUP_NAME,
             'description': settings.EJABBERD_EVERYBODY_DEFAULT_GROUP_DESCRIPTION,
-            'display': ''
+            'display': []
         }
         request.user.api.srg_create_api(data=create_group_data)
         add_all_users_data = {
             'user': '@all@',
             'host': hostname,
-            'group': hostname,
+            'circle': hostname,
             'grouphost': hostname
         }
         request.user.api.srg_user_add_api(data=add_all_users_data)
@@ -305,7 +300,7 @@ class DeleteVirtualHostView(PageContextMixin, TemplateView):
             groups_to_del = Group.objects.filter(host=vhost_to_del)
             for item in groups_to_del:
                 data = {
-                    'group': item.group,
+                    'circle': item.group,
                     'host': item.host
                 }
                 user.api.delete_group(data=data)

@@ -63,7 +63,7 @@
 
     <script>
         function updateVGroupsInputField(groups) {
-            var groups_string = Array.from(groups).join(';');
+            var groups_string = Array.from(groups);
             $('input[name=displayed_groups]').val(groups_string);
         }
 

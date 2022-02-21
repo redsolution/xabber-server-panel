@@ -218,10 +218,10 @@ class ChangeUserPasswordForm(AuthorizedApiForm):
         if password and confirm_password and password == confirm_password:
             self.cleaned_data.pop('password')
             self.cleaned_data.pop('confirm_password')
-            self.cleaned_data['newpass'] = password
+            self.cleaned_data['password'] = password
         else:
             self.add_error(None, 'Passwords do not match.')
-        self.cleaned_data['user'] = self.user_to_change.username
+        self.cleaned_data['username'] = self.user_to_change.username
         self.cleaned_data['host'] = self.user_to_change.host
 
 
@@ -276,11 +276,11 @@ class CreateGroupForm(AuthorizedApiForm):
 
     def clean_displayed_groups(self):
         if self.cleaned_data['displayed_groups'] == GROUP_SUBSCRIBER_ALL:
-            return 'all'
+            return ['all']
         elif self.cleaned_data['displayed_groups'] == GROUP_SUBSCRIBER_SELF:
-            return self.cleaned_data['group']
+            return [self.cleaned_data['group']]
         else:
-            return ''
+            return []
 
     def before_clean(self):
         if self.cleaned_data['group'].lower() == 'all':
@@ -312,9 +312,7 @@ class EditGroupForm(CreateGroupForm):
         self.fields['host'].widget = forms.HiddenInput()
 
     def clean_displayed_groups(self):
-        return self.cleaned_data['displayed_groups']\
-            .replace(';', '\\n')\
-            .replace(',', '\\n')
+        return re.split(";|,", self.cleaned_data['displayed_groups'])
 
     def before_clean(self):
         pass
@@ -333,7 +331,7 @@ class EditGroupForm(CreateGroupForm):
                 add_all_users_data = {
                     'user': item.username,
                     'host': item.host,
-                    'group': group.group,
+                    'circle': group.group,
                     'grouphost': group.host
                 }
                 self.api.srg_user_add_api(data=add_all_users_data)
@@ -365,18 +363,20 @@ class AddGroupMemberForm(AuthorizedApiForm):
             visible.field.widget.attrs['class'] = 'form-control'
 
     def before_clean(self):
+        members = []
+        self.cleaned_data['circle'] = self.group.group
+        self.cleaned_data['host'] = self.group.host
         if self.cleaned_data.get('member'):
             member = self.cleaned_data.pop('member').strip()
-            self.cleaned_data['user'] = member.split('@')[0]
-            self.cleaned_data['host'] = member.split('@')[1]
+            members.append(member)
+            self.cleaned_data['members'] = members
             if not VirtualHost.objects.filter(name=self.cleaned_data['host']).exists():
                 self.add_error('member', "Can`t add member from external server")
-        self.cleaned_data['group'] = self.group.group
-        self.cleaned_data['grouphost'] = self.group.host
 
     def after_clean(self, cleaned_data):
-        self.group.groupmember_set.get_or_create(username=cleaned_data['user'],
-                                                 host=cleaned_data['host'])
+        for member in cleaned_data['members']:
+            self.group.groupmember_set.get_or_create(username=member.split('@')[0],
+                                                     host=member.split('@')[1])
 
 
 class DeleteGroupMemberForm(AddGroupMemberForm):
@@ -387,9 +387,11 @@ class DeleteGroupMemberForm(AddGroupMemberForm):
         self.fields['member'].widget = forms.HiddenInput()
 
     def after_clean(self, cleaned_data):
-        self.group.groupmember_set\
-            .filter(username=cleaned_data['user'], host=cleaned_data['host'])\
-            .delete()
+        for member in cleaned_data.get('members'):
+            split_member = member.split("@")
+            self.group.groupmember_set\
+                .filter(username=split_member[0], host=split_member[1])\
+                .delete()
 
 
 class AddGroupAllMemberForm(AuthorizedApiForm):
@@ -401,13 +403,13 @@ class AddGroupAllMemberForm(AuthorizedApiForm):
     )
 
     def __init__(self, *args, **kwargs):
-        self.group = kwargs.pop('group', None)
+        self.group = kwargs.pop('circle', None)
         super(AddGroupAllMemberForm, self).__init__(*args, **kwargs)
 
     def before_clean(self):
-        self.cleaned_data['user'] = '@all@'
+        self.cleaned_data['user2'] = '@all@'
         self.cleaned_data['host'] = self.cleaned_data['host']
-        self.cleaned_data['group'] = self.group.group
+        self.cleaned_data['circle'] = self.group.group
         self.cleaned_data['grouphost'] = self.group.host
 
     def after_clean(self, cleaned_data):
@@ -427,7 +429,7 @@ class DeleteGroupAllMemberForm(AddGroupAllMemberForm):
 class DeleteGroupForm(AuthorizedApiForm):
     api_method = 'delete_group'
 
-    group = forms.CharField(
+    circle = forms.CharField(
         max_length=100,
         required=True,
         widget=forms.HiddenInput(),
@@ -440,6 +442,6 @@ class DeleteGroupForm(AuthorizedApiForm):
 
     def after_clean(self, cleaned_data):
         Group.objects\
-            .filter(group=cleaned_data['group'],
+            .filter(group=cleaned_data['circle'],
                     host=cleaned_data['host'])\
             .delete()
