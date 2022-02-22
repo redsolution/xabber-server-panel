@@ -189,6 +189,8 @@ EJABBERD_EVERYBODY_DEFAULT_GROUP_DESCRIPTION = "Contains all users on this virtu
 
 PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 
+EJABBERD_MODULES_CONFIG_FILE = 'modules_config.yml'
+
 # Modules initialization
 MODULES_DIR_NAME = 'modules'
 MODULES_DIR = os.path.join(BASE_DIR, MODULES_DIR_NAME)
