@@ -18,6 +18,7 @@ from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost
 from .forms import UploadModuleFileForm
 from .mixins import ModuleAccessMixin
+from .utils.config_generator import update_modules_config_file
 
 SETTINGS_TAB_MODULES = 'modules'
 
@@ -93,6 +94,7 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                             management.call_command('collectstatic', '--noinput', interactive=False)
                             update_module_permissions()
                             update_module_permissions_names()
+                            update_modules_config_file()
                         except:
                             return 'Something went wrong during the installation of this module'
             return ''

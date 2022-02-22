@@ -6,6 +6,7 @@ import json
 from django.template.loader import get_template, render_to_string
 from django.conf import settings
 
+from modules_installation.utils.config_generator import update_modules_config_file
 from server.models import Configuration
 from .signals import success_installation
 
@@ -63,6 +64,7 @@ def update_vhosts_config(data):
 def create_config(data):
     data['PROJECT_DIR'] = settings.PROJECT_DIR
     data['VHOST_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_VHOSTS_CONFIG_FILE)
+    data['MODULES_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_MODULES_CONFIG_FILE)
     config_template = get_template('ejabberd/base_config.yml')
     config_file = open(os.path.join(settings.EJABBERD_CONFIG_PATH, 'ejabberd.yml'), "w+")
     config_file.write(config_template.render(context=data))
@@ -70,6 +72,7 @@ def create_config(data):
     entry = Configuration(pk=1, config=config_template.render(context=data))
     entry.save()
     update_vhosts_config(data)
+    update_modules_config_file()
 
 
 def start_ejabberd():
