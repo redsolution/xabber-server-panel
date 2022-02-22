@@ -36,4 +36,7 @@ urlpatterns = [
     url(r'^firebase-messaging-sw.js', XabberWebFirebaseMessSWView.as_view()),
 
 ]
+for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
+    urlpatterns += [url(r'^%s/' % module, include('%s.urls' % module, namespace='%s' % module)),]
+
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
