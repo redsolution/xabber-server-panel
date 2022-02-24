@@ -37,14 +37,14 @@ EXCLUDED_PERMISSIONS_CODENAMES = [
 ]
 
 PERMISSIONS_DICT = {
-    'virtualhost.view_user': {'user': 'read'},
+    'virtualhost.view_user': {'users': 'read'},
     'virtualhost.view_group': {'circles': 'read'},
     'virtualhost.view_groupchat': {'groups': 'read'},
     'server.view_dashboard': {'server': 'read'},
-    'virtualhost.add_user': {'user': 'write'},
-    'virtualhost.delete_user': {'user': 'write'},
-    'virtualhost.change_user': {'user': 'write'},
-    'virtualhost.change_userpassword': {'user': 'write'},
+    'virtualhost.add_user': {'users': 'write'},
+    'virtualhost.delete_user': {'users': 'write'},
+    'virtualhost.change_user': {'users': 'write'},
+    'virtualhost.change_userpassword': {'users': 'write'},
     'virtualhost.add_group': {'circles': 'write'},
     'virtualhost.delete_group': {'circles': 'write'},
     'virtualhost.change_group': {'circles': 'write'},
@@ -80,11 +80,17 @@ def set_api_permissions(user, curr_user, perms_list):
                     commands += [PERMISSIONS_DICT[perm]]
             except KeyError:
                 pass
-        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'user', 'server']}
+        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'users', 'server']}
         sorted_perms = sorted(commands, key=lambda i: list(i.values()))
         for perm in sorted_perms:
-            key, value = perm.popitem()
+            key, value = list(perm.items())[0]
             perms_dict[key] = value
+        user.api.xabber_del_admin(
+            {
+                "username": curr_user.username,
+                "host": curr_user.host,
+            }
+        )
         user.api.xabber_set_permissions(
             {
                 "username": curr_user.username,
@@ -92,12 +98,7 @@ def set_api_permissions(user, curr_user, perms_list):
                 "permissions": perms_dict,
             }
         )
-        user.api.xabber_del_admin(
-            {
-                "username": curr_user.username,
-                "host": curr_user.host,
-            }
-        )
+
     else:
         user.api.xabber_set_admin(
             {
