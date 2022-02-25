@@ -1,7 +1,7 @@
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.conf import settings
-from django.shortcuts import resolve_url
+from django.shortcuts import resolve_url, redirect
 from functools import wraps
 from urllib.parse import urlparse
 from virtualhost.models import User
@@ -12,12 +12,8 @@ def custom_user_passes_test(test_func, login_url=None, redirect_field_name=REDIR
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            username = request.session.get('_auth_user_username')
-            host = request.session.get('_auth_user_host')
-            try:
-                user = User.objects.get(username=username, host=host)
-                if test_func(request, user):
-                    return view_func(request, *args, **kwargs)
+
+            def to_login():
                 path = request.build_absolute_uri()
                 resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
 
@@ -29,8 +25,20 @@ def custom_user_passes_test(test_func, login_url=None, redirect_field_name=REDIR
                 from django.contrib.auth.views import redirect_to_login
                 return redirect_to_login(
                     path, resolved_login_url, redirect_field_name)
+
+            username = request.session.get('_auth_user_username')
+            host = request.session.get('_auth_user_host')
+            if not username and not host:
+                return to_login()
+
+            try:
+                user = User.objects.get(username=username, host=host)
+                if test_func(request, user):
+                    return view_func(request, *args, **kwargs)
+                else:
+                    return redirect('/')
             except User.DoesNotExist:
-                return None
+                return to_login()
         return _wrapped_view
     return decorator
 
