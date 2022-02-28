@@ -80,11 +80,12 @@ def set_api_permissions(user, curr_user, perms_list):
                     commands += [PERMISSIONS_DICT[perm]]
             except KeyError:
                 pass
-        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'users', 'server']}
+        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'users', 'server', 'vcard']}
         sorted_perms = sorted(commands, key=lambda i: list(i.values()))
         for perm in sorted_perms:
             key, value = list(perm.items())[0]
             perms_dict[key] = value
+        perms_dict['vcard'] = perms_dict['users']
         user.api.xabber_del_admin(
             {
                 "username": curr_user.username,
