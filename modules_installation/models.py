@@ -2,7 +2,7 @@ from django.db import models
 from virtualhost.models import VirtualHost
 
 
-class BasePluginConfig(models.Model):
+class BaseModuleConfig(models.Model):
     GLOBAL_HOST_NAME = "global"
 
     virtual_host = models.CharField(

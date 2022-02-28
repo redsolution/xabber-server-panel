@@ -29,7 +29,7 @@ GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes']
 EXCLUDED_PERMISSIONS_MODELS = [
     'authbackend', 'configdata', 'configuration', 'ldapsettings', 'ldapsettingsserver', 'serverconfig',
-    'serverconfiguration', 'groupmember', "virtualhost"
+    'serverconfiguration', 'groupmember', "virtualhost", 'basemoduleconfig'
 ]
 EXCLUDED_PERMISSIONS_CODENAMES = [
     'add_dashboard', 'change_dashboard', 'delete_dashboard', 'add_groupchat', 'change_groupchat', 'delete_groupchat',

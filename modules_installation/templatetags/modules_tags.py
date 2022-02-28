@@ -3,7 +3,7 @@ from importlib import import_module
 from django.conf import settings
 from django import template
 from django.urls import reverse, NoReverseMatch
-
+from django.apps import apps
 register = template.Library()
 
 
@@ -19,7 +19,7 @@ def get_modules():
             url = '/admin/server/modules/%s' % module + \
                   reverse('info', urlconf="modules." + module + '.urls')
         modules_list.append({
-            'name': module,
+            'name': apps.get_app_config(module).verbose_name,
             'url': url
         })
     return modules_list
