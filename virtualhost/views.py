@@ -29,7 +29,7 @@ GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes']
 EXCLUDED_PERMISSIONS_MODELS = [
     'authbackend', 'configdata', 'configuration', 'ldapsettings', 'ldapsettingsserver', 'serverconfig',
-    'serverconfiguration', 'groupmember', "virtualhost"
+    'serverconfiguration', 'groupmember', "virtualhost", 'basemoduleconfig'
 ]
 EXCLUDED_PERMISSIONS_CODENAMES = [
     'add_dashboard', 'change_dashboard', 'delete_dashboard', 'add_groupchat', 'change_groupchat', 'delete_groupchat',
@@ -80,11 +80,12 @@ def set_api_permissions(user, curr_user, perms_list):
                     commands += [PERMISSIONS_DICT[perm]]
             except KeyError:
                 pass
-        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'users', 'server']}
+        perms_dict = {key: 'forbidden' for key in ['circles', 'groups', 'users', 'server', 'vcard']}
         sorted_perms = sorted(commands, key=lambda i: list(i.values()))
         for perm in sorted_perms:
             key, value = list(perm.items())[0]
             perms_dict[key] = value
+        perms_dict['vcard'] = perms_dict['users']
         user.api.xabber_del_admin(
             {
                 "username": curr_user.username,

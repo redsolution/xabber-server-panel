@@ -23,7 +23,7 @@ from .utils.config_generator import update_modules_config_file
 SETTINGS_TAB_MODULES = 'modules'
 
 
-class BasePluginView(ModuleAccessMixin, View):
+class BaseModuleView(ModuleAccessMixin, View):
     pass
 
 
