@@ -7,6 +7,7 @@ from xmppserverui.decorators import custom_permission_required
 app_name = 'xmppserverui'
 
 urlpatterns = [
+    url(r'^$', views.ServerHomePage.as_view(), name='home'),
     url(r'^dashboard/$', custom_permission_required('server.view_dashboard')(views.ServerDashboardView.as_view()), name='dashboard'),
     url(r'^stopped/$', views.ServerStoppedStubView.as_view(), name='stopped-stub'),
     url(r'^modules/$', custom_permission_required('is_admin')(ManageModulesView.as_view()), name='modules-list'),

@@ -29,10 +29,9 @@ def is_xmpp_server_should_start():
 def get_default_url(user, django_user=None):
     if user.is_anonymous:
         return reverse('auth:login')
-    # return reverse('server:dashboard')
     if django_user:
         if django_user.is_admin or django_user.get_all_permissions():
-            return reverse('personal-area:profile')
+            return reverse('server:home')
     return reverse('xabber-web')
 
 

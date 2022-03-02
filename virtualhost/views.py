@@ -196,7 +196,7 @@ class SearchView(VhostContextView, TemplateView):
             context = {**context, **self.context}
             return self.get_response(request, vhost=vhost, context=context)
         else:
-            return HttpResponseRedirect(reverse('personal-area:profile'))
+            return HttpResponseRedirect(reverse('server:home'))
 
 
 class UserListView(VhostContextView, TemplateView):

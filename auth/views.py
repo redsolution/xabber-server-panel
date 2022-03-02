@@ -48,7 +48,7 @@ class LoginView(NoAuthMixin, TemplateView):
                     if not user.password:
                         user.set_password(request.POST['password'])
                         user.save()
-                    return HttpResponseRedirect(reverse('personal-area:profile'))
+                    return HttpResponseRedirect(reverse('server:home'))
             return HttpResponseRedirect(reverse('xabber-web'))
         return self.render_to_response({"form": form, 'user_ip': user_ip})
 

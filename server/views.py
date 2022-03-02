@@ -17,6 +17,14 @@ SETTINGS_TAB_ADMINS = 'admins'
 SETTINGS_TAB_AUTH_BACKENDS = 'auth_backends'
 
 
+class ServerHomePage(PageContextMixin, TemplateView):
+    page_section = 'home'
+    template_name = 'server/home.html'
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(request, *args, **kwargs)
+
+
 class ServerDashboardView(PageContextMixin, TemplateView):
     page_section = 'dashboard'
     template_name = 'server/dashboard.html'
@@ -79,7 +87,7 @@ class ServerDashboardView(PageContextMixin, TemplateView):
                        "vhosts_data": vhosts_data}
             return self.render_to_response(context)
         else:
-            return HttpResponseRedirect(reverse('personal-area:profile'))
+            return HttpResponseRedirect(reverse('server:home'))
 
 
 class ServerStoppedStubView(PageContextMixin, TemplateView):
