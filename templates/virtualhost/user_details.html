@@ -4,6 +4,7 @@
 {% block title %}Details for {{ curr_user }}{% endblock %}
 
 {% block tab_content %}
+{% check_user_perms 'virtualhost.delete_user' as virtualhost_delete_user_perm %}
 <div class="tab-pane fade show active">
     <div class="user-details">
         <div class="user-avatar-container">
@@ -16,7 +17,7 @@
         <div class="user-name">
             {{ curr_user.full_name }}
         </div>
-        {% if curr_user.allowed_delete %}
+        {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
         <div class="btn-set">
             <!--<button type="button" class="btn btn-outline-secondary">Activate</button>-->
             <!--<button type="button" class="btn btn-custom-yellow">Suspend</button>-->

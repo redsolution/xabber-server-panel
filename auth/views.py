@@ -44,12 +44,12 @@ class LoginView(NoAuthMixin, TemplateView):
             user = User.objects.filter(username=username, host=host)
             if user.exists():
                 user = user[0]
-                if user.is_admin:
+                if user.is_admin or user.get_all_permissions():
                     if not user.password:
                         user.set_password(request.POST['password'])
                         user.save()
-                    return HttpResponseRedirect(reverse('server:dashboard'))
-            return HttpResponseRedirect(reverse('personal-area:profile'))
+                    return HttpResponseRedirect(reverse('server:home'))
+            return HttpResponseRedirect(reverse('xabber-web'))
         return self.render_to_response({"form": form, 'user_ip': user_ip})
 
 

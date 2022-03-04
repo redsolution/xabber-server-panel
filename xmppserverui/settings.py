@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import json
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -26,9 +26,9 @@ SECRET_KEY = '1y+xp2ic@04=_t5293l69k%)8c(ika!h3zk&qmqcn9uep088-v'
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
-
+AUTH_USER_MODEL = 'virtualhost.User'
 APPEND_SLASH = True
-
+LOGIN_URL = '/auth/login/'
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,9 +42,8 @@ INSTALLED_APPS = [
     'virtualhost',
     'server',
     'xmppserverui',
-
-    'xmppserverinstaller',
-    'personal_area'
+    'modules_installation',
+    'xmppserverinstaller'
 ]
 
 MIDDLEWARE = [
@@ -151,7 +150,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Project settings
 
-EJABBERD_API_URL = 'http://127.0.0.1:5280/api'
+EJABBERD_API_URL = 'http://127.0.0.1:5280/panel'
 EJABBERD_API_TOKEN_TTL = 60 * 60 * 24 * 365
 EJABBERD_API_SCOPES = 'sasl_auth'
 
@@ -182,10 +181,22 @@ EJABBERD_STATE = os.path.join(PROJECT_DIR, 'server_state')
 EJABBERD_STATE_ON = 1
 EJABBERD_STATE_OFF = 0
 
-EJABBERD_ADMINS_CONFIG_FILE = 'acl_admin.yml'
 EJABBERD_VHOSTS_CONFIG_FILE = 'virtual_hosts.yml'
 
 EJABBERD_EVERYBODY_DEFAULT_GROUP_NAME = "All"
 EJABBERD_EVERYBODY_DEFAULT_GROUP_DESCRIPTION = "Contains all users on this virtual host"
 
 PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
+
+EJABBERD_MODULES_CONFIG_FILE = 'modules_config.yml'
+
+# Modules initialization
+MODULES_DIR_NAME = 'modules'
+MODULES_DIR = os.path.join(BASE_DIR, MODULES_DIR_NAME)
+if os.path.exists(MODULES_DIR):
+    for folder in os.listdir(MODULES_DIR):
+        folder_path = os.path.join(MODULES_DIR, folder)
+        if os.path.isdir(folder_path):
+            new_app_name = MODULES_DIR_NAME + "." + folder
+            INSTALLED_APPS += (new_app_name,)
+

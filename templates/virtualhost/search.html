@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load xmppserverui_tags %}
+
+{% block title %}Users{% endblock %}
+
+{% block main_content %}
+{% check_user_perms 'virtualhost.view_user' as virtualhost_user_perms %}
+{% check_user_perms 'virtualhost.view_group' as virtualhost_group_perms %}
+{% check_user_perms 'virtualhost.view_groupchat' as virtualhost_groupchat_perms %}
+{% check_user_perms 'virtualhost.change_user' as virtualhost_edit_user_perm %}
+{% check_user_perms 'virtualhost.change_group' as virtualhost_change_group_perm %}
+{% check_user_perms 'virtualhost.delete_group' as virtualhost_delete_group_perm %}
+{% check_user_perms 'virtualhost.delete_user' as virtualhost_delete_user_perm %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Search</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    {% if auth_user.is_admin %}
+                    <li class="list-group-item right-btn">
+                        <div class="dropdown">
+                            <button class="btn dropdown-toggle"
+                                    type="button" id="dropdown-vhost"
+                                    data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">
+                                {{ vhosts.0 }}
+                            </button>
+                            <div class="dropdown-menu"
+                                   aria-labelledby="dropdown-vhost">
+                                {% for vhost in vhosts %}
+                                    <a class="dropdown-item" href="#">{{ vhost }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% if data_users and virtualhost_user_perms %}
+        <h2>Users</h2>
+        <div class="row no-gutters">
+            <div class="col">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Username</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Auth backend</th>
+                            {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
+                                <th scope="col">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obj in data_users %}
+                            <tr>
+                                <td class="table-data">
+                                    {% if obj.user.photo %}
+                                        <img class="user-avatar-preview" src="{{ obj.photo.url }}" />
+                                    {% else %}
+                                        {% if obj.user %}
+                                            <p class="user-avatar-preview-p" data-letters="{% get_user_initials obj.user %}"></p>
+                                        {% else %}
+                                            <p class="user-avatar-preview-p" data-letters="{% get_user_initials obj.username %}"></p>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="table-data">
+                                    {% if obj.user.id %}
+                                    <a href="{% url 'virtualhost:user-details' obj.user.id %}">
+                                        {{ obj.user.username }}
+                                    </a>
+                                    {% else %}
+                                        {{ obj.username }}
+                                    {% endif %}
+                                </td>
+                                <td class="table-data">
+                                    {% if obj.user.first_name and obj.user.last_name %}
+                                        {{ obj.user.first_name }} {{ obj.user.last_name }}
+                                    {% endif %}
+                                </td>
+                                <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}</td>
+                                <td class="table-data date">{{ obj.user.get_auth_backend_display }}</td>
+                                <td class="table-data dots-menu">
+                                    {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
+                                    {% if obj.user.id %}
+                                        <div class="btn-group dropleft">
+                                            <i class="mdi mdi-24px mdi-dots-vertical" role="button"
+                                               id="dropdown-user-actions" data-toggle="dropdown"
+                                               aria-haspopup="true" aria-expanded="false">
+                                            </i>
+                                                <div class="dropdown-menu"
+                                                      aria-labelledby="dropdown-user-actions-2">
+                                                    {% if virtualhost_edit_user_perm %}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-vcard' obj.user.id %}">
+                                                            Edit vcard
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if obj.user.allowed_delete and virtualhost_delete_user_perm %}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
+                                                            Delete user
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                        </div>
+                                    {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% if data_groups and virtualhost_group_perms %}
+        <h2>Circles</h2>
+        <div class="row no-gutters">
+            <div class="col">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Circle identifier</th>
+                            <th scope="col">Circle name</th>
+                            <th scope="col">Members count</th>
+                            {% if virtualhost_delete_group_perm %}
+                            <th scope="col">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in data_groups %}
+                            <tr>
+                                <td class="table-data">{{ forloop.counter }}</td>
+                                <td class="table-data">
+                                    {% if group.id and virtualhost_change_group_perm %}
+                                    <a href="{% url 'virtualhost:group-details' group.id %}">
+                                       {{ group.group }}
+                                    </a>
+                                    {% else %}
+                                        {{ group.group }}
+                                    {% endif %}
+                                </td>
+                                <td class="table-data">{{ group.name }}</td>
+                                <td class="table-data">
+                                    {% if group.members != None %}
+                                        {{ group.members }}
+                                    {% endif %}
+                                </td>
+                                <td class="table-data dots-menu">
+                                    {% if group.id and virtualhost_delete_group_perm %}
+                                    <div class="btn-group dropleft">
+                                        <i class="mdi mdi-24px mdi-dots-vertical" role="button"
+                                           id="dropdown-group-actions" data-toggle="dropdown"
+                                           aria-haspopup="true" aria-expanded="false">
+                                        </i>
+                                        <div class="dropdown-menu"
+                                              aria-labelledby="dropdown-user-actions-2">
+                                            <a class="dropdown-item" href="{% url 'virtualhost:group-delete' group.id %}">
+                                                Delete circle
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% if data_chats and virtualhost_groupchat_perms %}
+        <h2>Groups</h2>
+        <div class="row no-gutters">
+            <div class="col">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Chat identifier</th>
+                            <th scope="col">Owner</th>
+                            <th scope="col">Members</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obj in data_chats %}
+                            <tr>
+                                <td class="table-data">{{ forloop.counter }}</td>
+                                <td class="table-data">{{ obj.chat.name }}</td>
+                                <td class="table-data">
+                                    {% if obj.owner_id %}
+                                        <a href="{% url 'virtualhost:user-details' obj.owner_id %}">
+                                            {{ obj.chat.owner }}
+                                        </a>
+                                    {% else %}
+                                        {{ obj.chat.owner }}
+                                    {% endif %}
+                                </td>
+                                <td class="table-data">{{ obj.chat.number }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% if not data_users and not data_chats and not data_groups %}
+            <h2>Nothing Found</h2>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function() {
+            let curr_vhost = $.cookie("vhost");
+            $("#dropdown-vhost").text(curr_vhost);
+
+            $(".dropdown-menu[aria-labelledby='dropdown-vhost'] a").click(function() {
+                $.cookie("vhost", $(this).text(), {expires : 30, path: '/'});
+                location.reload();
+            });
+        });
+    </script>
+{% endblock %}

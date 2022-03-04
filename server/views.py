@@ -17,6 +17,14 @@ SETTINGS_TAB_ADMINS = 'admins'
 SETTINGS_TAB_AUTH_BACKENDS = 'auth_backends'
 
 
+class ServerHomePage(PageContextMixin, TemplateView):
+    page_section = 'home'
+    template_name = 'server/home.html'
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(request, *args, **kwargs)
+
+
 class ServerDashboardView(PageContextMixin, TemplateView):
     page_section = 'dashboard'
     template_name = 'server/dashboard.html'
@@ -24,15 +32,29 @@ class ServerDashboardView(PageContextMixin, TemplateView):
     def get_hosts_stat(self, request):
         user = request.user
         data = []
-        for host in VirtualHost.objects.all():
-            user_count = user.api.xabber_registered_users_count(
-                {"host": host.name}).get('number')
-            online_user_count = user.api.stats_host(
-                {"host": host.name, "name": "onlineusers"}).get('users')
-            host_data = {"name": host.name,
-                         "registeredusers": user_count,
-                         "onlineusers": online_user_count}
-            data.append(host_data)
+        if self.context['auth_user'].is_admin:
+            for host in VirtualHost.objects.all():
+                user_count = user.api.xabber_registered_users_count(
+                    {"host": host.name}).get('count')
+                online_user_count = user.api.stats_host(
+                    {"host": host.name}).get('count')
+                host_data = {"name": host.name,
+                             "registeredusers": user_count,
+                             "onlineusers": online_user_count}
+                data.append(host_data)
+        else:
+            try:
+                host = VirtualHost.objects.get(name=self.context['auth_user'].host)
+                user_count = user.api.xabber_registered_users_count(
+                    {"host": host.name}).get('count')
+                online_user_count = user.api.stats_host(
+                    {"host": host.name}).get('count')
+                host_data = {"name": host.name,
+                             "registeredusers": user_count,
+                             "onlineusers": online_user_count}
+                data.append(host_data)
+            except VirtualHost.DoesNotExist:
+                raise Http404
         data.append({"name": "",
                      "registeredusers": sum([o["registeredusers"]
                                              for o in data if o['registeredusers']]),
@@ -49,19 +71,23 @@ class ServerDashboardView(PageContextMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        action = request.POST.get('action')
-        if action == 'start_server':
-            start_ejabberd()
-        elif action == 'restart_server':
-            restart_ejabberd()
-        elif action == 'stop_server':
-            stop_ejabberd()
+        user = self.context['auth_user']
+        if user.is_admin:
+            action = request.POST.get('action')
+            if action == 'start_server':
+                start_ejabberd()
+            elif action == 'restart_server':
+                restart_ejabberd()
+            elif action == 'stop_server':
+                stop_ejabberd()
 
-        is_ejabberd_started = is_ejabberd_running()['success']
-        vhosts_data = self.get_hosts_stat(request)
-        context = {"is_ejabberd_started": is_ejabberd_started,
-                   "vhosts_data": vhosts_data}
-        return self.render_to_response(context)
+            is_ejabberd_started = is_ejabberd_running()['success']
+            vhosts_data = self.get_hosts_stat(request)
+            context = {"is_ejabberd_started": is_ejabberd_started,
+                       "vhosts_data": vhosts_data}
+            return self.render_to_response(context)
+        else:
+            return HttpResponseRedirect(reverse('server:home'))
 
 
 class ServerStoppedStubView(PageContextMixin, TemplateView):
@@ -122,6 +148,13 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
         for admin in users_to_add:
             if len(admin) is 0:
                 continue
+            name, host = admin.split('@')
+            user.api.xabber_set_admin(
+                {
+                    "username": name,
+                    "host": host
+                }
+            )
             post_data['user'] = admin
             form = SelectAdminForm(post_data, action='add')
             if not form.is_valid():
@@ -131,6 +164,13 @@ class ManageAdminsSelectView(PageContextMixin, TemplateView):
         for admin in users_to_del:
             if len(admin) is 0:
                 continue
+            name, host = admin.split('@')
+            user.api.xabber_del_admin(
+                {
+                    "username": name,
+                    "host": host,
+                }
+            )
             post_data['user'] = admin
             form = SelectAdminForm(post_data, action='delete')
             if not form.is_valid():
@@ -173,13 +213,13 @@ class AddVirtualHostView(PageContextMixin, TemplateView):
             'host': hostname,
             'name': settings.EJABBERD_EVERYBODY_DEFAULT_GROUP_NAME,
             'description': settings.EJABBERD_EVERYBODY_DEFAULT_GROUP_DESCRIPTION,
-            'display': ''
+            'display': []
         }
         request.user.api.srg_create_api(data=create_group_data)
         add_all_users_data = {
             'user': '@all@',
             'host': hostname,
-            'group': hostname,
+            'circle': hostname,
             'grouphost': hostname
         }
         request.user.api.srg_user_add_api(data=add_all_users_data)
@@ -268,7 +308,7 @@ class DeleteVirtualHostView(PageContextMixin, TemplateView):
             groups_to_del = Group.objects.filter(host=vhost_to_del)
             for item in groups_to_del:
                 data = {
-                    'group': item.group,
+                    'circle': item.group,
                     'host': item.host
                 }
                 user.api.delete_group(data=data)

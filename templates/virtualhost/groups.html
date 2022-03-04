@@ -4,6 +4,8 @@
 {% block title %}Circles{% endblock %}
 
 {% block main_content %}
+{% check_user_perms 'virtualhost.delete_group' as virtualhost_delete_group_perm %}
+{% check_user_perms 'virtualhost.change_group' as virtualhost_change_group_perm %}
     <div class="container">
         <div class="row no-gutters">
             <div class="col breadcrumbs">
@@ -11,6 +13,7 @@
                     <li class="list-group-item"><h1>Circles</h1></li>
                     <li class="list-group-item"><div class="divider"></div></li>
                     <li class="list-group-item"><h4>{{ title }} circles</h4></li>
+                    {% if auth_user.is_admin %}
                     <li class="list-group-item right-btn">
                          <div class="dropdown">
                             <button class="btn dropdown-toggle"
@@ -27,6 +30,7 @@
                             </div>
                         </div>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -40,7 +44,9 @@
                             <th scope="col">Circle identifier</th>
                             <th scope="col">Circle name</th>
                             <th scope="col">Members count</th>
+                            {% if virtualhost_delete_group_perm %}
                             <th scope="col">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -48,7 +54,7 @@
                             <tr>
                                 <td class="table-data">{{ forloop.counter }}</td>
                                 <td class="table-data">
-                                    {% if group.id %}
+                                    {% if group.id and virtualhost_change_group_perm %}
                                     <a href="{% url 'virtualhost:group-details' group.id %}">
                                        {{ group.group }}
                                     </a>
@@ -63,7 +69,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="table-data dots-menu">
-                                    {% if group.id %}
+                                    {% if group.id and virtualhost_delete_group_perm %}
                                     <div class="btn-group dropleft">
                                         <i class="mdi mdi-24px mdi-dots-vertical" role="button"
                                            id="dropdown-user-actions" data-toggle="dropdown"

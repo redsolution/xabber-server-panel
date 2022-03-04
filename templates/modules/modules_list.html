@@ -1,0 +1,36 @@
+{% extends 'server/overview_tabs.html' %}
+
+{% block title %}Modules{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Module</th>
+                        <th scope="col" style="padding-left: 24px"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for module in modules %}
+                    <tr {% if module.deleted %}class="alert-danger"{% endif %}>
+                        <td class="col-sm-1 table-data align-top" >{{ forloop.counter }}</td>
+                        <td class="col-sm-5 table-data align-top" >
+                            {{ module.name }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="row" style="padding-bottom: 16px; margin-top: 24px">
+            <div class="col-sm-9">
+            </div>
+            <div class="col-sm-3">
+                <a class="btn btn-primary" style="float: right" href="{% url 'server:upload-module' %}">Upload module</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

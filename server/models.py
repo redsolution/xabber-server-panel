@@ -138,3 +138,15 @@ class LDAPSettingsServer(models.Model):
 
     def __str__(self):
         return 'LDAP Settings {}'.format(self.server)
+
+
+class Configuration(models.Model):
+    config = models.TextField()
+
+    def save(self, *args, **kwargs):
+        self.__class__.objects.exclude(id=self.id).delete()
+        super(Configuration, self).save(*args, **kwargs)
+
+
+class Dashboard(models.Model):
+    pass

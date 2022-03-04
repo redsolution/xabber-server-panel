@@ -22,11 +22,16 @@ class EjabberdAPI(object):
         self.token = token
         self.session.headers.update({'Authorization': 'Bearer {}'.format(token)})
 
-    def _wrapped_call(self, method, url, status_code, data):
+    def _wrapped_call(self, method, url, status_code, data, http_method):
         try:
-            self.raw_response = method(url,
-                                       json=data,
-                                       timeout=settings.HTTP_REQUEST_TIMEOUT)
+            if http_method in ("post", "delete", "put"):
+                self.raw_response = method(url,
+                                           json=data,
+                                           timeout=settings.HTTP_REQUEST_TIMEOUT)
+            elif http_method == "get":
+                self.raw_response = method(url,
+                                           params=data,
+                                           timeout=settings.HTTP_REQUEST_TIMEOUT)
         except requests.exceptions.ConnectionError:
             self.status_code = 503
             raise ResponseException({'type': 'connection_error'})
@@ -51,7 +56,7 @@ class EjabberdAPI(object):
         method = getattr(self.session, http_method)
         url = self.base_url + relative_url
         try:
-            self._wrapped_call(method, url, success_code, data)
+            self._wrapped_call(method, url, success_code, data, http_method)
         except ResponseException as e:
             self.success = False
             if self.response is None:
@@ -84,7 +89,7 @@ class EjabberdAPI(object):
             "ttl": settings.EJABBERD_API_TOKEN_TTL
         }
         self.session.auth = requests.auth.HTTPBasicAuth(username, password)
-        self._call_method('post', '/xabber_oauth_issue_token', 200, data=data,
+        self._call_method('post', '/issue_token', 201, data=data,
                           login_method=True, auth_required=False, **kwargs)
         self.session.auth = None
         return self.success
@@ -94,7 +99,7 @@ class EjabberdAPI(object):
             "token": self.token,
             "host": host
         }
-        self._call_method('post', '/xabber_revoke_token', 200, data=data,
+        self._call_method('post', '/revoke_token', 200, data=data,
                           **kwargs)
         if self.success:
             self.authorized = False
@@ -108,72 +113,65 @@ class EjabberdAPI(object):
             "scopes": settings.EJABBERD_API_SCOPES,
             "ttl": settings.EJABBERD_API_TOKEN_TTL
         }
-        return self._call_method('post', '/xabber_oauth_issue_token', 200, data=data,
-                          login_method=True, auth_required=False, **kwargs)
+        return self._call_method('post', '/issue_token', 201, data=data,
+                                 login_method=True, auth_required=False, **kwargs)
 
     def registered_vhosts(self, data, **kwargs):
-        return self._call_method('post', '/registered_vhosts', 200, data=data,
+        return self._call_method('get', '/vhosts', 200, data=data,
                                  **kwargs)
 
-    def get_registered_users(self, data, **kwargs):
-        return self._call_method('post', '/registered_users', 200, data=data,
-                                 **kwargs)
+    def xabber_set_admin(self, data, **kwargs):
+        return self._call_method('post', '/admins', 201,
+                                 data=data, **kwargs)
+
+    def xabber_del_admin(self, data, **kwargs):
+        return self._call_method('delete', '/admins', 201,
+                                 data=data, **kwargs)
+
+    def xabber_set_permissions(self, data, **kwargs):
+        return self._call_method('post', '/permissions', 201,
+                                 data=data, **kwargs)
 
     def xabber_registered_users(self, data, **kwargs):
-        return self._call_method('post', '/xabber_registered_users', 200,
+        return self._call_method('get', '/users', 200,
                                  data=data, **kwargs)
 
     def xabber_registered_users_count(self, data, **kwargs):
-        return self._call_method('post', '/xabber_registered_users_count', 200,
+        return self._call_method('get', '/users/count', 200,
                                  data=data, **kwargs)
 
     def xabber_registered_chats(self, data, **kwargs):
-        return self._call_method('post', '/xabber_registered_chats', 200,
-                                 data=data, **kwargs)
+        return self._call_method('get', '/groups', 200, data=data, **kwargs)
 
     def xabber_registered_chats_count(self, data, **kwargs):
-        return self._call_method('post', '/xabber_registered_chats_count', 200,
+        return self._call_method('post', '/groups/count', 200,
                                  data=data, **kwargs)
 
     def register_user(self, data, **kwargs):
-        return self._call_method('post', '/register', 200, data=data,
-                                 **kwargs)
+        self._call_method('post', '/users', 201, data=data, **kwargs)
+        if self.status_code == 409:
+            self.response = {'error': "This user already exists."}
+        return self.response
 
     def unregister_user(self, data, **kwargs):
         data_copy = data.copy()
-        data_copy['user'] = data_copy.pop('username')
-        self._call_method('post', '/unregister', 200, data=data_copy, **kwargs)
-        self.success = self.response == 0
+        data_copy['username'] = data_copy.pop('username')
+        self._call_method('delete', '/users', 200, data=data_copy, **kwargs)
         if not self.success:
             self.response = {'error': 'This user has not been deleted.'}
         return self.response
 
     def set_vcard(self, data, **kwargs):
-        data['name'] = data.get('name', '').upper()
-        return self._call_method('post', '/set_vcard', 200, data=data,
-                                 **kwargs)
-
-    def set_vcard2(self, data, **kwargs):
-        data['name'] = data.get('name', '').upper()
-        data['subname'] = data.get('subname', '').upper()
-        return self._call_method('post', '/set_vcard2', 200, data=data,
+        return self._call_method('post', '/vcard', 200, data=data,
                                  **kwargs)
 
     def get_vcard(self, data, **kwargs):
-        data['name'] = data.get('name', '').upper()
-        return self._call_method('post', '/get_vcard', 200, data=data,
-                                 **kwargs)
-
-    def get_vcard2(self, data, **kwargs):
-        data['name'] = data.get('name', '').upper()
-        data['subname'] = data.get('subname', '').upper()
-        return self._call_method('post', '/get_vcard2', 200, data=data,
-                                 **kwargs)
+        return self._call_method('get', '/vcard', 200, data=data, **kwargs)
 
     def create_user(self, data, **kwargs):
-        new_user_data = {"user": data.get("username"),
+        new_user_data = {"username": data.get("username"),
                          "host": data.get("host"),
-                         "password": data.get("password")} #TODO fix it
+                         "password": data.get("password")}
         self.register_user(new_user_data)
         if not self.success:
             return self.success
@@ -184,61 +182,37 @@ class EjabberdAPI(object):
     def edit_user_vcard(self, data, **kwargs):
         username, host = data.get("username"), data.get("host")
         vcard = data.get('vcard', dict())
-        for key, value in vcard.items():
-            if isinstance(value, dict):
-                for nested_key, nested_value in value.items():
-                    vcard2_data = {"user": username,
-                                   "host": host,
-                                   "name": key,
-                                   "subname": nested_key,
-                                   "content": nested_value.strip()}
-                    self.set_vcard2(vcard2_data)
-                if not self.success:
-                    self.unregister_user({"username": username, "host": host})
-                    self.success = False
-                    self.response = {'error': 'Error with creating user.'}
-                    break
-            else:
-                vcard_data = {"user": username,
-                              "host": host,
-                              "name": key,
-                              "content": value.strip()}
-                self.set_vcard(vcard_data)
-            if not self.success:
-                self.unregister_user({"username": username, "host": host})
-                self.success = False
-                self.response = {'error': 'User has not been created.'}
-                break
-
+        vcard_data = {"username": username,
+                      "host": host,
+                      "vcard": vcard}
+        self.set_vcard(vcard_data)
+        if not self.success:
+            self.unregister_user({"username": username, "host": host})
+            self.success = False
+            self.response = {'error': 'Error with creating user.'}
         return self.success
 
     def change_password_api(self, data, **kwargs):
-        return self._call_method('post', '/change_password', 200, data=data, **kwargs)
-
-    def check_user_password(self, data, **kwargs):
-        return self._call_method('post', '/check_password', 200, data=data, **kwargs)
+        return self._call_method('put', '/users/set_password', 200, data=data, **kwargs)
 
     def get_groups(self, data, **kwargs):
-        return self._call_method('post', '/srg_list', 200, data=data, **kwargs)
-
-    def get_group_info(self, data, **kwargs):
-        return self._call_method('post', '/srg_get_info', 200, data=data, **kwargs)
+        return self._call_method('get', '/circles', 200, data=data, **kwargs)
 
     def srg_create_api(self, data, **kwargs):
-        return self._call_method('post', '/srg_create', 200, data=data, **kwargs)
+        return self._call_method('post', '/circles', 200, data=data, **kwargs)
 
     def delete_group(self, data, **kwargs):
-        return self._call_method('post', '/srg_delete', 200, data=data, **kwargs)
+        return self._call_method('delete', '/circles', 200, data=data, **kwargs)
 
     def srg_user_add_api(self, data, **kwargs):
-        return self._call_method('post', '/srg_user_add', 200, data=data, **kwargs)
+        return self._call_method('post', '/circles/members', 200, data=data, **kwargs)
 
     def srg_user_del_api(self, data, **kwargs):
-        return self._call_method('post', '/srg_user_del', 200, data=data, **kwargs)
+        return self._call_method('delete', '/circles/members', 200, data=data, **kwargs)
 
     def create_group(self, data, **kwargs):
         group_data = {
-            "group": data["group"],
+            "circle": data["group"],
             "host": data["host"],
             "name": data["name"],
             "description": data["description"],
@@ -247,9 +221,5 @@ class EjabberdAPI(object):
         self.srg_create_api(group_data)
         return self.success
 
-    def stats(self, data, **kwargs):
-        return self._call_method('post', '/stats', 200, data=data, **kwargs)
-
     def stats_host(self, data, **kwargs):
-        return self._call_method('post', '/xabber_num_online_users', 200, data=data, **kwargs)
-
+        return self._call_method('get', '/users/online', 200, data=data, **kwargs)

@@ -21,19 +21,18 @@ class Command(BaseCommand):
             user, created = User.objects.get_or_create(username=username,
                                                        host=USERS_HOST)
             nickname, first_name, last_name = None, None, None
-            api.get_vcard({"user": username, "host": USERS_HOST, "name": "nickname"})
+            vcard = api.get_vcard({"username": username, "host": USERS_HOST})
             if api.success:
-                nickname = api.response["content"]
-
-            api.get_vcard2(
-                {"user": username, "host": USERS_HOST, "name": "n", "subname": "given"})
-            if api.success:
-                first_name = api.response["content"]
-
-            api.get_vcard2(
-                {"user": username, "host": USERS_HOST, "name": "n", "subname": "family"})
-            if api.success:
-                last_name = api.response["content"]
+                if vcard.get('vcard'):
+                    nickname = vcard.get('vcard').get('nickname')
+            try:
+                first_name = vcard['vcard']['n']['given']
+            except KeyError:
+                pass
+            try:
+                last_name = vcard['vcard']['n']['family']
+            except KeyError:
+                pass
 
             print('{} {} {}'.format(nickname, first_name, last_name))
 

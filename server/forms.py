@@ -27,7 +27,6 @@ class BaseForm(forms.Form):
 
 
 class SelectAdminForm(BaseForm):
-    api_method = 'srg_user_add_api'
 
     user = forms.CharField(
         max_length=256,

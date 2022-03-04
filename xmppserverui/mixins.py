@@ -1,4 +1,5 @@
-from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.urls import reverse
 
 from virtualhost.models import VirtualHost, User
@@ -58,8 +59,8 @@ class AdminMixin(AuthMixin):
         user = User.objects.filter(username=username, host=host)
         if user.exists():
             user = user[0]
-            if not user.is_admin:
-                return HttpResponseRedirect(reverse('personal-area:profile'))
+            if not user.get_all_permissions() and not user.is_admin:
+                return HttpResponseRedirect(reverse('xabber-web'))
 
 
 class PageContextMixin(AdminMixin):
@@ -95,6 +96,10 @@ class PageContextMixin(AdminMixin):
                         'need_to_request_user_pass': need_to_request_user_pass,
                         'vhosts': vhosts,
                         'vhosts_cr': vhosts_cr}
+
+    def check_host(self, host):
+        if not self.context['auth_user'].host == host and not self.context['auth_user'].is_admin:
+            raise PermissionDenied
 
     def fill_page_context(self, request, *args, **kwargs):
         pass

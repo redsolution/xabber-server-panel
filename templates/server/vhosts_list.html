@@ -1,8 +1,10 @@
 {% extends 'server/overview_tabs.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}Virtual hosts{% endblock %}
 
 {% block tab_content %}
+{% check_user_perms 'virtualhost.add_virtualhost' as virtualhost_add_virtualhost_perm %}
+{% check_user_perms 'virtualhost.delete_virtualhost' as virtualhost_delete_virtualhost_perm %}
     <div class="tab-pane fade show active">
         <div class="row no-gutters">
             <table class="table">
@@ -28,7 +30,9 @@
                             <div class="dropdown-menu"
                                   aria-labelledby="dropdown-vhost-actions-2">
                                 <a class="dropdown-item" href="{% url 'server:detail-vhost' host.id %}">SRV records info</a>
-                                <a class="dropdown-item" href="{% url 'server:delete-vhost' host.id %}">Delete</a>
+                                {% if virtualhost_delete_virtualhost_perm %}
+                                    <a class="dropdown-item" href="{% url 'server:delete-vhost' host.id %}">Delete</a>
+                                {% endif %}
                             </div>
                         </div>
                         </td>
@@ -40,9 +44,11 @@
         <div class="row" style="padding-bottom: 16px; margin-top: 24px">
             <div class="col-sm-9">
             </div>
-            <div class="col-sm-3">
-                <a class="btn btn-primary" style="float: right" href="{% url 'server:add-vhost' %}">Add virtual host</a>
-            </div>
+            {% if virtualhost_add_virtualhost_perm %}
+                <div class="col-sm-3">
+                    <a class="btn btn-primary" style="float: right" href="{% url 'server:add-vhost' %}">Add virtual host</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

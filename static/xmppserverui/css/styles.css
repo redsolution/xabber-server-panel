@@ -83,6 +83,13 @@ a:hover {
     padding: 16px 0;
 }
 
+.left-content .nav-menu .list-group-item-inactive {
+    background-color: #212121;
+    border: none;
+    color: #727277;
+    padding: 11px 24px;
+}
+
 .left-content .nav-menu .list-group-item {
     background-color: #212121;
     border: none;
@@ -124,6 +131,7 @@ a:hover {
 
 .top-content .navbar {
     padding: 0;
+    height: 40px;
     justify-content: normal;
 }
 
@@ -645,4 +653,16 @@ body {
 .form-field-popover:hover {
     color: #fff;
     text-decoration: none;
+}
+
+.wrap {
+    display: flex;
+}
+
+.left {
+    width: 185px;
+}
+
+.right {
+    width:80%
 }

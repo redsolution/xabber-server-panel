@@ -21,7 +21,7 @@ class DefaultView(View):
             user = User.objects.filter(username=username, host=host)
             if user.exists():
                 user = user[0]
-                return HttpResponseRedirect(get_default_url(request.user, admin=user.is_admin))
+                return HttpResponseRedirect(get_default_url(request.user, django_user=user))
         return HttpResponseRedirect(get_default_url(request.user))
 
 

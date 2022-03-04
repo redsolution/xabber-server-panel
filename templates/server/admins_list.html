@@ -1,8 +1,9 @@
 {% extends 'server/overview_tabs.html' %}
-
+{% load xmppserverui_tags %}
 {% block title %}Server administrators{% endblock %}
 
 {% block tab_content %}
+{% check_user_perms 'virtualhost.change_user' as virtualhost_change_user_perm %}
     <div class="tab-pane fade show active">
         <div class="row no-gutters">
             <div class="col">
@@ -29,9 +30,11 @@
         <div class="row" style="padding-bottom: 16px; margin-top: 24px">
             <div class="col-sm-9">
             </div>
-            <div class="col-sm-3">
-                <a class="btn btn-primary" style="float: right" href="{% url 'server:manage-admins' %}">Manage</a>
-            </div>
+            {% if virtualhost_change_user_perm %}
+                <div class="col-sm-3">
+                    <a class="btn btn-primary" style="float: right" href="{% url 'server:manage-admins' %}">Manage</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

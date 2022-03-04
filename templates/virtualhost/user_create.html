@@ -62,18 +62,19 @@
                         <!--{% include 'include/input_file_field.html' %}-->
                     <!--{% endwith %}-->
 
-
-                    {% with form.is_admin as field %}
-                        <div class="form-group row">
-                            <div class="col-sm-3"></div>
-                            <div class="col-sm-9">
-                                <div class="form-check form-check-inline">
-                                    {{ field }}
-                                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% if auth_user.is_admin %}
+                        {% with form.is_admin as field %}
+                            <div class="form-group row">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-9">
+                                    <div class="form-check form-check-inline">
+                                        {{ field }}
+                                        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    {% endwith %}
+                        {% endwith %}
+                    {% endif %}
 
 
 
