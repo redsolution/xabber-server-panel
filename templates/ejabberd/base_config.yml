@@ -31,7 +31,7 @@ listen:
       "/ws": ejabberd_http_ws
       "/bosh": mod_bosh
       "/upload": mod_http_upload
-      "/api": mod_http_api
+      "/panel": mod_panel
       "/images": mod_http_fileserver
     web_admin: true
     captcha: true
@@ -106,72 +106,6 @@ api_permissions:
       - ejabberd_ctl
     who: all
     what: "*"
-  "admin access":
-    who:
-      - access:
-          - allow:
-            - acl: loopback
-            - acl: admin
-      - oauth:
-        - scope: "ejabberd:admin"
-        - access:
-          - allow:
-            - acl: loopback
-            - acl: admin
-    what:
-      - "*"
-      - "!stop"
-      - "!start"
-  "web admin":
-    who:
-      - access:
-          - allow:
-            - acl: loopback
-            - acl: admin
-      - oauth:
-        - scope: "sasl_auth"
-        - access:
-          - allow:
-            - acl: loopback
-            - acl: admin
-    what:
-      - "*"
-      - "!stop"
-      - "!start"
-
-  "web user":
-    who:
-      - access:
-          - allow:
-            - acl: loopback
-            - acl: local
-      - oauth:
-        - scope: "sasl_auth"
-        - access:
-          - allow:
-            - acl: loopback
-            - acl: local
-    what:
-      - "xabber_oauth_issue_token"
-      - "xabber_revoke_token"
-      - "xabberuser_change_password"
-      - "change_password"
-      - "get_vcard"
-      - "get_vcard2"
-      - "get_vcard2_multi"
-      - "xabberuser_get_vcard"
-      - "xabberuser_get_vcard2"
-      - "xabberuser_get_vcard2_multi"
-      - "xabberuser_set_nickname"
-      - "xabberuser_set_vcard"
-      - "xabberuser_set_vcard2"
-      - "xabberuser_set_vcard2_multi"
-  "public commands":
-    who:
-      - ip: "127.0.0.1/8"
-    what:
-      - "status"
-      - "connected_users_number"
 
 language: "en"
 
@@ -185,23 +119,7 @@ default_db: sql
 modules:
   mod_xep_ccc: {}
   mod_xep_rrr: {}
-  mod_groupchat_present_mnesia: {}
   mod_x_auth_token: {}
-  mod_groupchat_presence:
-    xabber_global_indexs:
-      - "index.xabber.com"
-  mod_groupchat_users: {}
-  mod_groupchat_chats: {}
-  mod_groupchat_service_message: {}
-  mod_groupchat_discovery: {}
-  mod_groupchat_retract: {}
-  mod_groupchat_iq_handler: {}
-  mod_groupchat_inspector: {}
-  mod_groupchat_access_model: {}
-  mod_groupchat_domains: {}
-  mod_groupchat_block: {}
-  mod_groupchat_messages: {}
-  mod_groupchat_default_restrictions: {}
   mod_adhoc: {}
   mod_admin_extra: {}
   mod_announce:
@@ -225,8 +143,6 @@ modules:
   mod_http_fileserver:
     docroot: "{{ PROJECT_DIR }}/user_images"
     accesslog: "{{ PROJECT_DIR }}/access.log"
-  mod_groupchat_vcard:
-    get_url: "https://@HOST@:5443/images"
 
   mod_last: {}
   mod_mam:
@@ -255,7 +171,8 @@ modules:
   mod_push_keepalive: {}
   mod_xabber_push:
     use_cache: false
-  mod_roster: {}
+  mod_roster:
+    versioning: true
   mod_shared_roster: {}
   mod_stats: {}
   mod_time: {}
@@ -271,7 +188,11 @@ modules:
   mod_unique: {}
   mod_previous: {}
   mod_register: {}
-  mod_xabber_api: {}
+  mod_devices: {}
+  mod_groups:
+    global_indexs:
+      - "index.xabber.com"
+  mod_panel: {}
 
 allow_contrib_modules: true
 
