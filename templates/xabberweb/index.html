@@ -197,19 +197,6 @@
             USE_SOCIAL_AUTH: false,
             CHECK_VERSION: false,
         });
-        {% if token_fetched %}
-            let jid = "{{ account_jid }}",
-                token = "{{ account_token }}",
-                accounts_storage_name = xabber.getStorageName() + '-accounts',
-                account_settings_storage_name = xabber.getStorageName() + '-account-settings',
-                accounts = JSON.parse(localStorage.getItem(accounts_storage_name)) || [],
-                account_settings = JSON.parse(localStorage.getItem(account_settings_storage_name)) || [];
-            accounts.push(jid);
-            account_settings.push(jid);
-            localStorage.setItem(accounts_storage_name, JSON.stringify(accounts));
-            localStorage.setItem(account_settings_storage_name, JSON.stringify(account_settings));
-            localStorage.setItem(accounts_storage_name + '-' + jid, JSON.stringify({enabled: true, jid: jid, auth_type: 'x-token', x_token: {token: token}, password: null}));
-        {% endif %}
     xabber.start();
     });
 </script>

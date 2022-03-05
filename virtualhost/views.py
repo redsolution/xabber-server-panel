@@ -979,7 +979,7 @@ class GroupSubscribersView(PageContextMixin, TemplateView):
     def get_displayed_groups(self, group):
         all_groups = Group.objects.filter(host=group.host)
         all_groups_members = list(GroupMember.objects.all().values('group', 'username', 'host'))
-        displayed_groups = group.displayed_groups
+        displayed_groups = group.displayed_groups if group.displayed_groups else []
         result = []
         for g in all_groups:
             if g.is_system:
