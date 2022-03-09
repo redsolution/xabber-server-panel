@@ -133,8 +133,8 @@ modules:
   mod_bosh: {}
   mod_http_upload:
     docroot: "{{ PROJECT_DIR }}/user_images"
-    get_url: "https://@HOST@:5443/upload"
-    put_url: "https://@HOST@:5443/upload"
+    get_url: "https://xabber.@HOST@:5443/upload"
+    put_url: "https://xabber.@HOST@:5443/upload"
     custom_headers:
       "Access-Control-Allow-Origin": "*"
       "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS, DELETE"
@@ -186,13 +186,15 @@ modules:
   mod_http_api: {}
   mod_fail2ban: {}
   mod_unique: {}
-  mod_previous: {}
   mod_register: {}
   mod_devices: {}
   mod_groups:
     global_indexs:
       - "index.xabber.com"
   mod_panel: {}
+  nick_generator:
+    pre_generated_images: "{{ PROJECT_DIR }}/pre_images"
+    pre_generated_images_count: 20
 
 allow_contrib_modules: true
 
