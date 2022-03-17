@@ -377,7 +377,6 @@ class RegistrationKeysForm(BaseForm):
         self.fields['host'].choices = [
             (o.name, o.name) for o in self.vhosts]
         self.fields['host'].initial = self.vhost.name
-        self.fields['description'].initial = "1233333333333333333"
 
     def init_keys_attrs(self):
         self.fields['expire'].initial = self.expire
