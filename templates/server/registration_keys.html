@@ -1,0 +1,61 @@
+{% extends 'server/overview_tabs.html' %}
+{% load xmppserverui_tags %}
+{% block title %}Registration keys{% endblock %}
+
+{% block tab_content %}
+{% check_user_perms 'virtualhost.add_virtualhost' as virtualhost_add_virtualhost_perm %}
+{% check_user_perms 'virtualhost.delete_virtualhost' as virtualhost_delete_virtualhost_perm %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Key</th>
+                        <th scope="col">Expired</th>
+                        <th scope="col">Description</th>
+                        <th scope="col" style="padding-left: 24px"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for key in keys %}
+                    <tr>
+                        <td class="col-sm-1 table-data">{% if key %}{{ forloop.counter }}{% endif %}</td>
+                        <td class="col-sm-1 table-data">{{ key.key }}</td>
+                        <td class="col-sm-3 table-data">{{ key.expire }}</td>
+                        <td class="col-sm-10 table-data">{{ key.description }}</td>
+                        <td class="col-sm-1 table-data" style="padding-left: 24px">
+
+                            <div class="btn-group dropleft">
+                            <i class="mdi mdi-24px mdi-dots-vertical" role="button"
+                               id="dropdown-vhost-actions" data-toggle="dropdown"
+                               aria-haspopup="true" aria-expanded="false">
+                            </i>
+                            <div class="dropdown-menu"
+                                  aria-labelledby="dropdown-vhost-actions-2">
+                                <a class="btn btn-link" href="{% url 'server:change-key' key.key %}">Change</a>
+                                {% if virtualhost_delete_virtualhost_perm %}
+                                <form onsubmit="return confirm('Delete key {{ key.key }}?')" method="post">
+                                {% csrf_token %}
+                                <button class="btn btn-link" name="key" value={{ key.key }} href="">Delete</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="row" style="padding-bottom: 16px; margin-top: 24px">
+            <div class="col-sm-9">
+            </div>
+            {% if virtualhost_add_virtualhost_perm %}
+                <div class="col-sm-3">
+                    <a class="btn btn-primary" style="float: right" href="{% url 'server:add-key' %}">Add registration key</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
