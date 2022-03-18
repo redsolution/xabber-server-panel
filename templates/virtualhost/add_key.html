@@ -1,7 +1,21 @@
-{% extends 'server/overview_tabs.html' %}
+{% extends 'base.html' %}
 {% block title %}Registration key{% endblock %}
 
-{% block tab_content %}
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:registration-keys' %}">Registration keys</a>
+                        </h1>
+                    </li>
+                </ul>
+                <hr>
+            </div>
+        </div>
+
     <div class="tab-pane fade show active">
         <div class="row no-gutters">
             <div class="col-sm-12 page-content">
@@ -9,16 +23,14 @@
                 <form action="" method="post" id="registration-settings" >
                     {% csrf_token %}
                     <div style="margin: 0 0 15px;">
-                        <h3>Change registration key <b>{{ current_key }}</b></h3>
+                        <h3>Add registration key <b>{{ current_key }}</b></h3>
                     </div>
                     {% with form.host as field %}
                         {% include 'include/input_field_with_popover.html' %}
                     {% endwith %}
-
                     {% with form.expire as field %}
                         {% include 'include/input_field_with_popover.html' %}
                     {% endwith %}
-
                     {% with form.description as field %}
                         {% include 'include/input_field_with_popover.html' %}
                     {% endwith %}
@@ -31,7 +43,7 @@
                         </div>
                     {% endfor %}
 
-                    <div class="row form-group form-btn-block">
+                    <div class="row">
                         <div class="col-sm-12">
                             <button type="submit" class="btn btn-primary"
                                     id="btn_manage_backends">Save</button>
@@ -41,4 +53,5 @@
             </div>
         </div>
     </div>
+</div>
 {% endblock %}

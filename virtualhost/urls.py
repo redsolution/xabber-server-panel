@@ -25,4 +25,7 @@ urlpatterns = [
     url(r'^groups/(?P<group_id>[0-9]+)/sharedcontacts/$', custom_permission_required(('virtualhost.view_group', 'virtualhost.change_group'))(views.GroupSubscribersView.as_view()), name='group-subscriptions'),
     url(r'^groups/(?P<group_id>[0-9]+)/delete/$', custom_permission_required(('virtualhost.view_group', 'virtualhost.delete_group'))(views.DeleteGroupView.as_view()), name='group-delete'),
     url(r'^chats/$', custom_permission_required('virtualhost.view_groupchat')(views.ChatListView.as_view()), name='chats'),
+    url(r'^keys/$', custom_permission_required('is_admin')(views.KeysView.as_view()), name='registration-keys'),
+    url(r'^keys/change/(?P<key>[-\w]+)/$', custom_permission_required('is_admin')(views.ChangeKeyView.as_view()), name='change-key'),
+    url(r'^keys/add/$', custom_permission_required('is_admin')(views.AddKeyView.as_view()), name='add-key'),
 ]

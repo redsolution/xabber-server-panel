@@ -80,6 +80,10 @@
                                class="list-group-item {% if page.section == 'server' %}active{% endif %}">
                                 Settings
                             </a>
+                            <a href="{% url 'virtualhost:registration-keys' %}"
+                               class="list-group-item {% if page.section == 'server-keys' %}active{% endif %}">
+                                Registration
+                            </a>
                             {% endif %}
                             <div class="list-group-item-inactive">Modules</div>
                             {% get_modules as modules %}
