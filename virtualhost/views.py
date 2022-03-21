@@ -1,4 +1,5 @@
 import math
+import time
 from datetime import datetime, timedelta
 from importlib import import_module
 from django.contrib.auth.models import Permission
@@ -13,7 +14,7 @@ from xmppserverui.utils import get_pagination_data
 from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     CreateGroupForm, EditGroupForm, DeleteGroupForm, AddGroupMemberForm, \
-    DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm
+    DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm, RegistrationKeysForm
 from .models import User, Group, GroupMember, GroupChat, VirtualHost
 
 USER_TAB_DETAILS = 'user-details'
@@ -25,7 +26,7 @@ USER_TAB_PERMISSIONS = 'user-permissions'
 GROUP_TAB_DETAILS = 'group-details'
 GROUP_TAB_MEMBERS = 'group-members'
 GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
-
+TAB_REGISTRATION_KEYS = 'registration-keys'
 EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes']
 EXCLUDED_PERMISSIONS_MODELS = [
     'authbackend', 'configdata', 'configuration', 'ldapsettings', 'ldapsettingsserver', 'serverconfig',
@@ -1132,3 +1133,101 @@ class UserPermissionsView(PageContextMixin, TemplateView):
                 codename__in=EXCLUDED_PERMISSIONS_CODENAMES),
             "user_perms": curr_user.user_permissions.all(),
         })
+
+
+class KeysView(PageContextMixin, TemplateView):
+    page_section = 'server-keys'
+    template_name = 'virtualhost/registration_keys.html'
+
+    def get_page_context(self, vhost=None):
+        return {
+            'active_tab': TAB_REGISTRATION_KEYS
+        }
+
+    def get_vhost(self, request, *args, **kwargs):
+        return request.COOKIES['vhost'] if 'vhost' in request.COOKIES and self.context['auth_user'].is_admin \
+            else request.session.get('_auth_user_host')
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        vhost = self.get_vhost(request)
+        context = self.get_page_context()
+        keys_list = user.api.get_keys({"host": vhost}).get('keys')
+        for key in keys_list:
+            key['expire'] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(key.get('expire')))
+        context['keys'] = keys_list
+        context['vhosts'] = self.context['vhosts']
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        vhost = self.get_vhost(request)
+        user.api.delete_key({"host": vhost}, key=request.POST.get('key'))
+        return HttpResponseRedirect(reverse('virtualhost:registration-keys'))
+
+
+class ChangeKeyView(PageContextMixin, TemplateView):
+    page_section = 'server-keys'
+    template_name = 'virtualhost/change_key.html'
+
+    def get_vhost(self, request, *args, **kwargs):
+        return request.COOKIES['vhost'] if 'vhost' in request.COOKIES and self.context['auth_user'].is_admin \
+            else request.session.get('_auth_user_host')
+
+    def get(self, request, *args, **kwargs):
+        context = {'current_key': kwargs.get('key')}
+        user = request.user
+        vhost = self.get_vhost(request)
+        vhost = VirtualHost.objects.filter(name=vhost).first()
+        keys_list = user.api.get_keys({"host": vhost}).get('keys')
+        initial_attrs = next(x for x in keys_list if x["key"] == context['current_key'])
+        expire = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(initial_attrs.get('expire')))
+        description = initial_attrs.get('description')
+        context['form'] = RegistrationKeysForm(
+            vhosts=self.context['vhosts'], vhost=vhost, description=description, expire=expire)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = RegistrationKeysForm(request.POST, vhosts=self.context['vhosts'])
+        if form.is_valid():
+            current_key = kwargs.get('key')
+            user = request.user
+            user.api.change_key({"host": form.cleaned_data['host'],
+                                 "expire": form.cleaned_data['expire'],
+                                 "description": form.cleaned_data['description']},
+                                current_key)
+            return HttpResponseRedirect(reverse('virtualhost:registration-keys'))
+        context = {'form': form}
+        return self.render_to_response(context)
+
+
+class AddKeyView(PageContextMixin, TemplateView):
+    page_section = 'server-keys'
+    template_name = 'virtualhost/add_key.html'
+
+    def get_vhost(self, request, *args, **kwargs):
+        return request.COOKIES['vhost'] if 'vhost' in request.COOKIES and self.context['auth_user'].is_admin \
+            else request.session.get('_auth_user_host')
+
+    def get(self, request, *args, **kwargs):
+        context = {}
+        vhost = self.get_vhost(request)
+        vhost = VirtualHost.objects.filter(name=vhost).first()
+        vhost = VirtualHost.objects.filter(name=vhost).first()
+        if vhost:
+            context['form'] = RegistrationKeysForm(
+                vhosts=self.context['vhosts'], vhost=vhost)
+        else:
+            context['form'] = RegistrationKeysForm(vhosts=self.context['vhosts'])
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = RegistrationKeysForm(request.POST, vhosts=self.context['vhosts'])
+        if form.is_valid():
+            user = request.user
+            user.api.create_key({"host": form.cleaned_data['host'],
+                                 "expire": form.cleaned_data['expire'],
+                                 "description": form.cleaned_data['description']})
+            return HttpResponseRedirect(reverse('virtualhost:registration-keys'))
+        context = {'form': form}
+        return self.render_to_response(context)

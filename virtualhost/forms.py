@@ -445,3 +445,63 @@ class DeleteGroupForm(AuthorizedApiForm):
             .filter(group=cleaned_data['circle'],
                     host=cleaned_data['host'])\
             .delete()
+
+class BaseForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(BaseForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        self.before_clean()
+        super(BaseForm, self).clean()
+        if not self.errors:
+            self.after_clean(self.cleaned_data)
+        return self.cleaned_data
+
+    def before_clean(self):
+        pass
+
+    def after_clean(self, cleaned_data):
+        pass
+
+
+class RegistrationKeysForm(BaseForm):
+    host = forms.ChoiceField(
+        required=True,
+        label='Host',
+        widget=forms.Select()
+    )
+    expire = forms.DateTimeField(
+        input_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d'],
+        required=True,
+        label='Expire',
+        widget=forms.DateTimeInput(attrs={"placeholder": "2022-04-15"})
+    )
+    description = forms.CharField(
+        max_length=100,
+        required=True,
+        label='Description',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'reg key number 1'
+        })
+    )
+
+    def init_keys_vhost(self):
+        self.fields['host'].choices = [
+            (o.name, o.name) for o in self.vhosts]
+        self.fields['host'].initial = self.vhost.name
+
+    def init_keys_attrs(self):
+        self.fields['expire'].initial = self.expire
+        self.fields['description'].initial = self.description
+
+    def after_clean(self, cleaned_data):
+        cleaned_data['expire'] = int(cleaned_data['expire'].timestamp())
+
+    def __init__(self, *args, **kwargs):
+        self.vhosts = kwargs.pop('vhosts')
+        self.vhost = kwargs.pop('vhost', self.vhosts[0])
+        self.expire = kwargs.pop('expire', '')
+        self.description = kwargs.pop('description', '')
+        super(RegistrationKeysForm, self).__init__(*args, **kwargs)
+        self.init_keys_vhost()
+        self.init_keys_attrs()

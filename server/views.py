@@ -11,7 +11,6 @@ from .models import AuthBackend
 from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, LDAPSettingsForm
 from .utils import start_ejabberd, restart_ejabberd, stop_ejabberd, is_ejabberd_running, update_ejabberd_config
 
-
 SETTINGS_TAB_VHOSTS = 'vhosts'
 SETTINGS_TAB_ADMINS = 'admins'
 SETTINGS_TAB_AUTH_BACKENDS = 'auth_backends'

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Registration key{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:registration-keys' %}">Registration keys</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ current_key }}</h1></li>
+                </ul>
+                <hr>
+            </div>
+        </div>
+
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col-sm-12 page-content">
+
+                <form method="post" id="registration-settings" >
+                    {% csrf_token %}
+                    <div style="margin: 0 0 15px;">
+                        <h3>Change registration key for <b>{{form.vhost}}</b></h3>
+                    </div>
+                    <br>
+                    <div hidden="true">
+                    {% with form.host as field %}
+                        {% include 'include/input_field_with_popover.html' %}
+                    {% endwith %}</div>
+                    {% with form.expire as field %}
+                        {% include 'include/input_field_with_popover.html' %}
+                    {% endwith %}
+
+                    {% with form.description as field %}
+                        {% include 'include/input_field_with_popover.html' %}
+                    {% endwith %}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary"
+                                    id="btn_manage_backends">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}
