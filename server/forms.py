@@ -350,3 +350,23 @@ class LDAPSettingsForm(BaseForm):
     def after_clean(self, cleaned_data):
         data = {k: cleaned_data[k] for k in self.LDAP_FIELDS}
         LDAPSettings.create_or_update(data)
+
+
+class RootPageForm(BaseForm):
+    root_page = forms.ChoiceField(
+        required=False,
+        label='Module',
+        widget=forms.Select()
+    )
+
+    def init_root_modules(self):
+        self.fields['root_page'].choices = [
+            (o.get('module'), o.get('module')) for o in self.modules if o.get('root_page')]
+        self.fields['root_page'].choices.insert(0, ('home_page', 'home_page'))
+        self.fields['root_page'].initial = self.current_root if self.current_root else "home_page"
+
+    def __init__(self, *args, **kwargs):
+        self.current_root = kwargs.pop('current_root')
+        self.modules = kwargs.pop('modules')
+        super(RootPageForm, self).__init__(*args, **kwargs)
+        self.init_root_modules()

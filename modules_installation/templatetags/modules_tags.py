@@ -20,7 +20,9 @@ def get_modules():
                   reverse('info', urlconf="modules." + module + '.urls')
         modules_list.append({
             'name': apps.get_app_config(module).verbose_name,
-            'url': url
+            'url': url,
+            'root_page': getattr(apps.get_app_config(module), 'root_page', False),
+            'module': module
         })
     return modules_list
 

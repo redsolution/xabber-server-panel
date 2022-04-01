@@ -1,7 +1,6 @@
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
+from django.http import HttpResponseRedirect
 from django.urls import reverse
-
 from virtualhost.models import VirtualHost, User
 from server.models import LDAPSettings
 from server.utils import is_ejabberd_running
@@ -60,7 +59,7 @@ class AdminMixin(AuthMixin):
         if user.exists():
             user = user[0]
             if not user.get_all_permissions() and not user.is_admin:
-                return HttpResponseRedirect(reverse('xabber-web'))
+                return HttpResponseRedirect(reverse('xmppserverui:root-page'))
 
 
 class PageContextMixin(AdminMixin):

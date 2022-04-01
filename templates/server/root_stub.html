@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block body_container %}
+    <div class="login-page">
+        <div class="container wrapper">
+            <div class="row content">
+                <div class="col">
+                    <div class="logo">
+                        <a href="https://www.xabber.com/">
+                            <img src="{% static 'xmppserverui/img/logo.png' %}" alt="xabber-logo">
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card" style="background-color:transparent !important;border:0px;padding:0px;">
+                        <div class="display-3" style="color:white;">Xabber Server</div>
+                        <br>
+                    </div>
+                </div>
+
+                    <div class="row login-panel-clients" style="margin-top:200px;">
+                        <div class="col lp-client-item">
+                            <a target="_blank" href="https://play.google.com/store/apps/details?id=com.xabber.android">
+                                <div class="lp-client-logo">
+                                    <img src="{% static 'xmppserverui/img/client_android.svg' %}" alt="">
+                                </div>
+                                <div class="lp-client-title">
+                                    Xabber for Android
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col lp-client-item">
+                            <a target="_blank" href="https://testflight.apple.com/join/8AVdKqCK">
+                                <div class="lp-client-logo">
+                                    <img src="{% static 'xmppserverui/img/client_iphone.svg' %}" alt="">
+                                </div>
+                                <div class="lp-client-title">
+                                    Xabber for iOS
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+            </div>
+
+
+
+            <div class="row footer">
+                <div class="col">
+                    <div class="login-page-footer-link">
+                        <a href="https://www.xabber.com/">www.xabber.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

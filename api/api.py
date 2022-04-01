@@ -144,7 +144,7 @@ class EjabberdAPI(object):
         return self._call_method('get', '/groups', 200, data=data, **kwargs)
 
     def xabber_registered_chats_count(self, data, **kwargs):
-        return self._call_method('post', '/groups/count', 200,
+        return self._call_method('get', '/groups/count', 200,
                                  data=data, **kwargs)
 
     def register_user(self, data, **kwargs):

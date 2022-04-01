@@ -14,11 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
-from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
 from .views import *
 
 
@@ -31,9 +27,7 @@ urlpatterns = [
     url(r'^admin/error/', include('error.urls', namespace='error')),
     url(r'^admin/$', DefaultView.as_view()),
     url(r'^admin', DefaultView.as_view(), name="admin_page"),
-    url(r'^$', XabberWebView.as_view(), name='xabber-web'),
-    url(r'^firebase-messaging-sw.js', XabberWebFirebaseMessSWView.as_view()),
-
+    url(r'^$', RootView.as_view(), name='root-page')
 ]
 for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
     urlpatterns += [url(r'^%s/' % module, include('%s.urls' % module, namespace='%s' % module)),]

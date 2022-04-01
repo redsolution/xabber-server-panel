@@ -1,15 +1,12 @@
-import math
 from datetime import datetime, timedelta
 from importlib import import_module
 from django.contrib.auth.models import Permission
 from django.db.models import Count
 from django.views.generic import TemplateView
 from django.urls import reverse
-from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect, Http404, HttpResponse, QueryDict
-
+from django.http import HttpResponseRedirect, Http404, QueryDict
 from django.conf import settings
-from xmppserverui.utils import get_pagination_data
+from xmppserverui.utils import get_pagination_data, get_chats_pagination_data
 from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     CreateGroupForm, EditGroupForm, DeleteGroupForm, AddGroupMemberForm, \
@@ -1044,10 +1041,11 @@ class ChatListView(VhostContextView, TemplateView):
             {"host": vhost,
              "limit": pagination_limit,
              "page": pagination_page}).get('groups')
-        if "error" in chats:
+        total_groups = user.api.xabber_registered_chats_count({"host": vhost}).get('count')
+        if chats is None or total_groups is None:
             return self.get_response(request,
                                      vhost=vhost,
-                                     context={"error": chats.get("error")})
+                                     context={})
 
         django_users = list(User.objects.all().values())
         data = []
@@ -1067,8 +1065,10 @@ class ChatListView(VhostContextView, TemplateView):
             data.append({"chat": chat,
                          "owner_id": user['id'] if user else None})
 
-        page = request.GET.get('page', 1)
-        context = get_pagination_data(data, page)
+        page = int(request.GET.get('page', 1))
+        total_pages = int(total_groups / pagination_limit) if total_groups % pagination_limit == 0 else \
+            int(total_groups / pagination_limit + 1)
+        context = get_chats_pagination_data(data, page, total_pages, total_groups, pagination_limit)
         return self.get_response(request, vhost=vhost, context=context)
 
 

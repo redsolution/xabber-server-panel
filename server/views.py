@@ -1,20 +1,20 @@
 from django.views.generic import TemplateView
-
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404
-
+from django.apps import apps
 from django.conf import settings
+from modules_installation.templatetags.modules_tags import get_modules
 from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost, User, Group, GroupMember
 from virtualhost.utils import get_system_group_suffix
-from .models import AuthBackend
-from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, LDAPSettingsForm
+from .models import AuthBackend, RootPageSettings
+from .forms import SelectAdminForm, AddVirtualHostForm, DeleteVirtualHostForm, LDAPSettingsForm, RootPageForm
 from .utils import start_ejabberd, restart_ejabberd, stop_ejabberd, is_ejabberd_running, update_ejabberd_config
-
 
 SETTINGS_TAB_VHOSTS = 'vhosts'
 SETTINGS_TAB_ADMINS = 'admins'
 SETTINGS_TAB_AUTH_BACKENDS = 'auth_backends'
+SETTINGS_TAB_ROOT = 'root'
 
 
 class ServerHomePage(PageContextMixin, TemplateView):
@@ -364,3 +364,33 @@ class ManageLDAPView(PageContextMixin, TemplateView):
         context = self.get_page_context()
         context['form'] = form
         return self.render_to_response(context)
+
+
+
+class ServerRootPageSettingsView(PageContextMixin, TemplateView):
+    page_section = 'server'
+    template_name = 'server/root_page.html'
+
+    def get_page_context(self, vhost=None):
+        return {
+            'active_tab': SETTINGS_TAB_ROOT
+        }
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_page_context()
+        current_root = RootPageSettings.objects.first()
+        context['form'] = RootPageForm(modules=get_modules(), current_root=current_root)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        current_root = request.POST.get('root_page')
+        try:
+            RootPageSettings.objects.first().delete()
+        except AttributeError:
+            pass
+        RootPageSettings.objects.create(module=current_root)
+        if current_root != "home_page":
+            whitenoise_root = getattr(apps.get_app_config(current_root), 'whitenoise_root_path', '')
+            with open("xmppserverui/whitenoise_root.py", "w") as f:
+                f.write("WHITENOISE_ROOT = '{}'".format(whitenoise_root))
+        return HttpResponseRedirect(reverse('server:root-settings'))

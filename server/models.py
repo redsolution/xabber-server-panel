@@ -150,3 +150,10 @@ class Configuration(models.Model):
 
 class Dashboard(models.Model):
     pass
+
+
+class RootPageSettings(models.Model):
+    module = models.CharField(max_length=50, default="home_page")
+
+    def __str__(self):
+        return self.module

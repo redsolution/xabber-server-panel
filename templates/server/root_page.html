@@ -1,0 +1,42 @@
+{% extends 'server/overview_tabs.html' %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Root page{% endblock %}
+
+{% block tab_content %}
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col-sm-12 page-content">
+
+                <form action="{% url 'server:root-settings' %}" method="post" id="root-page-settings" >
+                    {% csrf_token %}
+                    <div style="margin: 0 0 15px;">
+                        <h3>Root page</h3>
+                    </div>
+                    {% with form.root_page as field %}
+                        {% include 'include/input_field_with_popover.html' %}
+                    {% endwith %}
+
+                    {% for error in form.non_field_errors %}
+                        <div class="form-group row">
+                            <div class="col-sm-12 non-field-error">
+                                {{ error }}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="row form-group form-btn-block">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary"
+                                    id="btn_manage_backends">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

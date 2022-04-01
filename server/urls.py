@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^settings/$',  custom_permission_required('is_admin')(views.ServerVhostsListView.as_view()), name='settings'),
     url(r'^settings/vhosts/$', custom_permission_required('is_admin')(views.ServerVhostsListView.as_view()), name='vhosts-list'),
     url(r'^settings/admins/$', custom_permission_required('is_admin')(views.ServerAdminsListView.as_view()), name='admins-list'),
+    url(r'^settings/root/$', custom_permission_required('is_admin')(views.ServerRootPageSettingsView.as_view()), name='root-settings'),
     url(r'^settings/add/admin/$', custom_permission_required('is_admin')(views.ManageAdminsSelectView.as_view()), name='manage-admins'),
     url(r'^settings/add/vhost/$',  custom_permission_required('is_admin')(views.AddVirtualHostView.as_view()), name='add-vhost'),
     url(r'^settings/manage/ldap/$', custom_permission_required('is_admin')(views.ManageLDAPView.as_view()), name='manage-ldap'),

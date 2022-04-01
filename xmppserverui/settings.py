@@ -140,7 +140,10 @@ STATICFILES_FINDERS = (
 
 # Whitenoise
 # to serve static from xabber web
-WHITENOISE_ROOT = os.path.join(STATIC_ROOT, 'xabberweb')
+try:
+    from xmppserverui.whitenoise_root import *
+except:
+    pass
 
 # Media files
 

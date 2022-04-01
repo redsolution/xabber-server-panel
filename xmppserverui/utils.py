@@ -32,7 +32,7 @@ def get_default_url(user, django_user=None):
     if django_user:
         if django_user.is_admin or django_user.get_all_permissions():
             return reverse('server:home')
-    return reverse('xabber-web')
+    return reverse('root-page')
 
 
 def logout_full(request):
@@ -116,3 +116,34 @@ def started_ejabberd():
 def is_ejabberd_running():
     cmd = ['status']
     return {"success": execute_ejabberd_cmd(cmd)}
+
+
+def get_chats_pagination_data(data, curr_page, total_pages, total_objects, obj_per_page):
+
+    if total_pages <= 7:
+        page_range = range(1, total_pages + 1)
+    elif curr_page <= 3:
+        page_range = [1, 2, 3, '...', total_pages]
+    elif curr_page >= total_pages - 2:
+        page_range = [1, '...', total_pages - 2,
+                      total_pages - 1, total_pages]
+    else:
+        page_range = [1, '...', curr_page - 1, curr_page, curr_page + 1, '...',
+                      total_pages]
+
+    title = '{all} of {all}'.format(all=total_objects) if len(page_range) < 2 \
+        else '{first} - {last} of {all}'.format(
+        first=(curr_page - 1) * obj_per_page + 1,
+        last=(curr_page - 1) * obj_per_page + len(data),
+        all=total_objects)
+
+    context = {
+        "data": data,
+        "curr_page": curr_page,
+        "title": title if title else "0 of 0",
+        "page_range": page_range,
+        "total_pages": total_pages,
+        "previous_page_number": curr_page - 1,
+        "next_page_number": curr_page + 1
+    }
+    return context
