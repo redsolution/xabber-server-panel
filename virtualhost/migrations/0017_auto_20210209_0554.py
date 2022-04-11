@@ -14,11 +14,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='user',
-            name='username',
-            field=models.CharField(max_length=256, unique=True),
-        ),
         migrations.CreateModel(
             name='UserPassword',
             fields=[
