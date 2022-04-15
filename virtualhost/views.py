@@ -10,7 +10,7 @@ from xmppserverui.utils import get_pagination_data, get_chats_pagination_data
 from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
     CreateGroupForm, EditGroupForm, DeleteGroupForm, AddGroupMemberForm, \
-    DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm
+    DeleteGroupMemberForm, ChangeUserPasswordForm, AddGroupAllMemberForm, DeleteGroupAllMemberForm, SetExpireForm
 from .models import User, Group, GroupMember, GroupChat, VirtualHost
 
 USER_TAB_DETAILS = 'user-details'
@@ -1133,3 +1133,110 @@ class UserPermissionsView(PageContextMixin, TemplateView):
                 codename__in=EXCLUDED_PERMISSIONS_CODENAMES),
             "user_perms": curr_user.user_permissions.all(),
         })
+
+
+class BlockUserView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-users'
+    template_name = 'virtualhost/user_block.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_to_block = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        else:
+            if not user_to_block.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_block.host)
+        if not user_to_block.is_active:
+            raise Http404
+        return self.render_to_response({"user_to_block": user_to_block})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user_to_block = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        else:
+            if not user_to_block.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_block.host)
+        request.user.api.block_user({"username": user_to_block.username,
+                                     "host": user_to_block.host,
+                                     "reason": request.POST.get('reason')})
+        user_to_block.is_active = False
+        user_to_block.expires = datetime.now()
+        user_to_block.save()
+        return HttpResponseRedirect(reverse('virtualhost:users'))
+
+
+class UnblockUserView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-users'
+    template_name = 'virtualhost/user_unblock.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_to_unblock = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        self.check_host(user_to_unblock.host)
+        if user_to_unblock.is_active:
+            raise Http404
+        return self.render_to_response({"user_to_unblock": user_to_unblock})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user_to_unblock = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        else:
+            if not user_to_unblock.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_unblock.host)
+        request.user.api.unblock_user({"host": user_to_unblock.host,
+                                       "username": user_to_unblock.username})
+        user_to_unblock.is_active = True
+        user_to_unblock.expires = None
+        user_to_unblock.save()
+        return HttpResponseRedirect(reverse('virtualhost:users'))
+
+
+class SetUserExpireView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-users'
+    template_name = 'virtualhost/user_expire.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_to_set = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        else:
+            if not user_to_set.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_set.host)
+        form = SetExpireForm(expires=user_to_set.expires)
+        return self.render_to_response({"user_to_set": user_to_set,
+                                        "form": form})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user_to_set = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        else:
+            if not user_to_set.allowed_delete:
+                return HttpResponseRedirect(reverse('error:403'))
+        self.check_host(user_to_set.host)
+        expires = request.POST.get('expires')
+        if expires.lower() == "never" or expires == "0":
+            user_to_set.expires = None
+            user_to_set.save()
+            return HttpResponseRedirect(reverse("virtualhost:users"))
+        else:
+            form = SetExpireForm(request.POST)
+            if form.is_valid():
+                user_to_set.expires = form.cleaned_data['expires']
+                user_to_set.save()
+                return HttpResponseRedirect(reverse("virtualhost:users"))
+            return self.render_to_response({"form": form,
+                                            "user_to_set": user_to_set})

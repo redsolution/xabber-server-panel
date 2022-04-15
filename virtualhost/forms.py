@@ -445,3 +445,17 @@ class DeleteGroupForm(AuthorizedApiForm):
             .filter(group=cleaned_data['circle'],
                     host=cleaned_data['host'])\
             .delete()
+
+
+class SetExpireForm(forms.Form):
+    expires = forms.DateTimeField(
+        input_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d'],
+        required=True,
+        label='Expires',
+        widget=forms.DateTimeInput(attrs={"placeholder": "2022-04-15 or 0"})
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.expires = kwargs.pop('expires', '')
+        super(SetExpireForm, self).__init__(*args, **kwargs)
+        self.fields['expires'].initial = self.expires

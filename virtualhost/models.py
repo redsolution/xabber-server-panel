@@ -52,6 +52,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True
     )
     created = models.DateTimeField(default=timezone.now)
+    expires = models.DateTimeField(null=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ('username', 'host')

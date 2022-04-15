@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete user{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:users' %}">Users</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ user_to_block }}</h1></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+<br>
+
+        <div class="row no-gutters" style="margin-left:15px">
+            <div class="col page-content">
+                <p><b>{{ user_to_block }}</b> will be blocked on the server.</p>
+                <form method="post" action="{% url 'virtualhost:user-block' user_to_block.id %}">
+                    {% csrf_token %}
+                    <textarea name="reason" cols="40" rows="3" placeholder="Reason for blocking"></textarea>
+                    <div class="btn-set">
+                        <a href="{% url 'virtualhost:users' %}">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" class="btn btn-primary">Block user</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

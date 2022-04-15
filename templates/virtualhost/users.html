@@ -43,8 +43,9 @@
                             <th scope="col">#</th>
                             <th scope="col">Username</th>
                             <th scope="col">Name</th>
-                            <th scope="col">Created</th>
+                            <th scope="col">Created/Expires</th>
                             <th scope="col">Auth backend</th>
+                            <th scope="col">Status</th>
                             {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
                                 <th scope="col">Actions</th>
                             {% endif %}
@@ -78,8 +79,14 @@
                                         {{ obj.user.first_name }} {{ obj.user.last_name }}
                                     {% endif %}
                                 </td>
-                                <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}</td>
+                                <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}/<br>
+                                {% if not obj.user.expires %}Never{%else%}{{obj.user.expires|pretty_date }}{%endif%}</td>
                                 <td class="table-data date">{{ obj.user.get_auth_backend_display }}</td>
+                                {% if obj.user.is_active %}
+                                <td class="table-data date" style="color:green;">Active</td>
+                                {% else %}
+                                <td class="table-data date" style="color:red;">Blocked</td>
+                                {%endif%}
                                 <td class="table-data dots-menu">
                                     {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
                                     {% if obj.user.id %}
@@ -98,6 +105,22 @@
                                                     {% if obj.user.allowed_delete and virtualhost_delete_user_perm %}
                                                         <a class="dropdown-item" href="{% url 'virtualhost:user-delete' obj.user.id %}">
                                                             Delete user
+                                                        </a>
+                                                    {%endif%}
+                                                    {% if virtualhost_edit_user_perm %}
+                                                        {%if obj.user.is_active %}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-block' obj.user.id %}">
+                                                            Block user
+                                                        </a>
+                                                        {%else%}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-unblock' obj.user.id %}">
+                                                            Unblock user
+                                                        </a>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                    {% if virtualhost_edit_user_perm %}
+                                                        <a class="dropdown-item" href="{% url 'virtualhost:user-expire' obj.user.id %}">
+                                                            Set expire
                                                         </a>
                                                     {% endif %}
                                                 </div>

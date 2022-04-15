@@ -17,10 +17,29 @@
         <div class="user-name">
             {{ curr_user.full_name }}
         </div>
+            <p style="display:inline-block">Status:</p>
+            {% if curr_user.is_active %}
+            <p style="color:green; display:inline-block;">Active</p>
+            {%else%}
+            <p style="color:red; display:inline-block;">Block</p>
+            {%endif%}
+            <p>Expired: {% if not curr_user.expires %}Never{%else%}{{curr_user.expires|pretty_date }}{%endif%}</p>
         {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
         <div class="btn-set">
             <!--<button type="button" class="btn btn-outline-secondary">Activate</button>-->
             <!--<button type="button" class="btn btn-custom-yellow">Suspend</button>-->
+            <a href="{% url 'virtualhost:user-expire' curr_user.id %}">
+                <button type="button" class="btn btn-custom-blue">Set expire</button>
+            </a>
+            {% if curr_user.is_active %}
+            <a href="{% url 'virtualhost:user-block' curr_user.id %}">
+                <button type="button" class="btn btn-custom-red">Block</button>
+            </a>
+            {% else%}
+            <a href="{% url 'virtualhost:user-unblock' curr_user.id %}">
+                <button type="button" class="btn btn-custom-yellow">Unblock</button>
+            </a>
+            {% endif %}
             <a href="{% url 'virtualhost:user-delete' curr_user.id %}">
                 <button type="button" class="btn btn-custom-red">Delete</button>
             </a>

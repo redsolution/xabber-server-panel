@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete user{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:users' %}">Users</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ user_to_unblock }}</h1></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+<br>
+        <div class="row no-gutters" style="margin-left:15px">
+            <div class="col page-content">
+                <p>User <b>{{ user_to_unblock }}</b> will be unblocked on the server.</p>
+                <form method="post" action="{% url 'virtualhost:user-unblock' user_to_unblock.id %}">
+                    {% csrf_token %}
+                    <div class="btn-set">
+                        <a href="{% url 'virtualhost:users' %}">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" class="btn btn-primary">Unblock user</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

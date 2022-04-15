@@ -235,3 +235,9 @@ class EjabberdAPI(object):
 
     def delete_key(self, data, key, **kwargs):
         return self._call_method('delete', '/registration/keys/{}'.format(key), 200, data=data, **kwargs)
+
+    def block_user(self, data, **kwargs):
+        return self._call_method('post', '/users/block', 200, data=data, **kwargs)
+
+    def unblock_user(self, data, **kwargs):
+        return self._call_method('delete', '/users/block', 200, data=data, **kwargs)
