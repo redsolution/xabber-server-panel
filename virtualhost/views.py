@@ -23,10 +23,10 @@ GROUP_TAB_DETAILS = 'group-details'
 GROUP_TAB_MEMBERS = 'group-members'
 GROUP_TAB_SUBSCRIPTIONS = 'group-subscriptions'
 
-EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes']
+EXCLUDED_PERMISSIONS_APPS = ['admin', 'auth', 'sessions', 'contenttypes', 'registration', 'modules_installation', ]
 EXCLUDED_PERMISSIONS_MODELS = [
     'authbackend', 'configdata', 'configuration', 'ldapsettings', 'ldapsettingsserver', 'serverconfig',
-    'serverconfiguration', 'groupmember', "virtualhost", 'basemoduleconfig'
+    'serverconfiguration', 'groupmember', "virtualhost", 'basemoduleconfig', 'rootpagesettings'
 ]
 EXCLUDED_PERMISSIONS_CODENAMES = [
     'add_dashboard', 'change_dashboard', 'delete_dashboard', 'add_groupchat', 'change_groupchat', 'delete_groupchat',
@@ -140,19 +140,19 @@ class SearchView(VhostContextView, TemplateView):
         if request.GET.get('search'):
             search_name = request.GET.get('search').rstrip().lstrip()
             user = request.user
-            users = user.api.xabber_registered_users({"host": vhost})
+            users = user.api.xabber_registered_users({"host": vhost}).get('users')
             groups = user.api.get_groups({"host": vhost})
-            chats = user.api.xabber_registered_chats({"host": vhost, "limit": 200, "page": 1})
+            chats = user.api.xabber_registered_chats({"host": vhost, "limit": 200, "page": 1}).get('groups')
             data_users = []
             data_groups = []
             data_chats = []
             if "error" not in users:
                 django_users = User.objects.filter(username__contains=search_name, host=vhost)
                 for user in users:
-                    django_user = filter(lambda o: o.username == user['name'], django_users)
+                    django_user = filter(lambda o: o.username == user['username'], django_users)
                     django_user = next(django_user, None)
                     if django_user:
-                        data_users.append({"username": user['name'], "user": django_user})
+                        data_users.append({"username": user['username'], "user": django_user})
             if "error" not in groups:
                 all_groups = Group.objects.filter(group__contains=search_name, host=vhost)
                 groups_members_count = GroupMember.objects.values('group__group').annotate(dcount=Count('group'))
@@ -203,13 +203,14 @@ class UserListView(VhostContextView, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         vhost = self.get_vhost(request)
-        users = user.api.xabber_registered_users({"host": vhost}).get('users')
+        users = user.api.xabber_registered_users({"host": vhost})
 
         if "error" in users:
             return self.get_response(request,
                                      vhost=vhost,
                                      context={"error": users.get("error")})
 
+        users = users.get('users') if isinstance(users, dict) else users
         django_users = User.objects.filter(host=vhost).values('username')
         django_users = [o['username'] for o in django_users]
         unknown_users = []

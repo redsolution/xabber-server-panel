@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'server',
     'xmppserverui',
     'modules_installation',
-    'xmppserverinstaller'
+    'xmppserverinstaller',
+    'registration'
 ]
 
 MIDDLEWARE = [

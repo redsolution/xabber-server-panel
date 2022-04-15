@@ -178,4 +178,6 @@ class GroupChat(models.Model):
 
 
 class UserPassword(models.Model):
-    pass
+    # model is only for granting rights to change the user's password
+    class Meta:
+        managed = False

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+{% endblock %}
+
+{% load xmppserverui_tags %}
+{% block title %}Registration{% endblock %}
+{% block main_content %}
+<div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item"><h1>Registration</h1></li>
+                    {% if auth_user.is_admin %}
+                    <li class="list-group-item right-btn">
+                         <div class="dropdown">
+                            <button class="btn dropdown-toggle"
+                                    type="button" id="dropdown-vhost"
+                                    data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">
+                                {{ vhosts.0 }}
+                            </button>
+                            <div class="dropdown-menu"
+                                   aria-labelledby="dropdown-vhost">
+                                {% for vhost in vhosts %}
+                                    <a class="dropdown-item" href="#">{{ vhost }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
+               <br>
+                <form action="" method="post" id="registration-settings">
+                    {% csrf_token %}
+                        {% with form.is_enabled as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        {% with form.is_enabled_by_key as field %}
+                            {% include 'include/input_field.html' %}
+                        {% endwith %}
+                        <div class="col-12" style="margin-left:15px;">
+                            <button type="submit" class="btn btn-primary float-right" >Save</button>
+                        </div>
+                </form>
+            </div>
+        </div>
+
+        {% if by_key %}
+        <div class="row no-gutters">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Key</th>
+                        <th scope="col">Expired</th>
+                        <th scope="col">Description</th>
+                        <th scope="col" style="padding-left: 24px"></th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                {% for key in keys %}
+                    <tr>
+                        <td class="col-sm-1 table-data">{% if key %}{{ forloop.counter }}{% endif %}</td>
+                        <td class="col-sm-1 table-data" id ="{{ key.key }}">{{ key.key }}</td>
+                        <td class="col-sm-3 table-data">{{ key.expire }}</td>
+                        <td class="col-sm-10 table-data">{{ key.description }}</td>
+                        <td class="col-sm-1 table-data" style="padding-left: 24px">
+
+                            <div class="btn-group dropleft">
+                            <i class="mdi mdi-24px mdi-dots-vertical" role="button"
+                               id="dropdown-vhost-actions" data-toggle="dropdown"
+                               aria-haspopup="true" aria-expanded="false">
+                            </i>
+                            <div class="dropdown-menu"
+                                  aria-labelledby="dropdown-vhost-actions-2">
+                                <a class="btn btn-link" href="{% url 'registration:change-key' key.key %}">Change</a>
+                                <form onsubmit="return confirm('Delete key {{ key.key }}?')" method="post">
+                                {% csrf_token %}
+                                <button class="btn btn-link" name="key" value={{ key.key }} href="">Delete</button>
+                                </form>
+                                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#exampleModal" data-whatever="{{ key.key }}">
+                                    Show link
+                                </button>
+                            </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                 </tbody>
+            </table>
+            <div class="col-12">
+                <a class="btn btn-primary float-right" href="{% url 'registration:add-key' %}">Add</a>
+            </div>
+        </div>
+    </div>
+
+{% endif %}
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Registration link</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div style="color:#007bff;" class="modal-body" id="modal-body">
+           <br>
+      </div>
+        <div class="modal-footer">
+        <button class="btn btn-primary" id="btncopy">Copy</button>
+            </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function(){
+      $('#exampleModal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget)
+      var recipient = button.data('whatever')
+      var modal = $(this)
+      modal.find('.modal-body').text(window.location.protocol + '//' +  window.location.host + '/?rkey=' + recipient)
+    });
+    var copyText = document.querySelector('#btncopy');
+    copyText.addEventListener('click', function(event) {
+
+    navigator.clipboard.writeText(document.getElementById('modal-body').innerHTML);
+    });
+
+$(document).ready(function() {
+    let curr_vhost = $.cookie("vhost");
+    $("#dropdown-vhost").text(curr_vhost);
+
+    $(".dropdown-menu[aria-labelledby='dropdown-vhost'] a").click(function() {
+        $.cookie("vhost", $(this).text(), {expires : 30, path: '/'});
+        location.reload();
+    });
+    document.getElementById('registration-settings').reset();
+    $('#id_is_enabled').bootstrapToggle();
+    $('#id_is_enabled_by_key').bootstrapToggle();
+});
+});
+</script>
+{% endblock %}

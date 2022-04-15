@@ -223,3 +223,15 @@ class EjabberdAPI(object):
 
     def stats_host(self, data, **kwargs):
         return self._call_method('get', '/users/online', 200, data=data, **kwargs)
+
+    def get_keys(self, data, **kwargs):
+        return self._call_method('get', '/registration/keys', 200, data=data, **kwargs)
+
+    def create_key(self, data, **kwargs):
+        return self._call_method('post', '/registration/keys', 201, data=data, **kwargs)
+
+    def change_key(self, data, key, **kwargs):
+        return self._call_method('put', '/registration/keys/{}'.format(key), 200, data=data, **kwargs)
+
+    def delete_key(self, data, key, **kwargs):
+        return self._call_method('delete', '/registration/keys/{}'.format(key), 200, data=data, **kwargs)

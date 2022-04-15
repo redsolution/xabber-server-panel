@@ -186,7 +186,6 @@ modules:
   mod_http_api: {}
   mod_fail2ban: {}
   mod_unique: {}
-  mod_register: {}
   mod_devices: {}
   mod_groups:
     global_indexs:

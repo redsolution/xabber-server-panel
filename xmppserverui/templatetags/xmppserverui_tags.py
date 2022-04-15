@@ -66,3 +66,10 @@ def check_user_perms(context, content_type_app_label):
         return False
     except User.DoesNotExist:
         return None
+
+
+@register.simple_tag
+def has_perm_on_app(auth_user, module):
+    user_perms = auth_user.user_permissions.all()
+    filtered_list = [obj for obj in user_perms if obj.content_type.app_label == module]
+    return len(filtered_list) > 0

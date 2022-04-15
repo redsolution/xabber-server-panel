@@ -83,6 +83,8 @@ def is_ejabberd_running():
 
 def update_ejabberd_config():
     update_vhosts_config()
+    from modules_installation.utils.config_generator import make_xmpp_config
+    make_xmpp_config()
     reload_ejabberd_config()
 
 

@@ -49,7 +49,7 @@ class LoginView(NoAuthMixin, TemplateView):
                         user.set_password(request.POST['password'])
                         user.save()
                     return HttpResponseRedirect(reverse('server:home'))
-            return HttpResponseRedirect(reverse('xmppserverui:root-page'))
+            return HttpResponseRedirect(reverse('root-page'))
         return self.render_to_response({"form": form, 'user_ip': user_ip})
 
 

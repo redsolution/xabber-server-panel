@@ -18,7 +18,8 @@ from xmppserverui.mixins import PageContextMixin
 from virtualhost.models import VirtualHost
 from .forms import UploadModuleFileForm
 from .mixins import ModuleAccessMixin
-from .utils.config_generator import update_modules_config_file
+from .utils.config_generator import make_xmpp_config
+from django.template.utils import get_app_template_dirs
 
 SETTINGS_TAB_MODULES = 'modules'
 
@@ -90,11 +91,13 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                             apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
                             apps.clear_cache()
                             apps.populate(settings.INSTALLED_APPS)
-                            management.call_command('migrate', folder, interactive=False)
+                            if os.path.exists(os.path.join(folder_path, 'migrations', '__init__.py')):
+                                management.call_command('migrate', folder, interactive=False)
                             management.call_command('collectstatic', '--noinput', interactive=False)
                             update_module_permissions()
                             update_module_permissions_names()
-                            update_modules_config_file()
+                            make_xmpp_config()
+                            get_app_template_dirs.cache_clear()
                         except:
                             return 'Something went wrong during the installation of this module'
             return ''

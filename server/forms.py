@@ -360,8 +360,7 @@ class RootPageForm(BaseForm):
     )
 
     def init_root_modules(self):
-        self.fields['root_page'].choices = [
-            (o.get('module'), o.get('module')) for o in self.modules if o.get('root_page')]
+        self.fields['root_page'].choices = [(module, module) for module in self.modules]
         self.fields['root_page'].choices.insert(0, ('home_page', 'home_page'))
         self.fields['root_page'].initial = self.current_root if self.current_root else "home_page"
 

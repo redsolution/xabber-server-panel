@@ -25,9 +25,10 @@ urlpatterns = [
     url(r'^admin/virtualhost/', include('virtualhost.urls', namespace='virtualhost')),
     url(r'^admin/installation/', include('xmppserverinstaller.urls', namespace='installer')),
     url(r'^admin/error/', include('error.urls', namespace='error')),
+    url(r'^admin/registration/', include('registration.urls', namespace='registration')),
     url(r'^admin/$', DefaultView.as_view()),
     url(r'^admin', DefaultView.as_view(), name="admin_page"),
-    url(r'^$', RootView.as_view(), name='root-page')
+    url(r'^$', RootView.as_view(), name='root-page'),
 ]
 for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
     urlpatterns += [url(r'^%s/' % module, include('%s.urls' % module, namespace='%s' % module)),]

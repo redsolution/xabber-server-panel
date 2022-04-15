@@ -59,7 +59,7 @@ class AdminMixin(AuthMixin):
         if user.exists():
             user = user[0]
             if not user.get_all_permissions() and not user.is_admin:
-                return HttpResponseRedirect(reverse('xmppserverui:root-page'))
+                return HttpResponseRedirect(reverse('root-page'))
 
 
 class PageContextMixin(AdminMixin):
