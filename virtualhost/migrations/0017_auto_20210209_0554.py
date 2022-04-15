@@ -38,9 +38,4 @@ class Migration(migrations.Migration):
             name='user_permissions',
             field=models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions'),
         ),
-        migrations.AlterField(
-            model_name='user',
-            name='username',
-            field=models.CharField(max_length=256, unique=True),
-        ),
     ]
