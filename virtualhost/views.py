@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from django.contrib.auth.models import Permission
 from django.db.models import Count
@@ -1160,7 +1160,7 @@ class BlockUserView(PageContextMixin, TemplateView):
                                      "host": user_to_block.host,
                                      "reason": request.POST.get('reason')})
         user_to_block.is_active = False
-        user_to_block.expires = datetime.now()
+        user_to_block.expires = datetime.now().replace(tzinfo=timezone.utc)
         user_to_block.save()
         return HttpResponseRedirect(reverse('virtualhost:users'))
 

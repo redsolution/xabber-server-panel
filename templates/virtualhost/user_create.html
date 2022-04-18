@@ -58,6 +58,9 @@
                     {% with form.last_name as field %}
                         {% include 'include/input_field.html' %}
                     {% endwith %}
+                    {% with form.expires as field %}
+                        {% include 'include/input_field.html' %}
+                    {% endwith %}
                     <!--{% with form.photo as field %}-->
                         <!--{% include 'include/input_file_field.html' %}-->
                     <!--{% endwith %}-->
