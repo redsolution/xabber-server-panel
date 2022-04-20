@@ -109,7 +109,8 @@ class RegisterUserForm(AuthorizedApiForm):
         if not regex.match(self.cleaned_data['username']):
             self.add_error('username', 'This username contains unsupported characters.')
         self.cleaned_data['username'] = self.cleaned_data['username'].lower()
-        self.cleaned_data['expires'].replace(tzinfo=datetime.timezone.utc)
+        if self.cleaned_data['expires']:
+            self.cleaned_data['expires'].replace(tzinfo=datetime.timezone.utc)
         return self.cleaned_data
 
     def after_clean(self, cleaned_data):
