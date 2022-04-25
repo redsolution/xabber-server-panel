@@ -399,7 +399,6 @@ class ServerRootPageSettingsView(PageContextMixin, TemplateView):
             module_config = spec.loader.load_module()
             wn_root = "'{}'".format(module_config.WHITENOISE_ROOT)
 
-        wn_path = os.path.join(os.path.abspath(os.path.join(settings.BASE_DIR, os.pardir)), 'whitenoise_root.py')
-        with open(wn_path, "w") as f:
+        with open(settings.WHITENOISE_ROOT_PATH, "w") as f:
             f.write(wn_root.strip("'"))
         return HttpResponseRedirect(reverse('server:root-settings'))
