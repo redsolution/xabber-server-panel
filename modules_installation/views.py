@@ -1,4 +1,4 @@
-import json
+import shutil
 import os
 import re
 import tarfile
@@ -98,8 +98,9 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
                             update_module_permissions_names()
                             make_xmpp_config()
                             get_app_template_dirs.cache_clear()
-                        except:
-                            return 'Something went wrong during the installation of this module'
+                        except Exception as err:
+                            rollback_install(new_app_name, folder_path)
+                            return 'Something went wrong during the installation of this module: {}'.format(err)
             return ''
 
 
@@ -114,3 +115,11 @@ def module_view_detail(request, module, path):
             return redirect('server:dashboard')
     except ImportError or AttributeError:
         return redirect('server:dashboard')
+
+
+def rollback_install(new_app_name, folder_path):
+    try:
+        settings.INSTALLED_APPS.remove(new_app_name)
+        shutil.rmtree(folder_path)
+    except Exception:
+        pass

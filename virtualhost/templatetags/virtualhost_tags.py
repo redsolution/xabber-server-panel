@@ -19,17 +19,17 @@ def update_module_permissions_names():
             renamed_models_dict = getattr(config, 'RENAMING_MODELS_NAMES')
             for key in renamed_models_dict:
                 RENAMING_MODELS_NAMES.update({key: renamed_models_dict[key]})
-        except ImportError:
-            print('Module', module_name, 'does not exist')
-        except AttributeError:
-            print('Module', module_name, 'app config is improperly configured')
+        except (ImportError, AttributeError):
+            pass
 
 
 update_module_permissions_names()
 
+
 @register.filter
 def get_first_part(self):
     return self.split('_')[0]
+
 
 @register.filter
 def model_renaming(self):

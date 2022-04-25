@@ -1,4 +1,5 @@
 import base64
+import datetime
 from django import forms
 import re
 
@@ -61,6 +62,14 @@ class RegisterUserForm(AuthorizedApiForm):
         label='Administrator',
         help_text="Promote user as admin"
     )
+    expires = forms.DateTimeField(
+        input_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d'],
+        required=False,
+        label='Expires',
+        help_text="A string of characters of the format YYYY-MM-DD; where YYYY shall contain year, MM shall contain "
+                  "the month, and DD shall contain the day.",
+        widget=forms.DateTimeInput(attrs={"placeholder": "2022-04-15"})
+    )
 
     def __init__(self, *args, **kwargs):
         self.vhosts = kwargs.pop('vhosts', None)
@@ -100,6 +109,8 @@ class RegisterUserForm(AuthorizedApiForm):
         if not regex.match(self.cleaned_data['username']):
             self.add_error('username', 'This username contains unsupported characters.')
         self.cleaned_data['username'] = self.cleaned_data['username'].lower()
+        if self.cleaned_data['expires']:
+            self.cleaned_data['expires'].replace(tzinfo=datetime.timezone.utc)
         return self.cleaned_data
 
     def after_clean(self, cleaned_data):

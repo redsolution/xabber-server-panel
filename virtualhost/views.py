@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from importlib import import_module
 from django.contrib.auth.models import Permission
 from django.db.models import Count
@@ -55,10 +55,8 @@ def update_module_permissions():
             config = getattr(module, 'ModuleConfig')
             EXCLUDED_PERMISSIONS_MODELS.extend(getattr(config, 'EXCLUDED_PERMISSIONS_MODELS'))
             EXCLUDED_PERMISSIONS_CODENAMES.extend(getattr(config, 'EXCLUDED_PERMISSIONS_CODENAMES'))
-        except ImportError:
-            print('Module', module_name, 'does not exist')
-        except AttributeError:
-            print('Module', module_name, 'app config is improperly configured')
+        except (ImportError, AttributeError):
+            pass
 
 
 update_module_permissions()
@@ -1144,12 +1142,9 @@ class BlockUserView(PageContextMixin, TemplateView):
             user_to_block = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        else:
-            if not user_to_block.allowed_delete:
-                return HttpResponseRedirect(reverse('error:403'))
         self.check_host(user_to_block.host)
         if not user_to_block.is_active:
-            raise Http404
+            return HttpResponseRedirect(reverse('error:403'))
         return self.render_to_response({"user_to_block": user_to_block})
 
     def post(self, request, *args, **kwargs):
@@ -1158,14 +1153,14 @@ class BlockUserView(PageContextMixin, TemplateView):
         except User.DoesNotExist:
             raise Http404
         else:
-            if not user_to_block.allowed_delete:
+            if user_to_block == self.context.get('auth_user'):
                 return HttpResponseRedirect(reverse('error:403'))
         self.check_host(user_to_block.host)
         request.user.api.block_user({"username": user_to_block.username,
                                      "host": user_to_block.host,
                                      "reason": request.POST.get('reason')})
         user_to_block.is_active = False
-        user_to_block.expires = datetime.now()
+        user_to_block.expires = datetime.now().replace(tzinfo=timezone.utc)
         user_to_block.save()
         return HttpResponseRedirect(reverse('virtualhost:users'))
 
@@ -1181,7 +1176,7 @@ class UnblockUserView(PageContextMixin, TemplateView):
             raise Http404
         self.check_host(user_to_unblock.host)
         if user_to_unblock.is_active:
-            raise Http404
+            return HttpResponseRedirect(reverse('error:403'))
         return self.render_to_response({"user_to_unblock": user_to_unblock})
 
     def post(self, request, *args, **kwargs):
@@ -1189,9 +1184,6 @@ class UnblockUserView(PageContextMixin, TemplateView):
             user_to_unblock = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        else:
-            if not user_to_unblock.allowed_delete:
-                return HttpResponseRedirect(reverse('error:403'))
         self.check_host(user_to_unblock.host)
         request.user.api.unblock_user({"host": user_to_unblock.host,
                                        "username": user_to_unblock.username})
@@ -1210,9 +1202,6 @@ class SetUserExpireView(PageContextMixin, TemplateView):
             user_to_set = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        else:
-            if not user_to_set.allowed_delete:
-                return HttpResponseRedirect(reverse('error:403'))
         self.check_host(user_to_set.host)
         form = SetExpireForm(expires=user_to_set.expires)
         return self.render_to_response({"user_to_set": user_to_set,
@@ -1224,7 +1213,7 @@ class SetUserExpireView(PageContextMixin, TemplateView):
         except User.DoesNotExist:
             raise Http404
         else:
-            if not user_to_set.allowed_delete:
+            if user_to_set == self.context.get('auth_user'):
                 return HttpResponseRedirect(reverse('error:403'))
         self.check_host(user_to_set.host)
         expires = request.POST.get('expires')
