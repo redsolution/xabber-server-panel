@@ -1,4 +1,5 @@
 import importlib
+import os
 from django.views.generic import TemplateView
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404
@@ -398,6 +399,7 @@ class ServerRootPageSettingsView(PageContextMixin, TemplateView):
             module_config = spec.loader.load_module()
             wn_root = "'{}'".format(module_config.WHITENOISE_ROOT)
 
-        with open("xmppserverui/whitenoise_root.py", "w") as f:
-            f.write("WHITENOISE_ROOT = {}\n".format(wn_root))
+        wn_path = os.path.join(os.path.abspath(os.path.join(settings.BASE_DIR, os.pardir)), 'whitenoise_root.py')
+        with open(wn_path, "w") as f:
+            f.write(wn_root.strip("'"))
         return HttpResponseRedirect(reverse('server:root-settings'))

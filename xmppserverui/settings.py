@@ -142,7 +142,8 @@ STATICFILES_FINDERS = (
 # Whitenoise
 # to serve static from xabber web
 try:
-    from xmppserverui.whitenoise_root import *
+    wn = os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'whitenoise_root.py')
+    WHITENOISE_ROOT = open(wn, "r").read().strip()
 except:
     pass
 
