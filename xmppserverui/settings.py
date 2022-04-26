@@ -141,9 +141,10 @@ STATICFILES_FINDERS = (
 
 # Whitenoise
 # to serve static from xabber web
-WHITENOISE_ROOT_PATH = os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'whitenoise_root.py')
+WN_ROOT_PATH = os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'whitenoise_root.txt')
 try:
-    WHITENOISE_ROOT = open(WHITENOISE_ROOT_PATH, "r").read().strip()
+    with open(WN_ROOT_PATH, "r") as f:
+        WHITENOISE_ROOT = f.read().strip()
 except Exception:
     pass
 
@@ -205,3 +206,5 @@ if os.path.exists(MODULES_DIR):
             new_app_name = MODULES_DIR_NAME + "." + folder
             INSTALLED_APPS += (new_app_name,)
 
+XABBER_WEB_CONFIG_PATH = os.path.join(BASE_DIR)
+XABBER_WEB_CONFIG_FILE = 'xabberweb_options.yml'

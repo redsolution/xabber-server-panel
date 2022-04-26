@@ -399,6 +399,6 @@ class ServerRootPageSettingsView(PageContextMixin, TemplateView):
             module_config = spec.loader.load_module()
             wn_root = "'{}'".format(module_config.WHITENOISE_ROOT)
 
-        with open(settings.WHITENOISE_ROOT_PATH, "w") as f:
+        with open(settings.WN_ROOT_PATH, "w") as f:
             f.write(wn_root.strip("'"))
         return HttpResponseRedirect(reverse('server:root-settings'))

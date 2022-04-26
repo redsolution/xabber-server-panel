@@ -23,9 +23,6 @@ class RootView(TemplateView):
     template_name = 'server/root_stub.html'
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
-            return self.render_to_response(context={})
-
         current_root = RootPageSettings.objects.first()
         if str(current_root) != "home_page":
             module_name = "modules.{}".format(current_root)
