@@ -146,7 +146,7 @@ try:
     with open(WN_ROOT_PATH, "r") as f:
         WHITENOISE_ROOT = f.read().strip()
 except Exception:
-    pass
+    WHITENOISE_ROOT = STATIC_ROOT
 
 # Media files
 
