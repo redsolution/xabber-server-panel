@@ -94,11 +94,9 @@
                             {% has_perm_on_app auth_user module.module as has_perm_on_app %}
                             {% check_user_perms 'is_admin' as is_admin %}
                             {% if has_perm_on_app or is_admin %}
-                                <a href="{{ module.url }}"
-                                   class="list-group-item
-<!--                                    {% if page.section == 'modules' %}active{% endif %}-->
-                                    ">
-                                    {{ module.name }}
+                                <a href="{{ module.url }}" class="list-group-item
+                                    {% if page.section == module.name %}active{% endif %}">
+                                        {{ module.name }}
                                 </a>
                             {% endif %}
                             {% endfor %}

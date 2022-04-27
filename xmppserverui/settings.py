@@ -141,9 +141,11 @@ STATICFILES_FINDERS = (
 
 # Whitenoise
 # to serve static from xabber web
+WN_ROOT_PATH = os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'whitenoise_root.txt')
 try:
-    from xmppserverui.whitenoise_root import *
-except:
+    with open(WN_ROOT_PATH, "r") as f:
+        WHITENOISE_ROOT = f.read().strip()
+except Exception:
     pass
 
 # Media files
@@ -203,4 +205,3 @@ if os.path.exists(MODULES_DIR):
         if os.path.isdir(folder_path):
             new_app_name = MODULES_DIR_NAME + "." + folder
             INSTALLED_APPS += (new_app_name,)
-
