@@ -72,7 +72,7 @@ def check_user_perms(context, content_type_app_label):
 def has_perm_on_app(auth_user, module):
     try:
         user_perms = auth_user.user_permissions.all()
-    except AttributeError:
+    except Exception:
         return False
     filtered_list = [obj for obj in user_perms if obj.content_type.app_label == module]
     return len(filtered_list) > 0
