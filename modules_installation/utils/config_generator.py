@@ -21,10 +21,9 @@ def update_modules_config_file():
 
 def get_modules_config():
     configs = []
-    for name, app in apps.app_configs.items():
+    for app in apps.app_configs.values():
         try:
-            spec = importlib.util.find_spec(".config", package=app.name)
-            module_config = spec.loader.load_module()
+            module_config = importlib.import_module(".config", package=app.name)
             configs.extend(module_config.get_xmpp_server_config())
         except Exception:
             pass
