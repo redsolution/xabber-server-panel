@@ -151,11 +151,12 @@ class SetUrlView(Registration):
                 RegistrationURL.objects.filter(vhost=obj).delete()
         else:
             new_url = request.POST.get('url')
-            for obj in vhost:
-                try:
-                    cur_url = RegistrationURL.objects.get(vhost=obj)
-                    cur_url.value = new_url
-                    cur_url.save()
-                except RegistrationURL.DoesNotExist:
-                    RegistrationURL.objects.create(vhost=obj, value=new_url)
+            if not new_url.isspace():
+                for obj in vhost:
+                    try:
+                        cur_url = RegistrationURL.objects.get(vhost=obj)
+                        cur_url.value = new_url
+                        cur_url.save()
+                    except RegistrationURL.DoesNotExist:
+                        RegistrationURL.objects.create(vhost=obj, value=new_url)
         return HttpResponseRedirect(reverse('registration:registration'))
