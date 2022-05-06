@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Registration key{% endblock %}
+
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'registration:registration' %}">Registration</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>URL</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    <li class="list-group-item"><h4>{{vhost}}</h4></li>
+                </ul>
+            </div>
+        </div>
+
+    <div class="tab-pane fade show active">
+        <div class="row no-gutters">
+            <div class="col-sm-12 page-content">
+                <table class="table">
+                    <th scope="col">
+                        Web client url:
+                        <h5 id="cur_url">{{cur_url}}</h5>
+                            <form method="post">
+                                {% csrf_token %}
+                                    <input type="text" name = "url" placeholder="https://example.com"/><br>
+                                    <input type="checkbox" name="all_domains">Set for all domains<br>
+                                    <button type="submit" class="btn btn-success">Change</button>
+                                    <button type="submit" class="btn btn-secondary" name="reset" value="true">Reset</button>
+                            </form>
+                     </th>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var cur_url = document.getElementById('cur_url').innerHTML
+    if(!cur_url){
+    document.getElementById('cur_url').innerHTML = window.location.protocol + '//' + window.location.host
+    }
+</script>
+{% endblock %}
+
