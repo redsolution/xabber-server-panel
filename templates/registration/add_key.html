@@ -8,9 +8,15 @@
                 <ul class="list-group list-group-flush list-group-horizontal">
                     <li class="list-group-item">
                         <h1>
-                            <a href="{% url 'registration:registration' %}">Registration keys</a>
+                            <a href="{% url 'registration:registration' %}">Registration</a>
                         </h1>
                     </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>Keys</h1></li>
+                    <li class="list-group-item"><div class="divider"></div></li>
+                    <li class="list-group-item"><h4 class="">Add</h4></li>
                 </ul>
                 <hr>
             </div>
@@ -23,7 +29,7 @@
                 <form action="" method="post" id="registration-settings" >
                     {% csrf_token %}
                     <div style="margin: 0 0 15px;">
-                        <h3>Add registration key <b>{{ current_key }}</b></h3>
+                        <h3>Add registration key for <b>{{ vhost }}</b></h3>
                     </div>
                     {% with form.expire as field %}
                         {% include 'include/input_field_with_popover.html' %}
