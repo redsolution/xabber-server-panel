@@ -32,29 +32,29 @@
                     {% endif %}
                 </ul>
                <br>
-                <form action="" method="post" id="registration-settings">
+                <form method="post" id="registration-settings">
                     {% csrf_token %}
-                        {% with form.is_enabled as field %}
-                            {% include 'include/input_field.html' %}
+                        {% with form.registration as field %}
+                            {% include 'include/input_field_with_popover.html' %}
                         {% endwith %}
-                        {% with form.is_enabled_by_key as field %}
-                            {% include 'include/input_field.html' %}
-                        {% endwith %}
-                        <div class="col-12" style="margin-left:15px;">
-                            <button type="submit" class="btn btn-primary float-right" >Save</button>
-                        </div>
+                            <button type="submit" class="btn btn-primary">Save</button>
                 </form>
+                {% if keys %}
+                    <a>Web client url:</a>
+                    <a href="{{cur_url}}" id="cur_url">{{cur_url}}</a>
+                    <a id="button_edit" type="submit" class="btn btn-primary" href="{% url 'registration:set-url' %}">Edit</a>
+                {% endif %}
             </div>
         </div>
 
-        {% if by_key %}
+        {% if keys %}
         <div class="row no-gutters">
             <table class="table">
                 <thead>
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">Key</th>
-                        <th scope="col">Expired</th>
+                        <th scope="col">Expires</th>
                         <th scope="col">Description</th>
                         <th scope="col" style="padding-left: 24px"></th>
                     </tr>
@@ -126,7 +126,12 @@
       var button = $(event.relatedTarget)
       var recipient = button.data('whatever')
       var modal = $(this)
-      modal.find('.modal-body').text(window.location.protocol + '//' +  window.location.host + '/?rkey=' + recipient)
+      var cur_url = document.getElementById('cur_url').innerHTML
+        if(!cur_url){
+            document.getElementById('cur_url').innerHTML = window.location.host
+            var cur_url = window.location.host
+            }
+      modal.find('.modal-body').text(cur_url + '/?rkey=' + recipient)
     });
     var copyText = document.querySelector('#btncopy');
     copyText.addEventListener('click', function(event) {
@@ -143,8 +148,10 @@ $(document).ready(function() {
         location.reload();
     });
     document.getElementById('registration-settings').reset();
-    $('#id_is_enabled').bootstrapToggle();
-    $('#id_is_enabled_by_key').bootstrapToggle();
+    var cur_url = document.getElementById('cur_url').innerHTML
+    if(!cur_url){
+    document.getElementById('cur_url').innerHTML = window.location.protocol + '//' + window.location.host
+    }
 });
 });
 </script>

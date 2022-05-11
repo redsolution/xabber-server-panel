@@ -24,7 +24,7 @@ class AddRegistrationKeyForm(BaseForm):
     expire = forms.DateTimeField(
         input_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d'],
         required=True,
-        label='Expire',
+        label='Expires',
         widget=forms.DateTimeInput(attrs={"placeholder": "2022-04-15"})
     )
     description = forms.CharField(
@@ -51,24 +51,22 @@ class AddRegistrationKeyForm(BaseForm):
 
 
 class EnableRegistrationForm(BaseForm):
-    is_enabled = forms.BooleanField(
-        required=False,
-        label='Enable registration',
-        initial=False
-    )
 
-    is_enabled_by_key = forms.BooleanField(
-        required=False,
-        label='Enable registration by key',
-        initial=False
+    ENABLE_CHOICES = (
+        ('DISABLED', 'disabled'),
+        ('LINK', 'link'),
+        ('PUBLIC', 'public'),
     )
-
-    def init_fields(self):
-        self.fields['is_enabled'].initial = self.is_enabled
-        self.fields['is_enabled_by_key'].initial = self.is_enabled_by_key
+    registration = forms.ChoiceField(
+        required=False,
+        label='Registration',
+        initial="disabled",
+        choices=ENABLE_CHOICES
+    )
 
     def __init__(self, *args, **kwargs):
-        self.is_enabled = kwargs.pop('is_enabled', '')
-        self.is_enabled_by_key = kwargs.pop('is_enabled_by_key', '')
+        self.registration = kwargs.pop('registration', '')
         super(EnableRegistrationForm, self).__init__(*args, **kwargs)
-        self.init_fields()
+        self.fields['registration'].initial = self.registration
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
