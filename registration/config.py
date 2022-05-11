@@ -7,11 +7,11 @@ def get_xmpp_server_config():
     configs = []
     for s in settings:
         try:
-            if s.status != "disabled":
+            if s.status != "DISABLED":
                 configs.append(BaseXmppModule(vhost=s.vhost.name, name="mod_register",
                                               module_options={"password_strength": 32,
                                                               "access": "register"}))
-            if s.status == "link":
+            if s.status == "LINK":
                 configs.append(BaseXmppModule(vhost=s.vhost.name, name="mod_registration_keys",
                                               module_options={}))
         except Exception as e:

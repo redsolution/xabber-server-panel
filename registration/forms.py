@@ -53,9 +53,9 @@ class AddRegistrationKeyForm(BaseForm):
 class EnableRegistrationForm(BaseForm):
 
     ENABLE_CHOICES = (
-        ('disabled', 'disabled'),
-        ('link', 'link'),
-        ('public', 'public'),
+        ('DISABLED', 'disabled'),
+        ('LINK', 'link'),
+        ('PUBLIC', 'public'),
     )
     registration = forms.ChoiceField(
         required=False,

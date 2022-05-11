@@ -30,7 +30,7 @@ class RegistrationView(Registration):
             sett_obj = RegistrationSettings.objects.get(vhost=vhost)
         except RegistrationSettings.DoesNotExist:
             sett_obj = RegistrationSettings()
-        if sett_obj.status == "link":
+        if sett_obj.status == "LINK":
             try:
                 context['cur_url'] = RegistrationURL.objects.get(vhost=vhost).value
             except RegistrationURL.DoesNotExist:
@@ -53,7 +53,7 @@ class RegistrationView(Registration):
             sett_obj = RegistrationSettings.objects.get(vhost=vhost)
             cur_status = sett_obj.status
         except RegistrationSettings.DoesNotExist:
-            cur_status = "disabled"
+            cur_status = "DISABLED"
 
         if key:
             user = request.user
@@ -61,7 +61,7 @@ class RegistrationView(Registration):
 
         if cur_status == new_status:
             pass
-        elif new_status == "disabled":
+        elif new_status == "DISABLED":
             try:
                 RegistrationSettings.objects.get(vhost=vhost).delete()
             except RegistrationSettings.DoesNotExist:
@@ -150,8 +150,8 @@ class SetUrlView(Registration):
             for obj in vhost:
                 RegistrationURL.objects.filter(vhost=obj).delete()
         else:
-            new_url = request.POST.get('url')
-            if not new_url.isspace():
+            new_url = request.POST.get('url').strip()
+            if new_url:
                 for obj in vhost:
                     try:
                         cur_url = RegistrationURL.objects.get(vhost=obj)
