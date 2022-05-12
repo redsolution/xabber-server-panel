@@ -27,12 +27,20 @@
             <div class="col-sm-12 page-content">
                 <table class="table">
                     <th scope="col">
-                        Web client url:
-                        <h5 id="cur_url">{{cur_url}}</h5>
+                        <div class="mb-4">
+                            <span class="form-label" >Current URL:</span>
+                            <a href="{{ cur_url }}" id="cur_url" class="mx-sm-2">{{ cur_url }}</a>
+                        </div>
                             <form method="post">
                                 {% csrf_token %}
-                                    <input type="text" name = "url" placeholder="https://example.com"/><br>
-                                    <input type="checkbox" name="all_domains">Set for all domains<br>
+                                <div class="form-group">
+                                    <label for="url">Change to</label>
+                                    <input type="text" class="form-control" id="url" name ="url" placeholder="https://example.com"/>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="all_domains" name="all_domains">
+                                    <label class="form-check-label" for="all_domains">Set for all domains</label>
+                                </div>
                                     <button type="submit" class="btn btn-success">Change</button>
                                     <button type="submit" class="btn btn-secondary" name="reset" value="true">Reset</button>
                             </form>

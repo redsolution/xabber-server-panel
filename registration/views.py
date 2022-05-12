@@ -43,21 +43,25 @@ class RegistrationView(Registration):
             else:
                 context['keys'] = []
         context['form'] = EnableRegistrationForm(registration=sett_obj.status)
+        context['status'] = sett_obj.status
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
         vhost = self.get_vhost(request)
         key = request.POST.get('key')
+
+        if key:
+            # deleting the registration key
+            user = request.user
+            user.api.delete_key({"host": vhost.name}, key=key)
+            return HttpResponseRedirect(reverse('registration:registration'))
+
         new_status = request.POST.get('registration')
         try:
             sett_obj = RegistrationSettings.objects.get(vhost=vhost)
             cur_status = sett_obj.status
         except RegistrationSettings.DoesNotExist:
             cur_status = "DISABLED"
-
-        if key:
-            user = request.user
-            user.api.delete_key({"host": vhost.name}, key=key)
 
         if cur_status == new_status:
             pass

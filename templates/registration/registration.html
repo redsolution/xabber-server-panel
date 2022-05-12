@@ -31,24 +31,37 @@
                     </li>
                     {% endif %}
                 </ul>
-               <br>
-                <form method="post" id="registration-settings">
-                    {% csrf_token %}
-                        {% with form.registration as field %}
-                            {% include 'include/input_field_with_popover.html' %}
-                        {% endwith %}
-                            <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+        <br>
+        <div class="row no-gutters" style="margin-left:15px">
+            <div class="col page-content">
+                <form method="post" id="registration-settings" class="form-inline">
+                    <div class="form-group mb-2">{% csrf_token %}</div>
+                    {% with form.registration as field %}
+                        <div class="form-group mb-2">
+                            <label for="{{ field.id_for_label }}" class="form-label" >{{ field.label }}</label>
+                            <div class="input-group mx-sm-4">
+                                {{ field }}
+                                {{ dropdown_field }}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                     {% endwith %}
+                    <button type="submit" class="btn btn-link mb-2" id="save_btn">Save</button>
                 </form>
-                {% if keys %}
-                    <a>Web client url:</a>
-                    <a href="{{cur_url}}" id="cur_url">{{cur_url}}</a>
-                    <a id="button_edit" type="submit" class="btn btn-primary" href="{% url 'registration:set-url' %}">Edit</a>
-                {% endif %}
             </div>
         </div>
 
-        {% if keys %}
+        {% if status == "LINK" %}
         <div class="row no-gutters">
+            <div class="mb-4">
+                <span class="form-label" >Web client url:</span>
+                <a href="{{ cur_url }}" id="cur_url" class="mx-sm-2">{{ cur_url }}</a>
+                <a id="button_edit" class="btn-link mx-sm-4" href="{% url 'registration:set-url' %}">Edit</a>
+            </div>
             <table class="table">
                 <thead>
                     <tr>
@@ -148,9 +161,22 @@ $(document).ready(function() {
         location.reload();
     });
     document.getElementById('registration-settings').reset();
+    {% with form.registration as field %}
+    $('#save_btn').hide()
+    var status = '{{ status }}'
+    $('#{{ field.id_for_label }}').change(function() {
+        if (this.value != status) {
+            $('#save_btn').show();
+          };
+     });
+    {% endwith %}
+
     var cur_url = document.getElementById('cur_url').innerHTML
     if(!cur_url){
-    document.getElementById('cur_url').innerHTML = window.location.protocol + '//' + window.location.host
+        var elem = document.getElementById('cur_url');
+        elem.innerHTML = window.location.protocol + '//' + window.location.host;
+        elem.href = window.location.protocol + '//' + window.location.host;
+
     }
 });
 });
