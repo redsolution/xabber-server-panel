@@ -218,10 +218,9 @@ class AddVirtualHostView(PageContextMixin, TemplateView):
         }
         request.user.api.srg_create_api(data=create_group_data)
         add_all_users_data = {
-            'user': '@all@',
+            'members': ['@all@'],
             'host': hostname,
-            'circle': hostname,
-            'grouphost': hostname
+            'circle': hostname
         }
         request.user.api.srg_user_add_api(data=add_all_users_data)
 

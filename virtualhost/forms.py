@@ -280,18 +280,18 @@ class CreateGroupForm(AuthorizedApiForm):
         elif self.cleaned_data['displayed_groups'] == GROUP_SUBSCRIBER_SELF:
             return [self.cleaned_data['group']]
         else:
-            return []
+            return None
 
     def before_clean(self):
         if self.cleaned_data['group'].lower() == 'all':
             self.add_error('group', 'This circle name is forbidden.')
+            return
         regex = re.compile(r'^[a-zA-Z0-9$@$!%*?&#^-_. +]+$')
         if not regex.match(self.cleaned_data['group']):
             self.add_error('group', 'This circle name contains unsupported characters.')
-        elif Group.objects\
-                .filter(group=self.cleaned_data['group'],
-                        host=self.cleaned_data['host'])\
-                .exists():
+            return
+        elif Group.objects.filter(group=self.cleaned_data['group'],
+                                  host=self.cleaned_data['host']).exists():
             self.add_error(None, 'Circle with this name and host already exist.')
 
     def after_clean(self, cleaned_data):
@@ -323,17 +323,19 @@ class EditGroupForm(CreateGroupForm):
                                       host=cleaned_data['host'])
             group.name = cleaned_data['name']
             group.description = cleaned_data['description']
-            group.displayed_groups = cleaned_data['displayed_groups']
+            displayed = cleaned_data['displayed_groups']
+            if displayed:
+                group.displayed_groups = ",".join(displayed)
+            else:
+                group.displayed_groups = None
             group.save()
 
-            group_members = GroupMember.objects.filter(group=group)
-            for item in group_members:
+            # xmppserver deletes the "all_users=true" property after updating the group.
+            if GroupMember.objects.filter(group=group, username="@all@").exists():
                 add_all_users_data = {
-                    'user': item.username,
-                    'host': item.host,
-                    'circle': group.group,
-                    'grouphost': group.host
-                }
+                    'members': ['@all@'],
+                    'host': group.host,
+                    'circle': group.group}
                 self.api.srg_user_add_api(data=add_all_users_data)
         except Group.DoesNotExist:
             pass
@@ -403,11 +405,11 @@ class AddGroupAllMemberForm(AuthorizedApiForm):
     )
 
     def __init__(self, *args, **kwargs):
-        self.group = kwargs.pop('circle', None)
+        self.group = kwargs.pop('group', None)
         super(AddGroupAllMemberForm, self).__init__(*args, **kwargs)
 
     def before_clean(self):
-        self.cleaned_data['user2'] = '@all@'
+        self.cleaned_data['members'] = ['@all@']
         self.cleaned_data['host'] = self.cleaned_data['host']
         self.cleaned_data['circle'] = self.group.group
         self.cleaned_data['grouphost'] = self.group.host
