@@ -671,7 +671,7 @@ class GroupCreateView(PageContextMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         user = request.user
         if self.context['auth_user'].is_admin:
-            form = CreateGroupForm(user, request.POST, vhosts=self.context['vhosts_cr'])
+            form = CreateGroupForm(user, request.POST, vhosts=self.context['vhosts'])
         else:
             try:
                 host = VirtualHost.objects.get(name=self.context['auth_user'].host)
