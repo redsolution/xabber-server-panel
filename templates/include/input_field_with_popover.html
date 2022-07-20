@@ -1,10 +1,12 @@
 {% if not field.is_hidden %}
-<div class="row form-group {% if field.errors %}invalid{% endif %}">
-    <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+<div class="row form-group no-gutters {% if field.errors %}invalid{% endif %}">
+    <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label pr-2">
         {{ field.label }}
     </label>
     <div class="col-sm-7">
-        {{ field }}
+        <div class="form-control-child">
+            {{ field }}
+        </div>
         {% if field.help_text %}
             <small class="form-text text-muted">{{ field.help_text }}</small>
         {% endif %}

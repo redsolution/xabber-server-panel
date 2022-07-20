@@ -5,46 +5,77 @@
 
 {% block tab_content %}
 {% check_user_perms 'virtualhost.delete_user' as virtualhost_delete_user_perm %}
-<div class="tab-pane fade show active">
-    <div class="user-details">
-        <div class="user-avatar-container">
-            {% if curr_user.photo %}
-                <img class="user-avatar" src="{{ curr_user.photo.url }}" />
-            {% else %}
-                <p class="user-avatar-p" data-letters="{% get_user_initials curr_user %}"></p>
+    <div class="tab-pane fade show active">
+        <div class="user-details row no-gutters page-content">
+
+            <div class="col-lg-6 col-md-12">
+                <div class="user-avatar-container">
+                    {% if curr_user.photo %}
+                        <img class="user-avatar" src="{{ curr_user.photo.url }}" />
+                    {% else %}
+                        <p class="user-avatar-p" data-letters="{% get_user_initials curr_user %}"></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-12 text-left">
+                <div class="user-name">
+                    {{ curr_user.full_name }}
+                </div>
+
+                <div class="user-status">
+                    <span>
+                        Status:
+                    </span>
+                    {% if curr_user.is_active %}
+                        <span style="color:green; display: inline-block; margin-right: 20px;">
+                            Active
+                        </span>
+                        {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
+                            <a href="{% url 'virtualhost:user-block' curr_user.id %}">
+                                Block
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span style="color:red; display: inline-block; margin-right: 20px;">
+                            Block
+                        </span>
+                        {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
+                            <a href="{% url 'virtualhost:user-unblock' curr_user.id %}">
+                                Unblock
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="user-expired">
+                    <span style="display: inline-block; margin-right: 20px;">
+                        Expired:
+                        {% if not curr_user.expires %}
+                            Never
+                        {% else %}
+                            {{ curr_user.expires|pretty_date }}
+                        {% endif %}
+                    </span>
+
+                    {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
+                        <a href="{% url 'virtualhost:user-expire' curr_user.id %}">
+                            Set expire
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
+                <div class="row form-btn-block">
+                    <div class="col-sm-12 text-left">
+                        <a href="{% url 'virtualhost:user-delete' curr_user.id %}">
+                            <button type="button" class="btn btn-custom-red">Delete User</button>
+                        </a>
+                    </div>
+                </div>
             {% endif %}
+
         </div>
-        <div class="user-name">
-            {{ curr_user.full_name }}
-        </div>
-            <p style="display:inline-block">Status:</p>
-            {% if curr_user.is_active %}
-            <p style="color:green; display:inline-block;">Active</p>
-            {%else%}
-            <p style="color:red; display:inline-block;">Block</p>
-            {%endif%}
-            <p>Expired: {% if not curr_user.expires %}Never{%else%}{{curr_user.expires|pretty_date }}{%endif%}</p>
-        {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
-        <div class="btn-set">
-            <!--<button type="button" class="btn btn-outline-secondary">Activate</button>-->
-            <!--<button type="button" class="btn btn-custom-yellow">Suspend</button>-->
-            <a href="{% url 'virtualhost:user-expire' curr_user.id %}">
-                <button type="button" class="btn btn-custom-blue">Set expire</button>
-            </a>
-            {% if curr_user.is_active %}
-            <a href="{% url 'virtualhost:user-block' curr_user.id %}">
-                <button type="button" class="btn btn-custom-red">Block</button>
-            </a>
-            {% else%}
-            <a href="{% url 'virtualhost:user-unblock' curr_user.id %}">
-                <button type="button" class="btn btn-custom-yellow">Unblock</button>
-            </a>
-            {% endif %}
-            <a href="{% url 'virtualhost:user-delete' curr_user.id %}">
-                <button type="button" class="btn btn-custom-red">Delete</button>
-            </a>
-        </div>
-        {% endif %}
     </div>
-</div>
 {% endblock %}

@@ -43,8 +43,9 @@
                             <th scope="col">#</th>
                             <th scope="col">Username</th>
                             <th scope="col">Name</th>
-                            <th scope="col">Created/Expires <small>utc</small></th>
-                            <th scope="col">Auth backend</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Expires</th>
+                            <th scope="col">Auth</th>
                             <th scope="col">Status</th>
                             {% if virtualhost_edit_user_perm or virtualhost_delete_user_perm %}
                                 <th scope="col">Actions</th>
@@ -74,13 +75,23 @@
                                         {{ obj.username }}
                                     {% endif %}
                                 </td>
-                                <td class="table-data">
+                                <td class="table-data table-name">
                                     {% if obj.user.first_name and obj.user.last_name %}
                                         {{ obj.user.first_name }} {{ obj.user.last_name }}
                                     {% endif %}
                                 </td>
-                                <td class="table-data date">{% if obj.user.created %}{{ obj.user.created|pretty_date }}{% endif %}/<br>
-                                {% if not obj.user.expires %}Never{%else%}{{obj.user.expires|pretty_date }}{%endif%}</td>
+                                <td class="table-data date">
+                                    {% if obj.user.created %}
+                                        {{ obj.user.created|pretty_date }}, UTC
+                                    {% endif %}
+                                </td>
+                                <td class="table-data date">
+                                    {% if not obj.user.expires %}
+                                        Never
+                                    {% else %}
+                                        {{ obj.user.expires|pretty_date }}, UTC
+                                    {% endif %}
+                                </td>
                                 <td class="table-data date">{{ obj.user.get_auth_backend_display }}</td>
                                 {% if obj.user.is_active %}
                                 <td class="table-data date" style="color:green;">Active</td>

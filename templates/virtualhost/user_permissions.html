@@ -28,8 +28,8 @@
 
                 <div class="row form-group {% if field.errors %}invalid{% endif %}">
                     <div class="col-sm-12">
-                        <ul class="list-perm" id="admin_settings">
-                            <p>Server</p>
+                        <p class="h4">Server</p>
+                        <ul class="list-perm mb-4 pl-3" id="admin_settings">
                             <li class="list-group-item">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input select-item"
@@ -43,8 +43,9 @@
                                 </div>
                             </li>
                         </ul>
-                        <ul class="list-perm" id="v_perms_list">
-                            <p>{{ curr_user.host}}</p>
+
+                        <p class="h4">{{ curr_user.host}}</p>
+                        <ul class="list-perm mb-4 pl-3" id="v_perms_list">
                             {% for perm in perms %}
                                 <li class="list-group-item">
                                     <div class="custom-control custom-checkbox">
