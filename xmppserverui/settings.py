@@ -173,6 +173,15 @@ PAGINATION_PAGE_SIZE = 30
 # in seconds
 HTTP_REQUEST_TIMEOUT = 5
 
+WEBHOOKS_SIGNATURE_HEADER = 'x-xmpp-server-signature'
+WEBHOOKS_SECRET = None
+
+# Default period (in days) after which the user account will be disabled.
+# 0 - infinite
+DEFAULT_ACCOUNT_LIFETIME = 0
+
+#  Bearer API token for cron jobs
+CRON_JOB_TOKEN = None
 
 # Installer settings
 

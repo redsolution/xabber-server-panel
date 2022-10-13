@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('virtualhost', '0018_auto_20220415_1231'),
         ('registration', '0001_initial'),
     ]
 

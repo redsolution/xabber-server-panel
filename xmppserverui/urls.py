@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^admin/registration/', include('registration.urls', namespace='registration')),
     url(r'^admin/$', DefaultView.as_view()),
     url(r'^admin', DefaultView.as_view(), name="admin_page"),
+    url(r'^webhooks/', include('webhooks.urls', namespace='webhooks')),
     url(r'^$', RootView.as_view(), name='root-page'),
 ]
 for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
