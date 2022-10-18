@@ -53,7 +53,7 @@ def success_installation_handler(sender, **kwargs):
 
 
 @receiver(webhook_received)
-def webhook_received_handler(_sender, **kwargs):
+def webhook_received_handler(sender, **kwargs):
     """
     Request path: "/xmppserver"
     Request body:
