@@ -53,7 +53,17 @@ def success_installation_handler(sender, **kwargs):
 
 
 @receiver(webhook_received)
-def webhook_received_handler(sender, **kwargs):
+def webhook_received_handler(_sender, **kwargs):
+    """
+    Request path: "/xmppserver"
+    Request body:
+        { "target": "user",
+          "action": "create/remove",
+          "username": "bob",
+          "host": "domain.com"
+        }
+    """
+
     path = kwargs.get('path')
     if path.rstrip('/') != 'xmppserver':
         return
@@ -65,7 +75,7 @@ def webhook_received_handler(sender, **kwargs):
     except:
         raise WebHookResponse(response=HttpResponse(status=400))
     if _json.get('target') == 'user':
-        if _json.get('action') == 'register' and _json.get('username') and _json.get('host'):
+        if _json.get('action') == 'create' and _json.get('username') and _json.get('host'):
             if User.objects.filter(username=_json.get('username'), host=_json.get('host')).exists():
                 raise WebHookResponse(response=HttpResponse(status=201))
             new_user = User(username=_json.get('username'), host=_json.get('host'))
