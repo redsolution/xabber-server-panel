@@ -280,8 +280,8 @@ class UserCreateView(PageContextMixin, TemplateView):
                 raise Http404
         if form.is_valid():
             new_user, _u = User.objects.update_or_create(
-                defaults=None,
-                **{i: form.cleaned_data[i] for i in form.cleaned_data if i != 'vcard'})
+                defaults={i: form.cleaned_data[i] for i in form.cleaned_data if i != 'vcard'},
+                username=form.cleaned_data['username'], host=form.cleaned_data['host'])
             if form.cleaned_data['is_admin'] is True and self.context['auth_user'].is_admin:
                 user.api.xabber_set_admin(
                     {
