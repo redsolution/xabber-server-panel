@@ -249,7 +249,7 @@ class UserCreateView(PageContextMixin, TemplateView):
 
         user = request.user
         if self.context['auth_user'].is_admin:
-            form = RegisterUserForm(user, vhosts=self.context['vhosts_cr'])
+            form = RegisterUserForm(user, vhosts=self.context['vhosts_cr'], cur_vhost=request.COOKIES.get('vhost'))
         else:
             try:
                 host = VirtualHost.objects.get(name=self.context['auth_user'].host)
@@ -279,6 +279,9 @@ class UserCreateView(PageContextMixin, TemplateView):
             except VirtualHost.DoesNotExist:
                 raise Http404
         if form.is_valid():
+            new_user, _u = User.objects.update_or_create(
+                defaults=None,
+                **{i: form.cleaned_data[i] for i in form.cleaned_data if i != 'vcard'})
             if form.cleaned_data['is_admin'] is True and self.context['auth_user'].is_admin:
                 user.api.xabber_set_admin(
                     {
@@ -288,10 +291,7 @@ class UserCreateView(PageContextMixin, TemplateView):
                 )
             return HttpResponseRedirect(
                 reverse('virtualhost:user-created',
-                        kwargs={'user_id': form.new_user.id}))
-        else:
-            if isinstance(form.new_user, User):
-                form.new_user.delete()
+                        kwargs={'user_id': new_user.id}))
         return self.render_to_response({
             "form": form,
             "gen_pass_len": settings.GENERATED_PASSWORD_MAX_LEN
@@ -662,7 +662,7 @@ class GroupCreateView(PageContextMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         if self.context['auth_user'].is_admin:
-            form = CreateGroupForm(user, vhosts=self.context['vhosts_cr'])
+            form = CreateGroupForm(user, vhosts=self.context['vhosts_cr'], cur_vhost=request.COOKIES.get('vhost'))
         else:
             try:
                 host = VirtualHost.objects.get(name=self.context['auth_user'].host)

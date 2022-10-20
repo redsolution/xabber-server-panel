@@ -73,12 +73,15 @@ class RegisterUserForm(AuthorizedApiForm):
 
     def __init__(self, *args, **kwargs):
         self.vhosts = kwargs.pop('vhosts', None)
+        current_vhost = kwargs.pop('cur_vhost', None)
         super(RegisterUserForm, self).__init__(*args, **kwargs)
         for visible in self.visible_fields():
             visible.field.widget.attrs['class'] = 'form-control'
         if self.vhosts:
             self.fields['host'].choices = [(o.name, "@" + o.name)
                                            for o in self.vhosts]
+        if current_vhost:
+            self.fields['host'].initial = current_vhost
         self.fields['photo'].widget.attrs['class'] = 'custom-file-input'
         self.fields['is_admin'].widget.attrs['class'] = 'form-check-input'
 
@@ -111,14 +114,7 @@ class RegisterUserForm(AuthorizedApiForm):
         self.cleaned_data['username'] = self.cleaned_data['username'].lower()
         if self.cleaned_data['expires']:
             self.cleaned_data['expires'].replace(tzinfo=datetime.timezone.utc)
-        self.new_user = User.objects.create(**{i: self.cleaned_data[i] for i in self.cleaned_data if i != 'vcard'})
         return self.cleaned_data
-
-    # def after_clean(self, cleaned_data):
-    #     cleaned_data.pop('vcard')
-    #     self.new_user = User.objects.create(**cleaned_data)
-    #     if cleaned_data['is_admin'] is True:
-    #         update_ejabberd_config()
 
 
 class UnregisterUserForm(AuthorizedApiForm):
@@ -279,12 +275,15 @@ class CreateGroupForm(AuthorizedApiForm):
 
     def __init__(self, *args, **kwargs):
         self.vhosts = kwargs.pop('vhosts', None)
+        current_vhost = kwargs.pop('cur_vhost', None)
         super(CreateGroupForm, self).__init__(*args, **kwargs)
         for visible in self.visible_fields():
             visible.field.widget.attrs['class'] = 'form-control'
         if self.vhosts:
             self.fields['host'].choices = [(o.name, "@" + o.name)
                                            for o in self.vhosts]
+        if current_vhost:
+            self.fields['host'].initial = current_vhost
 
     def clean_displayed_groups(self):
         if self.cleaned_data['displayed_groups'] == GROUP_SUBSCRIBER_ALL:
