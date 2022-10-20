@@ -111,13 +111,14 @@ class RegisterUserForm(AuthorizedApiForm):
         self.cleaned_data['username'] = self.cleaned_data['username'].lower()
         if self.cleaned_data['expires']:
             self.cleaned_data['expires'].replace(tzinfo=datetime.timezone.utc)
+        self.new_user = User.objects.create(**{i: self.cleaned_data[i] for i in self.cleaned_data if i != 'vcard'})
         return self.cleaned_data
 
-    def after_clean(self, cleaned_data):
-        cleaned_data.pop('vcard')
-        self.new_user = User.objects.create(**cleaned_data)
-        if cleaned_data['is_admin'] is True:
-            update_ejabberd_config()
+    # def after_clean(self, cleaned_data):
+    #     cleaned_data.pop('vcard')
+    #     self.new_user = User.objects.create(**cleaned_data)
+    #     if cleaned_data['is_admin'] is True:
+    #         update_ejabberd_config()
 
 
 class UnregisterUserForm(AuthorizedApiForm):

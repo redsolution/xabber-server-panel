@@ -289,6 +289,9 @@ class UserCreateView(PageContextMixin, TemplateView):
             return HttpResponseRedirect(
                 reverse('virtualhost:user-created',
                         kwargs={'user_id': form.new_user.id}))
+        else:
+            if isinstance(form.new_user, User):
+                form.new_user.delete()
         return self.render_to_response({
             "form": form,
             "gen_pass_len": settings.GENERATED_PASSWORD_MAX_LEN
