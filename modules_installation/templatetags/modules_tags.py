@@ -12,14 +12,15 @@ def get_modules():
     modules_list = []
 
     for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
-        module = module.split('.')[1]
+        module = module.replace('modules.', '', 1)
         try:
-            url = reverse('modules:%s:info' % module)
+            url = reverse('%s:info' % module)
         except NoReverseMatch:
-            url = '/admin/server/modules/%s' % module + \
+            url = '/admin/modules/%s' % module + \
                   reverse('info', urlconf="modules." + module + '.urls')
         modules_list.append({
-            'name': apps.get_app_config(module).verbose_name,
+            'name': module,
+            'verbose_name': apps.get_app_config(module).verbose_name,
             'url': url
         })
     return modules_list
@@ -37,7 +38,7 @@ def get_menu_subitems():
             if hasattr(config, 'CREATE_ITEMS'):
                 for subitem in config.CREATE_ITEMS:
                     try:
-                        url = reverse('modules:%s:%s' % (module, subitem['url_name']))
+                        url = reverse('%s:%s' % (module, subitem['url_name']))
                     except NoReverseMatch:
                         url = '/admin/server/modules/%s' % module + \
                               reverse('%s' % subitem['url_name'], urlconf="modules." + module + '.urls')

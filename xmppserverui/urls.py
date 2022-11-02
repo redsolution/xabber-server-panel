@@ -14,14 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
+from django.urls import path
 from django.conf.urls.static import static
 from .views import *
 
+urlpatterns = []
+for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
+    urlpatterns += [path('admin/modules/{}/'.format(module.replace('modules.', '', 1)), include('%s.urls' % module, namespace='%s' % module)), ]
 
-urlpatterns = [
+urlpatterns += [
     url(r'^auth/', include('auth.urls', namespace='auth')),
     url(r'^admin/server/', include('server.urls', namespace='server')),
-    url(r'^admin/server/modules/', include('modules_installation.urls', namespace='modules')),
     url(r'^admin/virtualhost/', include('virtualhost.urls', namespace='virtualhost')),
     url(r'^admin/installation/', include('xmppserverinstaller.urls', namespace='installer')),
     url(r'^admin/error/', include('error.urls', namespace='error')),
@@ -31,7 +34,5 @@ urlpatterns = [
     url(r'^webhooks/', include('webhooks.urls', namespace='webhooks')),
     url(r'^$', RootView.as_view(), name='root-page'),
 ]
-for module in list(filter(lambda k: 'modules.' in k, settings.INSTALLED_APPS)):
-    urlpatterns += [url(r'^%s/' % module, include('%s.urls' % module, namespace='%s' % module)),]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

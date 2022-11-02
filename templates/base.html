@@ -96,7 +96,7 @@
                             {% if has_perm_on_app or is_admin %}
                                 <a href="{{ module.url }}" class="list-group-item
                                     {% if page.section == module.name %}active{% endif %}">
-                                        {{ module.name }}
+                                        {{ module.verbose_name }}
                                 </a>
                             {% endif %}
                             {% endfor %}
