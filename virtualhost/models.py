@@ -35,6 +35,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         (SQL, 'internal'),
         (LDAP, 'LDAP')
     ]
+    ACTIVE = 'ACTIVE'
+    BANNED = 'BANNED'
+    EXPIRED = 'EXPIRED'
+    SUSPENDED = 'SUSPENDED'
+    STATUSES = [
+        (ACTIVE, 'ACTIVE'),
+        (BANNED, 'BANNED'),
+        (EXPIRED, 'EXPIRED'),
+        (SUSPENDED, 'SUSPENDED'),
+    ]
     username = models.CharField(max_length=256)
     USERNAME_FIELD = 'username'
     password = models.CharField(max_length=128, null=True)
@@ -53,10 +63,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     created = models.DateTimeField(default=timezone.now)
     expires = models.DateTimeField(null=True)
-    is_active = models.BooleanField(default=True)
+    status = models.CharField(max_length=50, choices=STATUSES, default=ACTIVE)
 
     class Meta:
         unique_together = ('username', 'host')
+
+    @property
+    def is_active(self):
+        return self.status in (self.ACTIVE,)
 
     @property
     def full_jid(self):

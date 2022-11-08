@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from importlib import import_module
 from django.contrib.auth.models import Permission
 from django.db.models import Count
@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404, QueryDict
 from django.conf import settings
+from django.utils import timezone
 from xmppserverui.utils import get_pagination_data, get_chats_pagination_data
 from xmppserverui.mixins import PageContextMixin, ServerStartedMixin
 from .forms import RegisterUserForm, UnregisterUserForm, EditUserVcardForm, \
@@ -1142,30 +1143,31 @@ class BlockUserView(PageContextMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         try:
-            user_to_block = User.objects.get(id=kwargs["user_id"])
+            current_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        self.check_host(user_to_block.host)
-        if not user_to_block.is_active:
+        self.check_host(current_user.host)
+        if not current_user.is_active:
             return HttpResponseRedirect(reverse('error:403'))
-        return self.render_to_response({"user_to_block": user_to_block})
+        return self.render_to_response({"user_to_block": current_user})
 
     def post(self, request, *args, **kwargs):
         try:
-            user_to_block = User.objects.get(id=kwargs["user_id"])
+            current_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
         else:
-            if user_to_block == self.context.get('auth_user'):
+            if current_user == self.context.get('auth_user'):
                 return HttpResponseRedirect(reverse('error:403'))
-        self.check_host(user_to_block.host)
-        request.user.api.block_user({"username": user_to_block.username,
-                                     "host": user_to_block.host,
+        self.check_host(current_user.host)
+        request.user.api.block_user({"username": current_user.username,
+                                     "host": current_user.host,
                                      "reason": request.POST.get('reason')})
-        user_to_block.is_active = False
-        user_to_block.expires = datetime.now().replace(tzinfo=timezone.utc)
-        user_to_block.save()
-        return HttpResponseRedirect(reverse('virtualhost:users'))
+        current_user.status = User.SUSPENDED
+        # user_to_block.expires = datetime.now().replace(tzinfo=timezone.utc)
+        current_user.save()
+        return HttpResponseRedirect(reverse('virtualhost:user-details',
+                                            kwargs={"user_id": current_user.id}))
 
 
 class UnblockUserView(PageContextMixin, TemplateView):
@@ -1174,26 +1176,28 @@ class UnblockUserView(PageContextMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         try:
-            user_to_unblock = User.objects.get(id=kwargs["user_id"])
+            current_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        self.check_host(user_to_unblock.host)
-        if user_to_unblock.is_active:
+        self.check_host(current_user.host)
+        if current_user.is_active:
             return HttpResponseRedirect(reverse('error:403'))
-        return self.render_to_response({"user_to_unblock": user_to_unblock})
+        return self.render_to_response({"user_to_unblock": current_user})
 
     def post(self, request, *args, **kwargs):
         try:
-            user_to_unblock = User.objects.get(id=kwargs["user_id"])
+            current_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        self.check_host(user_to_unblock.host)
-        request.user.api.unblock_user({"host": user_to_unblock.host,
-                                       "username": user_to_unblock.username})
-        user_to_unblock.is_active = True
-        user_to_unblock.expires = None
-        user_to_unblock.save()
-        return HttpResponseRedirect(reverse('virtualhost:users'))
+        self.check_host(current_user.host)
+        request.user.api.unblock_user({"host": current_user.host,
+                                       "username": current_user.username})
+        current_user.status = User.ACTIVE
+        if current_user.expires and current_user.expires < timezone.now():
+            current_user.expires = None
+        current_user.save()
+        return HttpResponseRedirect(reverse('virtualhost:user-details',
+                                            kwargs={"user_id": current_user.id}))
 
 
 class SetUserExpireView(PageContextMixin, TemplateView):
@@ -1202,33 +1206,44 @@ class SetUserExpireView(PageContextMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         try:
-            user_to_set = User.objects.get(id=kwargs["user_id"])
+            current_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
-        self.check_host(user_to_set.host)
-        form = SetExpireForm(expires=user_to_set.expires)
-        return self.render_to_response({"user_to_set": user_to_set,
+        self.check_host(current_user.host)
+        form = SetExpireForm(expires=current_user.expires)
+        return self.render_to_response({"user_to_set": current_user,
                                         "form": form})
 
     def post(self, request, *args, **kwargs):
         try:
-            user_to_set = User.objects.get(id=kwargs["user_id"])
+            current_user = User.objects.get(id=kwargs["user_id"])
         except User.DoesNotExist:
             raise Http404
         else:
-            if user_to_set == self.context.get('auth_user'):
+            if current_user == self.context.get('auth_user'):
                 return HttpResponseRedirect(reverse('error:403'))
-        self.check_host(user_to_set.host)
+        self.check_host(current_user.host)
         expires = request.POST.get('expires')
         if expires.lower() == "never" or expires == "0":
-            user_to_set.expires = None
-            user_to_set.save()
-            return HttpResponseRedirect(reverse("virtualhost:users"))
+            current_user.expires = None
         else:
             form = SetExpireForm(request.POST)
             if form.is_valid():
-                user_to_set.expires = form.cleaned_data['expires']
-                user_to_set.save()
-                return HttpResponseRedirect(reverse("virtualhost:users"))
-            return self.render_to_response({"form": form,
-                                            "user_to_set": user_to_set})
+                current_user.expires = form.cleaned_data['expires']
+            else:
+                return self.render_to_response({"form": form,
+                                                "user_to_set": current_user})
+        if current_user.status == User.EXPIRED:
+            if not current_user.expires or (current_user.expires and current_user.expires > timezone.now()):
+                request.user.api.unblock_user({"host": current_user.host,
+                                               "username": current_user.username})
+                current_user.status = User.ACTIVE
+        elif current_user.status == User.ACTIVE:
+            if current_user.expires and current_user.expires < timezone.now():
+                request.user.api.block_user({"host": current_user.host,
+                                             "username": current_user.username,
+                                             "reason": "Your account has expired"})
+                current_user.status = User.EXPIRED
+        current_user.save()
+        return HttpResponseRedirect(reverse("virtualhost:user-details",
+                                            kwargs={"user_id": current_user.id}))

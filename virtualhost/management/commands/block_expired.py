@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        users = User.objects.filter(expires__lt=timezone.now(), is_active=True)
+        users = User.objects.filter(expires__lt=timezone.now(), status=User.ACTIVE)
         api = EjabberdAPI()
         api.fetch_token(options['token'])
         for user in users:
@@ -23,4 +23,4 @@ class Command(BaseCommand):
             if not api.success:
                 self.stderr.write(self.style.ERROR('status_code: {}\nresponse {}'.format(api.status_code, api.response)))
                 return
-        users.update(is_active=False)
+        users.update(status=User.EXPIRED)
