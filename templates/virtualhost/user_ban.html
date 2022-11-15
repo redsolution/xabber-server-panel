@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete user{% endblock %}
+
+{% block main_content %}
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col breadcrumbs">
+                <ul class="list-group list-group-flush list-group-horizontal">
+                    <li class="list-group-item">
+                        <h1>
+                            <a href="{% url 'virtualhost:users' %}">Users</a>
+                        </h1>
+                    </li>
+                    <li class="list-group-item grey">
+                        <i class="mdi mdi-24px mdi-chevron-right"></i>
+                    </li>
+                    <li class="list-group-item"><h1>{{ current_user }}</h1></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+<br>
+        <div class="row no-gutters" style="margin-left:15px">
+            <div class="col page-content">
+                <p>User <b>{{ current_user }}</b> will be banned.</p>
+                <form method="post" action="{% url 'virtualhost:user-ban' current_user.id %}">
+                    {% csrf_token %}
+                    <div class="btn-set">
+                        <a href="{% url 'virtualhost:user-details' current_user.id %}">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </a>
+                        <button type="submit" class="btn btn-primary">Ban user</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

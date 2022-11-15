@@ -241,3 +241,9 @@ class EjabberdAPI(object):
 
     def unblock_user(self, data, **kwargs):
         return self._call_method('delete', '/users/block', 200, data=data, **kwargs)
+
+    def ban_user(self, data, **kwargs):
+        return self._call_method('post', '/users/ban', 200, data=data, **kwargs)
+
+    def unban_user(self, data, **kwargs):
+        return self._call_method('delete', '/users/ban', 200, data=data, **kwargs)

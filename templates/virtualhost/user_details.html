@@ -28,23 +28,32 @@
                         Status:
                     </span>
                     {% if curr_user.is_active %}
-                        <span style="color:green; display: inline-block; margin-right: 20px;">
-                            Active
-                        </span>
-                        {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
-                            <a href="{% url 'virtualhost:user-block' curr_user.id %}">
-                                Block
-                            </a>
-                        {% endif %}
+                    <span style="color:green; display: inline-block; margin-right: 20px;">
+                            {{ curr_user.status | title}}
+                    </span>
+                    <a href="{% url 'virtualhost:user-block' curr_user.id %}">
+                        Block
+                    </a>
+                    or
+                    <a href="{% url 'virtualhost:user-ban' curr_user.id %}">
+                        Ban
+                    </a>
+                    {% elif curr_user.status != curr_user.BANNED %}
+                     <span style="color:grey; display: inline-block; margin-right: 20px;">
+                         {{ curr_user.status | title}}
+                     </span>
+                    <a href="{% url 'virtualhost:user-unblock' curr_user.id %}">
+                        Unblock
+                    </a>
+                    or
+                    <a href="{% url 'virtualhost:user-ban' curr_user.id %}">
+                        Ban
+                    </a>
                     {% else %}
-                        <span style="color:red; display: inline-block; margin-right: 20px;">
-                            Block
-                        </span>
-                        {% if curr_user.allowed_delete and virtualhost_delete_user_perm %}
-                            <a href="{% url 'virtualhost:user-unblock' curr_user.id %}">
-                                Unblock
-                            </a>
-                        {% endif %}
+                    <span style="color:red; display: inline-block; margin-right: 20px;">
+                         {{ curr_user.status | title}}
+                     </span>
+                    <a href="{% url 'virtualhost:user-unban' curr_user.id %}">Unban</a>
                     {% endif %}
                 </div>
 

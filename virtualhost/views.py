@@ -1247,3 +1247,69 @@ class SetUserExpireView(PageContextMixin, TemplateView):
         current_user.save()
         return HttpResponseRedirect(reverse("virtualhost:user-details",
                                             kwargs={"user_id": current_user.id}))
+
+
+class BanUserView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-users'
+    template_name = 'virtualhost/user_ban.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            current_user = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        self.check_host(current_user.host)
+        return self.render_to_response({"current_user": current_user})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            current_user = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        self.check_host(current_user.host)
+
+        data = {"host": current_user.host, "username": current_user.username}
+        if current_user.status != User.ACTIVE:
+            request.user.api.unblock_user(data)
+
+        request.user.api.ban_user(data)
+        current_user.status = User.BANNED
+        current_user.save()
+        print(current_user.id)
+        return HttpResponseRedirect(reverse('virtualhost:user-details',
+                                            kwargs={"user_id": current_user.id}))
+
+
+class UnbanUserView(PageContextMixin, TemplateView):
+    page_section = 'vhosts-users'
+    template_name = 'virtualhost/user_unban.html'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            current_user = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        self.check_host(current_user.host)
+        if current_user.is_active:
+            return HttpResponseRedirect(reverse('error:403'))
+        return self.render_to_response({"current_user": current_user})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            current_user = User.objects.get(id=kwargs["user_id"])
+        except User.DoesNotExist:
+            raise Http404
+        self.check_host(current_user.host)
+        request.user.api.unban_user({"host": current_user.host,
+                                     "username": current_user.username})
+
+        if current_user.expires and current_user.expires < timezone.now():
+            request.user.api.block_user({"host": current_user.host,
+                                         "username": current_user.username,
+                                         "reason": "Your account has expired"})
+            current_user.status = User.EXPIRED
+        else:
+            current_user.status = User.ACTIVE
+        current_user.save()
+        return HttpResponseRedirect(reverse('virtualhost:user-details',
+                                            kwargs={"user_id": current_user.id}))
