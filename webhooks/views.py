@@ -1,3 +1,5 @@
+import traceback
+
 from django.http import HttpResponse
 from django.views.generic import View
 
@@ -13,6 +15,7 @@ class Hook(View):
         except WebHookResponse as result:
             return result.response
         except:
+            traceback.print_exc()
             return HttpResponse(status=500)
 
         return HttpResponse(status=404)
