@@ -390,14 +390,6 @@ class ServerRootPageSettingsView(PageContextMixin, TemplateView):
         current_root = RootPageSettings.objects.first()
         if current_root:
             current_root.delete()
-        if new_root == "home_page":
-            wn_root = "''"
-        else:
+        if new_root != "home_page":
             RootPageSettings.objects.create(module=new_root)
-            spec = importlib.util.find_spec(".config", package="modules.{}".format(new_root))
-            module_config = spec.loader.load_module()
-            wn_root = "'{}'".format(module_config.WHITENOISE_ROOT)
-
-        with open(settings.WN_ROOT_PATH, "w") as f:
-            f.write(wn_root.strip("'"))
         return HttpResponseRedirect(reverse('server:root-settings'))

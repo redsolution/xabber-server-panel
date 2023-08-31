@@ -49,7 +49,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,7 +88,7 @@ WSGI_APPLICATION = 'xmppserverui.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'xmppserverui.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, os.pardir, 'xmppserverui.sqlite3'),
     }
 }
 
@@ -138,15 +137,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-
-# Whitenoise
-# to serve static from xabber web
-WN_ROOT_PATH = os.path.join(os.path.abspath(os.path.join(BASE_DIR, os.pardir)), 'whitenoise_root.txt')
-try:
-    with open(WN_ROOT_PATH, "r") as f:
-        WHITENOISE_ROOT = f.read().strip()
-except Exception:
-    WHITENOISE_ROOT = STATIC_ROOT
 
 # Media files
 
