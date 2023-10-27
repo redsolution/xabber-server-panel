@@ -1242,7 +1242,7 @@ class SetUserExpireView(PageContextMixin, TemplateView):
             if current_user.expires and current_user.expires < timezone.now():
                 request.user.api.block_user({"host": current_user.host,
                                              "username": current_user.username,
-                                             "reason": "Your account has expired"})
+                                             "reason": settings.BLOCK_USER_REASON})
                 current_user.status = User.EXPIRED
         current_user.save()
         return HttpResponseRedirect(reverse("virtualhost:user-details",

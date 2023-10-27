@@ -79,38 +79,39 @@ class UploadModuleFileView(PageContextMixin, TemplateView):
         except tarfile.ReadError:
             return 'Module files cannot be extracted from this file'
 
-        if os.path.exists(settings.MODULES_DIR):
-            for folder in os.listdir(settings.MODULES_DIR):
-                folder_path = os.path.join(settings.MODULES_DIR, folder)
-                if os.path.isdir(folder_path):
-                    new_app_name = "modules." + folder
-                    if not apps.is_installed(new_app_name):
-                        try:
-                            apps.app_configs = OrderedDict()
-                            settings.INSTALLED_APPS += (new_app_name,)
-                            apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
-                            apps.clear_cache()
-                            apps.populate(settings.INSTALLED_APPS)
-                            if os.path.exists(os.path.join(folder_path, 'migrations', '__init__.py')):
-                                management.call_command('migrate', folder, interactive=False)
-                            management.call_command('collectstatic', '--noinput', interactive=False)
-                            update_module_permissions()
-                            update_module_permissions_names()
-                            make_xmpp_config()
-                            get_app_template_dirs.cache_clear()
-                            try:
-                                if os.environ.get("XABBER_PANEL_PF"):
-                                    import signal
-                                    pid = open(os.environ.get("XABBER_PANEL_PF")).read()
-                                    os.kill(int(pid), signal.SIGHUP)
-                                else:
-                                    os.utime(os.path.join(settings.BASE_DIR, 'xmppserverui/wsgi.py'), times=None)
-                            except:
-                                pass
-                        except Exception as err:
-                            rollback_install(new_app_name, folder_path)
-                            return 'Something went wrong during the installation of this module: {}'.format(err)
-            return ''
+        for folder in next(os.walk(settings.MODULES_DIR))[1]:
+            new_app_name = "modules." + folder
+            if not apps.is_installed(new_app_name):
+                try:
+                    apps.app_configs = OrderedDict()
+                    settings.INSTALLED_APPS += (new_app_name,)
+                    apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
+                    apps.clear_cache()
+                    apps.populate(settings.INSTALLED_APPS)
+                except Exception as err:
+                    rollback_install(new_app_name, os.path.join(settings.MODULES_DIR, folder))
+                    return 'Something went wrong during the installation of this module: {}'.format(err)
+            if os.path.exists(os.path.join(settings.MODULES_DIR, folder, 'migrations', '__init__.py')):
+                management.call_command('migrate', folder, interactive=False)
+
+        try:
+            management.call_command('collectstatic', '--noinput', interactive=False)
+            update_module_permissions()
+            update_module_permissions_names()
+            make_xmpp_config()
+            get_app_template_dirs.cache_clear()
+        except Exception as err:
+            return 'Something went wrong during the installation of this module: {}'.format(err)
+        try:
+            if os.environ.get("XABBER_PANEL_PF"):
+                import signal
+                pid = open(os.environ.get("XABBER_PANEL_PF")).read()
+                os.kill(int(pid), signal.SIGHUP)
+            else:
+                os.utime(os.path.join(settings.BASE_DIR, 'xmppserverui/wsgi.py'), times=None)
+        except:
+            pass
+        return ''
 
 
 def module_view_detail(request, module, path):

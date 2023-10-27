@@ -173,6 +173,9 @@ DEFAULT_ACCOUNT_LIFETIME = 0
 #  Bearer API token for cron jobs
 CRON_JOB_TOKEN = None
 
+# Default reason for blocking users
+BLOCK_USER_REASON = ''
+
 # Installer settings
 
 PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
