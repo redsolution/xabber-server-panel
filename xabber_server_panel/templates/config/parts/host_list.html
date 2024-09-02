@@ -1,0 +1,92 @@
+{% load users_tags %}
+
+{% check_user_permissions 'config' as settings_read_permissions %}
+{% check_user_permissions 'config' 'write' as settings_write_permissions %}
+{% if request.hosts %}
+    <div class="table-adaptive position-relative">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Virtual host</th>
+                    <th>DNS records</th>
+                    <th>Issue certificates</th>
+                    <th>Certificates</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for host in request.hosts %}
+                    <tr>
+                        <td class="align-middle" data-title="#">
+                            {{ forloop.counter }}
+                        </td>
+                        <td class="align-middle" data-title="Virtual host">
+                            {{ host.name }}
+                        </td>
+
+                        <td class="align-middle" data-title="SRV Records">
+                           {% if not host.srv_records %}
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-link text-warning fs-5 me-2">
+                                        <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                    </div>
+
+                                    <a href="{% url 'config:host_detail' id=host.id %}">
+                                        DNS records failed
+                                    </a>
+                                </div>
+                           {% endif %}
+                        </td>
+
+                        <td class="align-middle" data-title="Issue certificates">
+                            <input name="issue_cert" id="id_issue_cert_{{ host.id }}" type="checkbox" value="{{ host.id }}" {% if host.issue_cert and host.srv_records %}checked{% endif %} {% if not host.srv_records %}disabled{% endif %}>
+                        </td>
+
+                        <td class="align-middle" data-title="Certificates">
+                            {% if host.cert_errors %}
+                                <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="{% for error in host.cert_errors %}{{ error }}<br>{% endfor %}">
+                                    <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                </div>
+                           {% elif host.certificate.expiration_date %}
+                                Expires on {{ host.certificate.expiration_date|date:"d.m.Y H:i" }}
+                            {% endif %}
+                        </td>
+
+                        <td class="align-middle" data-title="Actions">
+                            <div class="d-flex">
+                                <div class="dropdown">
+                                    <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical d-flex"></i>
+                                    </div>
+
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item text-wrap" href="{% url 'config:host_detail' id=host.id %}">
+                                                Domain settings
+                                            </a>
+                                        </li>
+                                        {% if settings_write_permissions %}
+                                            <li>
+                                                {% if host.srv_records and host.cert_records %}
+                                                    <a class="dropdown-item text-wrap check-cert-js" data-url="{% url 'config:update_cert' domain=host.name %}" role="button">
+                                                         Renew certificate
+                                                    </a>
+                                                {% endif %}
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'config:host_delete' id=host.id %}" data-delete-name="Host" data-delete-target="{{ host.name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                     Delete
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

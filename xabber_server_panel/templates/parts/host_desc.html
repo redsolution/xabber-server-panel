@@ -1,0 +1,106 @@
+<div class="col-12">
+    <div class="mb-4">
+        <p>
+            To make XMPP work on this server, you need to set up SRV records for <b>{{ host }}</b> domain.
+            It will allow XMPP clients to correctly find the location of your server using Domain Name System (DNS).
+            You need to add several types of DNS records to make things work:
+        </p>
+        <ul>
+            <li>A record for subdomain <b>{{ host }}</b> to make server management panel available from the Internet on this address</li>
+            <li>SRV records to help XMPP clients and servers find your server</li>
+            <li>To use free certificates, add an CNAME record "_acme-challenge" for the domain.</li>
+        </ul>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="pb-2">
+            A record
+        </h5>
+
+        <div class="table-adaptive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Hostname</th>
+                        <th>IP Address</th>
+                        <th>TTL (seconds)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-title="Hostname">xabber.{{ host }}</td>
+                        <td data-title="IP Address">Your server IP</td>
+                        <td data-title="TTL (seconds)">Default</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="pb-2">
+            CNAME record
+        </h5>
+
+        <div class="table-adaptive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Hostname</th>
+                        <th>Aliases to</th>
+                        <th>TTL (seconds)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-title="Hostname">_acme-challenge.{{ host }}</td>
+                        <td data-title="IP Address">alias_acme-challenge.xabber.com</td>
+                        <td data-title="TTL (seconds)">Default</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="pb-2">
+            SRV records
+        </h5>
+
+        <div class="table-adaptive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Protocol</th>
+                        <th>Priority</th>
+                        <th>Weight</th>
+                        <th>Port</th>
+                        <th>Target</th>
+                        <th>TTL (seconds)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-title="Service">_xmpp-client</td>
+                        <td data-title="Protocol">TCP</td>
+                        <td data-title="Priority">10</td>
+                        <td data-title="Weight">5</td>
+                        <td data-title="Port">5222</td>
+                        <td data-title="Target">xabber.{{ host }}</td>
+                        <td data-title="TTL (seconds)">86400</td>
+                    </tr>
+                    <tr>
+                        <td data-title="Service">_xmpp-server</td>
+                        <td data-title="Protocol">TCP</td>
+                        <td data-title="Priority">10</td>
+                        <td data-title="Weight">5</td>
+                        <td data-title="Port">5269</td>
+                        <td data-title="Target">xabber.{{ host }}</td>
+                        <td data-title="TTL (seconds)">86400</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

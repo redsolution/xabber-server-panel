@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load base_tags %}
+
+{% block section_title %}{% endblock %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'config:cron_jobs' %}">
+                            Cron jobs
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        Add cron
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <form class="check-change-js" method="post">
+            {% csrf_token %}
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.schedule.errors %}text-danger{% endif %}">Schedule</label>
+                <div class="col-12 col-md-9">
+                    <input class="form-control {% if form.schedule.errors %}is-invalid{% endif %}" type="text" name="schedule" placeholder="*/5 * * * *" {% if form.schedule.data %}value="{{ form.cleaned_data.schedule|default:form.schedule.data }}"{% endif %}>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.command.errors %}text-danger{% endif %}">Command</label>
+                <div class="col-12 col-md-9">
+                    <div class="input-group follow-select-js">
+                        <input class="form-control cmw-50-percent {% if form.command.errors %}is-invalid{% endif %} {% if form.base_command.data %}custom-disabled{% endif %}" type="text" name="command" placeholder="clearsessions" {% if form.command.data %}value="{{ form.cleaned_data.command|default:form.command.data }}"{% endif %}>
+
+                        <select class="form-select cmw-50-percent" name="base_command">
+                            <option value="">---------</option>
+                            {% for choice in form.base_command.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.base_command.data == choice.0|stringformat:'s' %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 ms-auto form-text text-secondary">Built-in command</div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.args.errors %}text-danger{% endif %}">Args</label>
+                <div class="col-12 col-md-9">
+                    <textarea class="form-control {% if form.args.errors %}is-invalid{% endif %}" placeholder="['arg1', 'arg2']" name="args" cols="30" rows="6">{% if form.args.data %}{{ form.args.data }}{% endif %}</textarea>
+                    <span class="form-text text-secondary">{{ form.args.help_text }}</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.kwargs.errors %}text-danger{% endif %}">Kwargs</label>
+                <div class="col-12 col-md-9">
+                    <textarea class="form-control {% if form.kwargs.errors %}is-invalid{% endif %}" placeholder="{'indent': 4}" name="kwargs" cols="30" rows="6">{% if form.kwargs.data %}{{ form.kwargs.data }}{% endif %}</textarea>
+                    <span class="form-text text-secondary">{{ form.kwargs.help_text }}</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.type.errors %}text-danger{% endif %}">Type</label>
+                <div class="col-12 col-md-9">
+                    <select class="form-select" name="type">
+                        <option value="internal_command" {% if form.type.data == 'internal_command' %}selected{% endif %}>
+                            Internal command
+                        </option>
+                        <option value="function" {% if form.type.data == 'function' %}selected{% endif %}>
+                            Function
+                        </option>
+                        <option value="console_command" {% if form.type.data == 'console_command' %}selected{% endif %}>
+                            Console command
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-3"></div>
+                <div class="col-12 col-md-9">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" id="active" type="checkbox" name="active" {% if not form.data or form.active.data %}checked{% endif %}>
+                        <label class="form-check-label" for="active">
+                            Active
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
+        </form>
+    </div>
+{% endblock %}

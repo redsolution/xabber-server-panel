@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+    <body class="d-flex flex-column min-vh-100 vh-100 bg-body bg-opacity-75 scroll-custom-y">
+        <main class="container flex-md-grow-1">
+            <div class="row h-100">
+                <div class="px-md-4 py-4">
+                    <div class="d-flex align-items-center my-4 fs-4">
+                        <img src="{% static 'img/logo.png' %}" width="48" height="48" alt="Xabber">
+                        Xabber server installation
+                    </div>
+
+                    <div class="col-12">
+                        <form method="POST" class="installation-form">
+                            {% csrf_token %}
+
+                            <div class="bs-stepper">
+                                <div class="bs-stepper-header flex-wrap flex-lg-nowrap mb-4" role="tablist">
+                                    <div class="line"></div>
+                                    <div class="step active">
+                                        <button type="button" class="step-trigger">
+                                            <span class="bs-stepper-label">Installation</span>
+                                        </button>
+                                    </div>
+                                    <div class="line"></div>
+                                </div>
+
+                                <div class="bs-stepper-content">
+                                    <div id="configure_admin" class="installation-content content {% if not installation_error %}active{% endif %}" role="tabpanel" aria-labelledby="configure_admin-trigger">
+                                        <div class="col-12 col-lg-8 mx-auto">
+                                            <div class="mb-4">
+                                                <p>
+                                                    Configure admin account for the server. It will be used to perform all administration and maintenance operations with the server. You will be able to chat using this account, you will also receive security alerts from the server. You will be able to configure additional admin accounts later.
+                                                </p>
+                                            </div>
+
+                                            <div class="mw-480 mx-auto">
+                                                <div class="mb-3">
+                                                    <label class="form-label {% if form.username.errors %}text-danger{% endif %}">{{ form.username.label }}</label>
+                                                    <div class="input-group">
+                                                        <input class="form-control {% if form.username.errors %}is-invalid{% endif %} installation-required" type="text" name="username" {% if form.username.data %}value="{{ form.username.data }}"{% endif %} placeholder="admin" maxlength="100" id="id_username">
+                                                        <span class="input-group-text">
+                                                            @
+                                                            {% if form.data.host %}
+                                                                {{ form.data.host }}
+                                                            {% else %}
+                                                                {{ data.host }}
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label {% if form.password.errors %}text-danger{% endif %}">{{ form.password.label }}</label>
+                                                    <input class="form-control {% if form.password.errors %}is-invalid{% endif %} installation-required" type="password" name="password" {% if form.password.data %}value="{{ form.password.data }}"{% endif %} placeholder="Password" maxlength="100" id="id_password">
+                                                </div>
+
+                                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                                    <button class="btn btn-primary ms-auto installation-next installation-final" type="submit">
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="error" class="installation-content content {% if installation_error %}active{% endif %}" role="tabpanel" aria-labelledby="installation-trigger">
+                                        <div class="col-12 col-lg-8 mx-auto">
+                                            <div class="mb-4">
+                                                <div class="text-danger">
+                                                    {{ installation_error }}
+                                                </div>
+
+                                                <div class="mt-2 alert alert-warning">
+                                                    Database installation instruction can be found <a class="alert-link" target="_blank" href="https://github.com/redsolution/xabber-server/wiki/Installation#postgresql-installation">here</a>.
+                                                </div>
+                                            </div>
+
+                                            <div class="mw-480 mx-auto">
+                                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                                    <button class="btn btn-secondary" type="submit" name="previous" value="1">
+                                                        Back
+                                                    </button>
+                                                    <button class="btn btn-success ms-auto installation-next installation-final" type="submit">
+                                                        Retry
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="loader" class="installation-content content" role="tabpanel" aria-labelledby="installation-trigger">
+                                        <div class="col-12 col-lg-8 mx-auto">
+                                            <div class="text-center">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <div class="mt-3">Waiting for installation...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+{% endblock %}

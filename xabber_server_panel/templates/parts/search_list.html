@@ -1,0 +1,41 @@
+{% load users_tags %}
+
+{% check_user_permissions 'users' as users_read_permissions %}
+{% check_user_permissions 'circles' as circles_read_permissions %}
+{% check_user_permissions 'groups' as groups_read_permissions %}
+
+{% if users and users_read_permissions %}
+    <div class="mb-4">
+        <h5 class="pb-2">
+            Users
+        </h5>
+
+        <div class="search-pagination-js" data-object="users">
+            {% include 'users/parts/user_list.html' %}
+        </div>
+    </div>
+{% endif %}
+
+{% if circles and circles_read_permissions %}
+    <div class="mb-4">
+        <h5 class="pb-2">
+            Circles
+        </h5>
+
+        <div class="search-pagination-js" data-object="circles">
+            {% include 'circles/parts/circle_list.html' %}
+        </div>
+    </div>
+{% endif %}
+
+{% if groups and groups_read_permissions %}
+    <div class="mb-4">
+        <h5 class="pb-2">
+            Groups
+        </h5>
+
+        <div class="search-pagination-js" data-object="groups">
+            {% include 'groups/parts/groups_list.html' %}
+        </div>
+    </div>
+{% endif %}

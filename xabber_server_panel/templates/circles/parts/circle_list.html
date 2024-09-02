@@ -1,0 +1,71 @@
+{% load base_tags users_tags %}
+
+{% check_user_permissions 'circles' 'write' as circles_write_permissions %}
+
+{% if circles %}
+    {% paginate circles 8 as paginated_circles %}
+
+    <div class="table-adaptive position-relative">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Circle identifier</th>
+                    <th>Circle name</th>
+                    <th>Members count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for circle in paginated_circles %}
+                    <tr>
+                        <td data-title="#">
+                            {{ forloop.counter }}
+                        </td>
+                        <td data-title="Circle identifier">
+                            <a href="{% url 'circles:detail' id=circle.id %}">
+                                {{ circle.circle }}
+                            </a>
+                        </td>
+                        <td data-title="Circle name">
+                            <span class="text-body-secondary">
+                                {{ circle.name|default:'-' }}
+                            </span>
+                        </td>
+                        <td data-title="Members count">
+                            <span class="text-body-secondary">
+                                {{ circle.get_members_count }}
+                                {% if circle.all_users %}
+                                    ( all )
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td data-title="Actions">
+                            {% if circles_write_permissions %}
+                                <div class="d-flex">
+                                    <div class="dropdown">
+                                        <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical d-flex"></i>
+                                        </div>
+
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'circles:delete' id=circle.id %}" data-delete-name="Circle" data-delete-target="{{ circle.circle }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                     Delete circle
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if circles.count > 8 %}
+        {% include 'parts/pagination.html' with objects=paginated_circles %}
+    {% endif %}
+{% endif %}

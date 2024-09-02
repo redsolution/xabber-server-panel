@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load config_tags %}
+
+{% block content_title %}
+    Server settings
+{% endblock %}
+
+{% block content %}
+    {% url 'config:tabs' as url %}
+    <div class="mb-4 col-12">
+        {% include 'config/parts/links.html' %}
+    </div>
+
+    {% if admins %}
+        <div class="table-adaptive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>JID</th>
+                        <th>Username</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                        <tr>
+                            <td data-title="#">{{ forloop.counter }}</td>
+                            <td data-title="JID">
+                                <a {% if users_read_permissions %}href="{% url 'users:detail' id=admin.id %}"{% endif %}>
+                                    {{ admin.full_jid }}
+                                </a>
+                            </td>
+                            <td data-title="Username">{{ admin.nickname|default:admin.username }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if settings_write_permissions %}
+        <div class="mt-4 text-end">
+            <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manage">
+                Manage
+            </a>
+        </div>
+
+        <div class="modal modal-lg fade reset-selector-custom-modal-js" id="manage" tabindex="-1" aria-labelledby="manage_label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <form class="modal-content check-change-js" method="post">
+                    {% csrf_token %}
+
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="manage_label">Manage administrators</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        {% include 'parts/multiple_users_select.html' with objects_name='users' avaliable_objects=users selected_objects=admins field_name='admins' %}
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-secondary" name="save" disabled>Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

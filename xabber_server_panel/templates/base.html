@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+{% load static base_tags config_tags users_tags %}
+{% smart_spaceless %}
+<html lang="en" data-bs-theme="{% if request.COOKIES.theme == 'dark' %}dark{% else %}light{% endif %}">
+    <head>
+        <meta name="theme-color" class="theme-color" content="#fff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="format-detection" content="telephone=no">
+        <meta charset="utf-8">
+
+        <title>{% block title %}Xabber Server{% endblock %}</title>
+
+        <link rel="icon" type="image/png" sizes="260x260" href="{% static 'img/favicon.png' %}">
+
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-5.3.2.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-icons-1.11.2.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-negative-margins.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-avatar-1.3.1.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-custom-bg.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-custom-width.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/bootstrap-stepper.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/vendor/table-adaptive.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/custom-style.css' %}">
+        {% block css %}{% endblock %}
+    </head>
+
+    {% block body %}
+        {% get_external_modules as modules %}
+
+        {% check_user_permissions 'dashboard' 'write' as dashboard_write_permissions %}
+        {% check_user_permissions 'dashboard' as dashboard_read_permissions %}
+        {% check_user_permissions 'users' 'write' as users_write_permissions %}
+        {% check_user_permissions 'users' as users_read_permissions %}
+        {% check_user_permissions 'circles' 'write' as circles_write_permissions %}
+        {% check_user_permissions 'circles' as circles_read_permissions %}
+        {% check_user_permissions 'groups' 'write' as groups_write_permissions %}
+        {% check_user_permissions 'groups' as groups_read_permissions %}
+        {% check_user_permissions 'registration' 'write' as registration_write_permissions %}
+        {% check_user_permissions 'registration' as registration_read_permissions %}
+        {% check_user_permissions 'config' 'write' as settings_write_permissions %}
+        {% check_user_permissions 'config' as settings_read_permissions %}
+        {% check_user_permissions 'log' as log_read_permissions %}
+
+        <body class="body d-flex flex-column overflow-hidden vh-md-100 bg-body bg-opacity-75">
+            <header class="header navbar d-flex flex-wrap flex-md-nowrap justify-content-start flex-grow-0 flex-shrink-1 fixed-top bg-dark shadow pe-3 ps-3 ps-md-0">
+                <a class="navbar-brand d-flex align-items-center col-md-3 col-xl-2 fs-4 text-white p-0 me-2 me-md-4" href="{% url 'home' %}">
+                    <img src="{% static 'img/logo.png' %}" width="48" height="48" alt="Xabber">
+                    <span class="d-none d-md-block ms-2 fs-4">Xabber</span>
+                </a>
+
+                {% if users_write_permissions or circles_write_permissions %}
+                    <div class="dropdown me-2 me-md-4 header-create">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Create
+                        </button>
+
+                        <ul class="dropdown-menu">
+                            {% if users_write_permissions %}
+                                <li>
+                                    <a class="dropdown-item text-wrap" href="{% url 'users:create' %}">
+                                        <b>User</b><br>
+                                        Add new user account. Users can send and receive messages, create and join group chats, make audio and video calls.
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if circles_write_permissions %}
+                                <li>
+                                    <a class="dropdown-item text-wrap" href="{% url 'circles:create' %}">
+                                        <b>Circle</b><br>
+                                        Circles are used to manage shared contact lists, user permissions and resource quotas.
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if groups_write_permissions %}
+                                <li>
+                                    <a class="dropdown-item text-wrap" href="{% url 'groups:create' %}">
+                                        <b>Group</b><br>
+                                        Create group chat.
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% get_create_views_data as create_data_list %}
+                            {% if create_data_list %}
+                                {% for create_data in create_data_list %}
+                                    <li>
+                                        <a class="dropdown-item text-wrap" href="{{ create_data.url }}">
+                                            <b>{{ create_data.title }}</b><br>
+                                            {{ create_data.subtitle }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <div class="d-md-block flex-grow-1 collapse hide me-0 me-md-4 order-2 order-md-0 col-12 col-md-1 header-search-content">
+                    <form class="w-100 pt-2 pt-md-0 position-relative suggestions-custom suggestions-custom-js" action="{% url 'search' %}" method="GET" autocomplete="off">
+                        <input class="form-control suggestions-custom__input" type="text" name="search"
+                               {% if request.GET.search %}value="{{ request.GET.search }}"{% endif %}
+                               placeholder="Search for Users, Circles, Groups" data-objects="users,circles,groups"
+                               data-url="{% url 'suggestions' %}" data-target="search-suggestions-js" data-type="search">
+
+                        <ul class="search-suggestions-js suggestions-custom__list position-absolute top-100 start-0 w-100 h-auto list-group mt-2 shadow-sm"></ul>
+                    </form>
+                </div>
+
+                {% block host_select %}{% endblock %}
+
+                <div class="ms-auto me-2 me-md-0">
+                    {% if request.user.is_authenticated %}
+                        <div class="dropdown">
+                            <div class="avatar avatar-48 bg-primary rounded-circle text-white fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item text-wrap" href="{% url 'users:detail' id=request.user.id %}">
+                                        {{ request.user.full_jid }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-wrap" href="{% url 'custom_auth:logout' %}">
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a class="btn btn-primary" href="{% url 'custom_auth:login' %}">Login</a>
+                    {% endif %}
+                </div>
+
+                <ul class="navbar-nav d-md-none flex-row">
+                    <li class="nav-item text-nowrap">
+                        <button class="nav-link icon-link px-2 text-white header-search-icon" type="button" aria-controls="search" aria-expanded="false" aria-label="Toggle search">
+                            <i class="bi bi-search d-flex"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item text-nowrap">
+                        <button class="nav-link icon-link px-2 text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                            <i class="bi bi-list-nested d-flex"></i>
+                        </button>
+                    </li>
+                </ul>
+            </header>
+
+            <main class="main h-100 container-fluid">
+                <div class="h-100 row">
+                    <div class="sidebar h-100 overflow-hidden overflow-y-auto scroll-custom-y offcanvas-md offcanvas-end col-md-3 col-xl-2 p-0 p-md-3 text-bg-dark bg-dark shadow" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+                        <div class="offcanvas-header" data-bs-theme="dark">
+                            <a class="navbar-brand d-flex align-items-center fs-4 p-0" href="/" id="sidebarMenuLabel">
+                                <img class="me-2" src="{% static 'img/logo.png' %}" width="48" height="48" alt="Xabber">
+                                <span class="fs-4">Xabber</span>
+                            </a>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                        </div>
+
+                        <div class="mhp-100 offcanvas-body d-flex flex-column pt-md-3 overflow-hidden" data-bs-theme="dark">
+                            <div class="flex-column mb-auto">
+                                {% include 'parts/left_menu.html' %}
+                            </div>
+
+                            <hr>
+                            <div class="d-flex align-items-center">
+                                <div class="form-switch mb-0 fs-4">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="theme_switch" {% if request.COOKIES.theme == 'dark' %}checked{% endif %}>
+                                </div>
+                                <label class="form-check-label" for="theme_switch">
+                                    <i class="bi bi-moon-stars"></i> Dark mode
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content h-100 col-md-9 col-xl-10 overflow-hidden overflow-y-auto scroll-custom-y ms-sm-auto px-md-4 py-4">
+                        <div class="mhp-100 container-xxl p-0 d-flex flex-column">
+                            {% block messages %}
+                                {% get_messages as messages %}
+                                {% if messages %}
+                                    {% if messages.success %}
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                            <div class="d-flex flex-column">
+                                                {% for message in messages.success %}
+                                                    <div class="{% if not forloop.last %}mb-1{% endif %}">
+                                                        {{ message|striptags }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endif %}
+                                    {% if messages.error %}
+                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                            <div class="d-flex flex-column">
+                                                {% for message in messages.error %}
+                                                    <div class="{% if not forloop.last %}mb-1{% endif %}">
+                                                        {{ message|striptags }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endblock %}
+
+                            {% block section_title %}
+                                <h2 class="mb-4 col-12">
+                                    {% block content_title %}{% endblock %}
+                                </h2>
+                            {% endblock %}
+
+                            {% block content %}{% endblock %}
+
+                            {% block modal %}
+                                <div class="modal fade" id="delete_modal" tabindex="-1" aria-labelledby="delete_modal_label" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="delete_modal_label"><span></span> will be deleted</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                Do you really want to delete?
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <a class="btn btn-danger" href="">Delete <span></span></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal fade" id="block_user" tabindex="-1" aria-labelledby="block_user_label" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-scrollable">
+                                        <form class="modal-content" action="" method="GET">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="block_user_label">Reason for blocking</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <textarea class="form-control" name="reason" cols="30" rows="6" placeholder="Reason for blocking"></textarea>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-info">Block</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="modal fade" id="start_server" tabindex="-1" aria-labelledby="start_server_label" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-scrollable">
+                                        <form class="modal-content form-startserver-js" action="{% url 'dashboard:dashboard' %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="start_server_label">Enter your password to start server</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="password">
+                                                    <input class="password-input form-control" type="password" name="password" placeholder="Password" required>
+                                                    <button class="password-btn" type="button">
+                                                        <i class="password-icon bi bi-eye"></i>
+                                                        <i class="password-icon bi bi-eye-slash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-success" name="start" value="start">Start server</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </body>
+    {% endblock %}
+
+    {% block js %}
+        <script src="{% static 'js/vendor/jquery-3.7.1.min.js' %}"></script>
+        <script src="{% static 'js/vendor/bootstrap-5.3.2.min.js' %}"></script>
+        <script src="{% static 'js/base.js' %}"></script>
+        <script src="{% static 'js/selector-custom.js' %}"></script>
+        <script src="{% static 'js/installation.js' %}"></script>
+    {% endblock %}
+</html>
+{% end_smart_spaceless %}

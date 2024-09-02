@@ -1,0 +1,228 @@
+loglevel: 4
+
+log_rotate_size: 10485760
+log_rotate_date: ""
+log_rotate_count: 1
+
+log_rate_limit: 100
+
+certfiles:
+ - "{{ settings.CERTS_DIR }}*.pem"
+ca_file: "{{ CA_FILE }}"
+
+listen:
+  -
+    port: {{ settings.XMPP_CLIENT_PORT }}
+    ip: "::"
+    module: ejabberd_c2s
+    max_stanza_size: 65536
+    shaper: c2s_shaper
+    access: c2s
+    starttls: true
+
+  -
+    port: {{ settings.XMPP_SERVER_PORT }}
+    ip: "::"
+    module: ejabberd_s2s_in
+
+  - port: {{ settings.XMPP_HTTP_PORT }}
+    ip: "::"
+    module: ejabberd_http
+    tls: true
+    request_handlers:
+      "/api": mod_http_api
+      "/panel": mod_panel
+      "/upload": mod_http_upload
+      "/ws": ejabberd_http_ws
+      "/iq": mod_http_iq
+    custom_headers:
+      "Access-Control-Allow-Methods": "GET,HEAD,PUT,OPTIONS"
+      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Origin": "*"
+
+
+  - port: {{ settings.XMPP_HTTPS_PORT }}
+    ip: "::"
+    module: ejabberd_http
+    request_handlers:
+      "/panel": mod_panel
+      "/ws": ejabberd_http_ws
+    custom_headers:
+      "Access-Control-Allow-Methods": "GET,HEAD,PUT,OPTIONS"
+      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Origin": "*"
+
+s2s_use_starttls: optional
+
+auth_password_format: scram
+auth_method: sql
+
+sql_type: pgsql
+sql_server: "{{ db_host }}"
+sql_database: "{{ db_name }}"
+sql_username: "{{ db_user }}"
+sql_password: {% if db_user_pass %}"{{ db_user_pass }}"{% endif %}
+new_sql_schema: true
+
+shaper:
+  normal: 100000
+  fast: 5000000
+
+max_fsm_queue: 10000
+
+acl:
+  local:
+    user_regexp: ""
+
+  loopback:
+    ip:
+      - "127.0.0.0/8"
+      - "::1/128"
+      - "::FFFF:127.0.0.1/128"
+
+shaper_rules:
+  max_user_sessions: 20
+  max_user_offline_messages:
+    - 5000: admin
+    - 100
+  c2s_shaper:
+    - none: admin
+    - normal
+  s2s_shaper: fast
+
+access_rules:
+  local:
+    - allow: local
+  c2s:
+    - deny: blocked
+    - allow
+  announce:
+    - allow: admin
+  configure:
+    - allow: admin
+  muc_create:
+    - allow: local
+  pubsub_createnode:
+    - allow: local
+  register:
+    - allow
+  trusted_network:
+    - allow: loopback
+
+api_permissions:
+  "console commands":
+    from:
+      - ejabberd_ctl
+    who: all
+    what: "*"
+  "admin access":
+    who:
+      - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
+      - oauth:
+        - scope: "ejabberd:admin"
+        - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
+    what:
+      - "*"
+      - "!stop"
+      - "!start"
+  "public commands":
+    who:
+      - ip: "127.0.0.1/8"
+    what:
+      - "status"
+      - "connected_users_number"
+
+language: "en"
+
+acme:
+   contact: "mailto:example-admin@example.com"
+   ca_url: "https://acme-v01.api.letsencrypt.org"
+
+sm_db_type: mnesia
+default_db: sql
+default_ram_db: mnesia
+
+modules:
+  mod_adhoc: {}
+  mod_favorites: {}
+  mod_notify: {}
+  mod_admin_extra: {}
+  mod_announce: # recommends mod_adhoc
+    access: announce
+  mod_blocking: {} # requires mod_privacy
+  mod_caps: {}
+  mod_carboncopy: {}
+  mod_client_state: {}
+  mod_configure: {} # requires mod_adhoc
+  mod_disco: {}
+  mod_echo: {}
+  mod_http_upload:
+    docroot: "{{ settings.USER_FILES }}"
+    get_url: "https://xabber.@HOST@:5443/upload"
+    put_url: "https://xabber.@HOST@:5443/upload"
+  mod_last: {}
+  mod_mam:
+    default: always
+    db_type: sql
+    strip_outgoing_stanza_id: false
+  mod_ping: {}
+  mod_privacy: {}
+  mod_private: {}
+  mod_pubsub:
+    db_type: sql
+    access_createnode: pubsub_createnode
+    ignore_pep_from_offline: false
+    last_item_cache: false
+    plugins:
+      - "flat"
+      - "hometree"
+      - "pep"
+    force_node_config:
+      "eu.siacs.conversations.axolotl.*":
+        access_model: whitelist
+      "storage:bookmarks":
+        access_model: whitelist
+  mod_roster:
+    versioning: true
+  mod_shared_roster: {}
+  mod_stats: {}
+  mod_time: {}
+  mod_vcard:
+    search: false
+  mod_vcard_xupdate: {}
+  mod_avatar: {}
+  mod_version: {}
+  mod_stream_mgmt: {}
+  mod_s2s_dialback: {}
+  mod_http_api: {}
+  mod_fail2ban: {}
+  mod_unique: {}
+  mod_retract: {}
+  mod_sync: {}
+  mod_devices: {}
+  mod_groups: {}
+  mod_panel: {}
+  mod_favorites: {}
+  mod_notify: {}
+  nick_generator:
+    pre_generated_images: "{{ settings.PROJECT_DIR }}/pre_images"
+    pre_generated_images_count: 20
+  mod_block_users: {}
+  mod_ws_proxy_detect: {}
+  mod_xabber_push:
+    db_type: sql
+    use_cache: false
+  mod_http_iq :
+    url: "https://xabber.@HOST@:5443/iq"
+
+
+allow_contrib_modules: true
+include_config_file: "{{ VHOST_FILE }}"
+include_config_file: "{{ MODULES_FILE }}"
+include_config_file: "{{ ADD_CONFIG }}"

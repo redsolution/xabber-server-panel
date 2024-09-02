@@ -1,0 +1,150 @@
+{% load base_tags users_tags %}
+
+{% check_user_permissions 'registration' 'write' as registration_write_permissions %}
+
+<div class="mb-4 overflow-hidden">
+    <form class="check-change-js" method="post">
+        {% csrf_token %}
+
+        <div class="d-flex flex-wrap mb-n3 me-n3">
+            <div class="me-3 mb-3">
+                <label class="col-form-label">Registration:</label>
+            </div>
+            <div class="me-3 mb-3">
+                <select class="form-select" name="status">
+                    <option value="disabled">disabled</option>
+                    <option value="link" {% if mod_registration_keys %}selected{% endif %}>link</option>
+                    <option value="public" {% if mod_register and not mod_registration_keys %}selected{% endif %}>public</option>
+                </select>
+            </div>
+            {% if registration_write_permissions %}
+                <div class="me-3 mb-3">
+                    <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                        Save
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% if mod_registration_keys %}
+    <div class="mb-4 overflow-hidden">
+        <div class="d-flex flex-wrap align-items-center mb-n3 me-n3">
+            <span class="me-3 mb-3">
+                Web client url:
+            </span>
+
+            <a class="me-3 mb-3 current-url-js" href="{{ registration_url.url|default:'' }}">
+                {{ registration_url.url|default:'' }}
+            </a>
+
+            {% if registration_write_permissions %}
+                <a class="me-3 mb-3" href="{% url 'registration:url' %}">
+                    Edit
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if keys %}
+        {% paginate keys 10 as paginated_keys %}
+
+        <div class="table-adaptive position-relative">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Key</th>
+                        <th>Expires</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in paginated_keys %}
+                        <tr>
+                            <td data-title="#">
+                                {{ forloop.counter }}
+                            </td>
+                            <td data-title="Key">
+                                {{ obj.key }}
+                            </td>
+                            <td data-title="Expires">
+                                {% if obj.expire %}
+                                    {{ obj.expire|fromtimestamp|date:"M d, Y H:i" }}
+                                {% endif %}
+                            </td>
+                            <td data-title="Description">
+                                {{ obj.description }}
+                            </td>
+                            <td data-title="Actions">
+                                <div class="d-flex">
+                                    <div class="dropdown">
+                                        <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical d-flex"></i>
+                                        </div>
+
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            {% if registration_write_permissions %}
+                                                <li>
+                                                    <a class="dropdown-item text-wrap" href="{% url 'registration:change' key=obj.key %}">
+                                                        Change
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% if registration_write_permissions %}
+                                                <li>
+                                                    <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'registration:delete' key=obj.key %}" data-delete-name="Key" data-delete-target="{{ obj.key }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                         Delete
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            <li>
+                                                <a class="dropdown-item text-wrap text-info show-url-js" role="button" data-link="{{ registration_url.url|default:'' }}" data-key="{{ obj.key }}" data-bs-toggle="modal" data-bs-target="#show_link">
+                                                     Show link
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal fade" id="show_link" tabindex="-1" aria-labelledby="show_link_label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="show_link_label">Registration link</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <a class="title-url-js" target="_blank"></a>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary copy-url-js">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if keys.count > 5 %}
+            {% include 'parts/pagination.html' with objects=paginated_keys %}
+        {% endif %}
+    {% endif %}
+
+    {% if registration_write_permissions %}
+        <div class="mt-4 text-end">
+            <a class="btn btn-primary" href="{% url 'registration:create' %}">
+                Add
+            </a>
+        </div>
+    {% endif %}
+{% endif %}

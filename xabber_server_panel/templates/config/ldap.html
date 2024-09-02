@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load config_tags %}
+
+{% block content_title %}
+    Server settings
+{% endblock %}
+
+{% block host_select %}
+    {% if request.user.is_admin %}
+        <div class="ms-auto me-0 me-md-4 pt-2 pt-md-0 order-1 order-md-0 col-12 col-md-auto header-host">
+            {% include 'parts/host_select.html' %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% url 'config:tabs' as url %}
+    <div class="mb-4 col-12">
+        {% include 'config/parts/links.html' %}
+    </div>
+
+    <div class="col-12 pb-5 mb-5">
+        {% url 'config:tabs' as ldap %}
+        <form class="check-change-js" method="post">
+            {% csrf_token %}
+
+            <div class="d-flex flex-column">
+                <h4 class="text-secondary mt-0">
+                    LDAP authentication
+                </h4>
+
+                <input type="hidden" value="{{ request.current_host.id }}" name="host">
+            </div>
+
+            <div class="list-js" data-url="{{ url }}">
+                {% include 'config/parts/ldap_fields.html' %}
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'circles/base.html' %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'circles:list' %}">
+                            Circles
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        {{ circle.circle }}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {{ circle.host }}
+            </h6>
+        </div>
+    </div>
+
+    <div class="mb-4 col-12">
+        {% include 'circles/parts/links.html' %}
+    </div>
+
+    <div class="col-12 pb-5 mb-5">
+        <form class="check-change-js" action="{% url 'circles:detail' id=circle.id %}" method="POST">
+            {% csrf_token %}
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3">Name</label>
+                <div class="col-12 col-md-9">
+                    <input class="form-control" type="text" name="name" placeholder="Name" value="{{ circle.name|default:'' }}" required {% if not circles_write_permissions %}disabled{% endif %}>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3">Description</label>
+                <div class="col-12 col-md-9">
+                    <textarea class="form-control" name="description" cols="30" rows="6" {% if not circles_write_permissions %}disabled{% endif %}>{% if circle.description %}{{ circle.description }}{% endif %}</textarea>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-3"></div>
+                <div class="col-12 col-md-9">
+                    <div class="d-flex">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" id="all_users" type="checkbox" name="all_users" {% if circle.all_users %}checked{% endif %} {% if circle.members.exists or not circles_write_permissions %}disabled{% endif %}>
+                            <label class="form-check-label" for="all_users">
+                                Include all users
+                            </label>
+                        </div>
+                        <div class="icon-link text-primary fs-5 ms-2" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Create global circle including all users in selected host.">
+                            <i class="bi bi-info-circle-fill d-flex"></i>
+                        </div>
+                    </div>
+                    {% if circle.members.exists %}
+                        <span class="form-text text-secondary">Members list is not empty.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if circles_write_permissions %}
+                <div class="fixed-bottom row col-md-9 col-xl-10 m-0 ms-auto py-4 px-0 px-md-4 bg-body border-top shadow">
+                    <div class="col-12 p-md-0">
+                        <div class="container-xxl p-0">
+                            <div class="d-flex flex-wrap mb-n3 me-n3">
+                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
+                                    Save
+                                </button>
+
+                                <a class="btn btn-danger me-3 mb-3" data-delete-href="{% url 'circles:delete' id=circle.id %}" data-delete-name="Circle" data-delete-target="{{ circle.circle }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                    Delete Circle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

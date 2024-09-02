@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load base_tags %}
+
+{% block section_title %}{% endblock %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'config:hosts' %}">
+                            Settings
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        Add virtual host
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {{ request.hosts.count }} hosts
+            </h6>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <form class="check-change-js" method="post">
+            {% csrf_token %}
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.name.errors %}text-danger{% endif %}">Virtual host</label>
+                <div class="col-12 col-md-9">
+                    <input class="form-control {% if form.name.errors %}is-invalid{% endif %}" type="text" name="name" placeholder="example.com" {% if form.name.data %}value="{{ form.cleaned_data.name|default:form.name.data }}"{% endif %}>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
+        </form>
+    </div>
+{% endblock %}

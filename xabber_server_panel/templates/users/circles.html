@@ -1,0 +1,77 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'users:list' %}">
+                            Users
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        {{ user.full_jid }}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {% if user.is_active %}Active{% else %}Blocked{% endif %}
+            </h6>
+        </div>
+    </div>
+
+    <div class="mb-4 col-12">
+        {% include 'users/parts/links.html' %}
+    </div>
+
+    <div class="col-12 pb-5 mb-5">
+        <form class="check-change-js" action="{% url 'users:circles' id=user.id %}" method="POST">
+            {% csrf_token %}
+
+            <ul class="list-group mb-3">
+                {% for circle in circles %}
+                    <li class="list-group-item d-flex align-items-center">
+                        <div class="d-flex">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" name="circles" {% if circle.all_users or not users_write_permissions or not circles_write_permissions %}disabled{% endif %} {% if circle in user.circles.all or circle.all_users %}checked{% endif %} value="{{ circle.id }}" id="circles_{{ circle.id }}">
+                                <label class="form-check-label" for="circles_{{ circle.id }}">
+                                    {{ circle.circle }}
+                                </label>
+                            </div>
+                        </div>
+                        {% if circle.all_users %}
+                            <div class="d-flex ms-2">
+                                <div class="icon-link text-warning fs-5" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This circle is global. Remove «all users» option in this circle if you want to manage.">
+                                    <i class="bi bi-exclamation-circle-fill d-flex"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if users_write_permissions and circles_write_permissions %}
+                <div class="fixed-bottom row col-md-9 col-xl-10 m-0 ms-auto py-4 px-0 px-md-4 bg-body border-top shadow">
+                    <div class="col-12 p-md-0">
+                        <div class="container-xxl p-0">
+                            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

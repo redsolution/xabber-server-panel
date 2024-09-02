@@ -1,0 +1,8 @@
+{% load base_tags %}
+{% if log %}
+    {% for line in log %}
+        <div class="mb-2">
+            {{ line }}
+        </div>
+    {% endfor %}
+{% endif %}

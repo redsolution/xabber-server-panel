@@ -1,0 +1,30 @@
+{% extends 'circles/base.html' %}
+
+{% block content %}
+    {% url 'circles:list' as url %}
+    <div class="mb-4 col-12 d-flex flex-wrap flex-md-nowrap">
+        <div class="d-flex align-items-center col-12 col-md-auto">
+            <h2 class="mb-0">
+                Circles
+            </h2>
+            <div class="vr mx-3"></div>
+            <h4 class="mb-0 text-secondary fw-normal">
+                <span>
+                    {{ circles.count }}
+                </span> circles
+            </h4>
+        </div>
+    </div>
+
+    <div class="mt-4 list-js" data-url="{{ url }}">
+        {% include 'circles/parts/circle_list.html' %}
+    </div>
+
+    {% if circles_write_permissions %}
+        <div class="mt-4 text-end">
+            <a class="btn btn-primary" href="{% url 'circles:create' %}">
+                Create Circle
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

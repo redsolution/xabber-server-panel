@@ -1,0 +1,81 @@
+<div class="row selector-custom selector-custom-js">
+    <div class="col-12 col-lg-5 d-flex">
+        <div class="card w-100 border-0">
+            <div class="card-header fs-6 d-flex align-items-center">
+                Avaliable {{ objects_name }}
+
+                <div class="icon-link text-primary fs-5 ms-2" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is the list of avaliable {{ objects_name }}. You can add some of them by highlighting and clicking 'Add' below, or by double-clicking.">
+                    <i class="bi bi-info-circle-fill d-flex"></i>
+                </div>
+            </div>
+
+            <div class="card-body px-0">
+                <div class="input-group">
+                    <label class="input-group-text" for="id_{{ objects_name }}_from_input">
+                        <div class="icon-link text-body-tertiary fs-5" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Start typing text in this field to filter the list of available {{ objects_name }}.">
+                            <i class="bi bi-search d-flex"></i>
+                        </div>
+                    </label>
+                    <input class="form-control nocheck-change-js selector-custom-filter-from" type="text" placeholder="Filter" id="id_{{ objects_name }}_from_input">
+                </div>
+
+                <select class="form-control nocheck-change-js selector-custom-from mt-3" size="5" name="{{ objects_name }}_old" multiple data-field-name="{{ objects_name }}">
+                    {% for user in avaliable_objects %}
+                        {% if user not in selected_objects %}
+                            <option value="{{ user.id }}" title="{{ user.full_jid }}">{{ user.full_jid }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="card-footer">
+                <a class="selector-custom-add-all" title="Click to select all {{ objects_name }} at once." href="#">Choose all</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-2 d-flex align-items-center justify-content-center my-3 my-lg-0">
+        <div class="icon-link fs-3 me-2 selector-custom-remove" type="button" title="Remove">
+            <i class="bi bi-arrow-left-circle-fill d-flex"></i>
+        </div>
+
+        <div class="icon-link fs-3 selector-custom-add" type="button" title="Add">
+            <i class="bi bi-arrow-right-circle-fill d-flex"></i>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5 d-flex">
+        <div class="card w-100 border-0">
+            <div class="card-header fs-6 d-flex align-items-center">
+                Added {{ objects_name }}
+
+                <div class="icon-link text-primary fs-5 ms-2" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is the list of selected {{ objects_name }}. You can delete some of them by highlighting and clicking 'Remove' below or by double-clicking.">
+                    <i class="bi bi-info-circle-fill d-flex"></i>
+                </div>
+            </div>
+
+            <div class="card-body px-0">
+                <div class="input-group">
+                    <label class="input-group-text" for="id_{{ objects_name }}_to_input">
+                        <div class="icon-link text-body-tertiary fs-5" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Start typing text in this field to filter the list of added {{ objects_name }}.">
+                            <i class="bi bi-search d-flex"></i>
+                        </div>
+                    </label>
+                    <input class="form-control nocheck-change-js selector-custom-filter-to" type="text" placeholder="Filter" id="id_{{ objects_name }}_to_input">
+                </div>
+
+                <select class="form-control nocheck-change-js selector-custom-to mt-3" size="5" multiple name="{{ objects_name }}">
+                    {% for user in selected_objects %}
+                        <option value="{{ user.id }}" title="{{ user.full_jid }}" data-selected>{{ user.full_jid }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="card-footer">
+                <a class="selector-custom-remove-all" title="Click to delete all {{ objects_name }} at once." href="#">Clear all</a>
+            </div>
+        </div>
+    </div>
+
+    <input class="selector-custom-result" type="hidden" name="{{ field_name }}" {% if selected_objects %}value="{% for user in selected_objects %}{{ user.id }}{% if not forloop.last %},{% endif %}{% endfor %}"{% endif %}>
+</div>

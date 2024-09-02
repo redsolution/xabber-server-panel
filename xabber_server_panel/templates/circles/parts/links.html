@@ -1,0 +1,22 @@
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        {% url 'circles:detail' id=circle.id as detail %}
+        <a class="nav-link {% if request.path_info == detail %}active{% endif %}" aria-current="page" href="{{ detail }}">
+            Details
+        </a>
+    </li>
+    {% if users_read_permissions %}
+        <li class="nav-item">
+            {% url 'circles:members' id=circle.id as members %}
+            <a class="nav-link {% if request.path_info == members %}active{% endif %}" href="{{ members }}">
+                Members
+            </a>
+        </li>
+    {% endif %}
+    <li class="nav-item">
+        {% url 'circles:shared' id=circle.id as shared %}
+        <a class="nav-link {% if request.path_info == shared %}active{% endif %}" href="{{ shared }}">
+            Shared circles
+        </a>
+    </li>
+</ul>

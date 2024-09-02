@@ -1,0 +1,155 @@
+{% extends 'circles/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'circles:list' %}">
+                            Circles
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        {{ circle.circle }}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {{ circle.host }}
+            </h6>
+        </div>
+    </div>
+
+    <div class="mb-4 col-12">
+        {% include 'circles/parts/links.html' %}
+    </div>
+
+    <div class="col-12">
+        <div class="row">
+            <div class="d-flex align-items-center col-12 col-md-6">
+                <div class="fs-5">Members</div> <div class="vr mx-3"></div> <span class="text-body-tertiary">{{ circle.get_members_count }} members</span>
+            </div>
+
+            {% if circles_write_permissions %}
+                <div class="d-flex align-items-start justify-content-start justify-content-md-end col-12 col-md-6 mt-3 mt-md-0">
+                    <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manage_members">
+                        Manage
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if circles_write_permissions and users_read_permissions %}
+
+            <div class="modal modal-lg fade reset-selector-custom-modal-js" id="manage_members" tabindex="-1" aria-labelledby="manage_members_label" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable">
+                    <form class="modal-content check-change-js" action="{% url 'circles:members' id=circle.id %}" method="POST">
+                        {% csrf_token %}
+
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="manage_members_label">Manage members</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        {% if circle.all_users %}
+                            <div class="modal-body">
+                                Remove "all members" option in <a href="{% url 'circles:detail' id=circle.id %}">details</a> before manage members
+                            </div>
+                        {% else %}
+                            <div class="modal-body">
+                                {% include 'parts/multiple_users_select.html' with objects_name='members' avaliable_objects=users selected_objects=circle.members.all field_name='members' %}
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary btn-secondary" name="save" disabled>Save</button>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if circle.all_users or users_read_permissions %}
+        <div class="mt-4 col-12">
+            <div class="table-adaptive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Nickname</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if circle.all_users %}
+                            <tr>
+                                <td class="align-middle d-none d-lg-table-cell">
+                                </td>
+                                <td class="align-middle" data-title="All users">
+                                    All ({{ circle.get_members_count }} on {{ circle.host }})
+                                </td>
+                                <td class="align-middle d-none d-lg-table-cell">
+                                </td>
+                                <td class="align-middle d-none d-lg-table-cell">
+                                </td>
+                            </tr>
+                        {% endif %}
+                        {% for user in circle.members.all %}
+                            <tr>
+                                <td class="align-middle" data-title="#">
+                                    <div class="d-flex">
+                                        <div class="avatar avatar-48 bg-primary rounded-circle text-white fs-6">
+                                            {{ user.get_initials }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle" data-title="Username">
+                                    <span class="text-break">
+                                        {{ user.full_jid }}
+                                    </span>
+                                </td>
+                                <td class="align-middle" data-title="Nickname">
+                                    {{ user.nickname|default:'' }}
+                                </td>
+                                <td class="align-middle" data-title="Actions">
+                                    {% if circles_write_permissions %}
+                                        <div class="d-flex">
+                                            <div class="dropdown">
+                                                <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical d-flex"></i>
+                                                </div>
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item text-wrap text-danger" href="{% url 'circles:delete_member' circle_id=circle.id member_id=user.id %}">
+                                                            Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content_title %}
+    Create new user
+{% endblock %}
+
+{% block content %}
+    <div class="col-12">
+        <form action="{% url 'users:create' %}" method="POST">
+            {% csrf_token %}
+            <div class="d-flex flex-column mb-4">
+                <h4 class="text-secondary mt-0">
+                    Credentials
+                </h4>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3 {% if form.username.errors %}text-danger{% endif %}">Username *</label>
+                    <div class="col-12 col-md-9">
+                        <div class="input-group">
+                            <input class="form-control {% if form.username.errors %}is-invalid{% endif %}" type="text" name="username" placeholder="Username" {% if form.username.data %}value="{{ form.cleaned_data.username|default:form.username.data }}"{% endif %}>
+
+                            {% if request.hosts %}
+                                <select class="form-select {% if request.hosts|length < 2 %}custom-disabled{% endif %}" name="host">
+                                    {% for host in request.hosts %}
+                                        <option value="{{ host.name }}"
+                                                {% if form.cleaned_data.host %}
+                                                    {% if form.cleaned_data.host == host.name %}selected{% endif %}
+                                                {% elif request.current_host == host %}selected{% endif %}>
+                                            @{{ host.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label class="col-form-label col-12 col-md-3 {% if form.password.errors %}text-danger{% endif %}">Password *</label>
+                    <div class="col-12 col-md-9">
+                        <div class="input-group">
+                            <div class="password {% if form.password.data %}active{% endif %}">
+                                <input class="password-input form-control {% if form.password.errors %}is-invalid{% endif %}" type="password" name="password" placeholder="Password" {% if form.password.data %}value="{{ form.password.data }}"{% endif %}>
+                                <button class="password-btn" type="button">
+                                    <i class="password-icon bi bi-eye"></i>
+                                    <i class="password-icon bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <button class="btn btn-primary generate-password-js" type="button">Generate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column mb-4">
+                <h4 class="text-secondary mt-0">
+                    User details
+                </h4>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3">Nickname</label>
+                    <div class="col-12 col-md-9">
+                        <input class="form-control" type="text" name="nickname" placeholder="John Doe" {% if form.nickname.data %}value="{{ form.nickname.data }}"{% endif %}>
+                        <span class="form-text text-secondary">Nickname will be seen to user's contact.</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3">First name</label>
+                    <div class="col-12 col-md-9">
+                        <input class="form-control" type="text" name="first_name" placeholder="John" {% if form.first_name.data %}value="{{ form.first_name.data }}"{% endif %}>
+                        <span class="form-text text-secondary">Permitted symbols are a..z, 0..9, dots and underscores.</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3">Last name</label>
+                    <div class="col-12 col-md-9">
+                        <input class="form-control" type="text" name="last_name" placeholder="Doe" {% if form.last_name.data %}value="{{ form.last_name.data }}"{% endif %}>
+                        <span class="form-text text-secondary">Permitted symbols are a..z, 0..9, dots and underscores.</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3">Expires</label>
+                    <div class="col-12 col-md-9">
+                        <div class="row check-date-js">
+                            <div class="col-6">
+                                <input class="form-control text-body-tertiary" type="date" name="expires_date" {% if form.expires_date.data %}value="{{ form.expires_date.data }}"{% endif %}>
+                            </div>
+                            <div class="col-6">
+                                <input class="form-control text-body-tertiary" type="time" name="expires_time" value="{{ form.expires_time.data|default:'12:00' }}" disabled>
+                            </div>
+                        </div>
+                        <span class="form-text text-secondary">User expiration date.</span>
+                    </div>
+                </div>
+
+                {% if request.user.is_admin %}
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-3"></div>
+
+                        <div class="col-12 col-md-9">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" name="is_admin" id="is_admin" {% if form.is_admin.data %}checked{% endif %}>
+                                <label class="form-check-label" for="is_admin">
+                                    Administrator
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <button class="btn btn-primary" type="submit">Create user</button>
+        </form>
+    </div>
+{% endblock %}

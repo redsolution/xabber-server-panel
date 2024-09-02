@@ -1,0 +1,10 @@
+<form action="{% url 'config:host_change' %}" method="POST" class="form-host-js">
+    {% csrf_token %}
+    <select class="form-select {% if request.hosts|length < 2 %}custom-disabled{% endif %}" id="host" name="host" role="button">
+        {% for host in request.hosts %}
+            <option value="{{ host.id }}" {% if host == request.current_host %}selected{% endif %}>
+                {{ host.name }}
+            </option>
+        {% endfor %}
+    </select>
+</form>

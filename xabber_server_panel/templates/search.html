@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block section_title %}{% endblock %}
+
+{% block host_select %}
+    {% if request.user.is_admin %}
+        <div class="ms-auto me-0 me-md-4 pt-2 pt-md-0 order-1 order-md-0 col-12 col-md-auto header-host">
+            {% include 'parts/host_select.html' %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% url 'search' as url %}
+    <div class="mb-4 col-12 d-flex flex-wrap flex-md-nowrap">
+        <div class="d-flex align-items-center me-0 me-md-4 col-12 col-md-auto">
+            <h2 class="mb-0">
+                Search
+            </h2>
+            <div class="vr mx-3"></div>
+            <h4 class="mb-0 text-secondary fw-normal">
+                <span>
+                    {{ request.GET.search|truncatechars:'20' }}
+                </span>
+            </h4>
+        </div>
+    </div>
+
+    <div class="mt-4 search-list-js" data-url="{{ url }}" data-querystring="{{ request.META.QUERY_STRING }}">
+        {% include 'parts/search_list.html' %}
+    </div>
+{% endblock %}

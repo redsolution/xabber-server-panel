@@ -1,0 +1,116 @@
+{% load base_tags users_tags %}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        {% url 'home' as home %}
+        <a href="{{ home }}" class="nav-link text-white {% if request.path_info == home %}active{% endif %}">
+            <i class="bi bi-house-door me-1 pe-none"></i>
+            Home
+        </a>
+    </li>
+
+    {% if dashboard_read_permissions %}
+        <li class="nav-item">
+            {% url 'dashboard:dashboard' as dashboard %}
+            <a href="{{ dashboard }}" class="nav-link text-white {% if request.path_info == dashboard %}active{% endif %}">
+                <i class="bi bi-speedometer2 me-1 pe-none"></i>
+                Dashboard
+            </a>
+        </li>
+    {% endif %}
+
+    {% if users_read_permissions %}
+        <li class="nav-item">
+            {% url 'users:list' as users %}
+            <a href="{{ users }}" class="nav-link text-white {% if users in request.path_info %}active{% endif %}">
+                <i class="bi bi-people me-1 pe-none"></i>
+                Users
+            </a>
+        </li>
+    {% endif %}
+
+    {% if circles_read_permissions %}
+        <li class="nav-item">
+            {% url 'circles:list' as circles %}
+            <a href="{{ circles }}" class="nav-link text-white {% if circles in request.path_info %}active{% endif %}">
+                <i class="bi bi-circle me-1 pe-none"></i>
+                Circles
+            </a>
+        </li>
+    {% endif %}
+
+    {% if groups_read_permissions %}
+        <li class="nav-item">
+            {% url 'groups:list' as groups %}
+            <a href="{{ groups }}" class="nav-link text-white {% if groups in request.path_info %}active{% endif %}">
+                <i class="bi bi-grid me-1 pe-none"></i>
+                Groups
+            </a>
+        </li>
+    {% endif %}
+
+    {% if request.user.is_admin %}
+        <li class="nav-item">
+            {% url 'registration:list' as registration %}
+            <a href="{{ registration }}" class="nav-link text-white {% if registration in request.path_info %}active{% endif %}">
+                <i class="bi bi-person-plus me-1 pe-none"></i>
+                Registration
+            </a>
+        </li>
+    {% endif %}
+
+    {% if settings_read_permissions %}
+        <li class="nav-item">
+            {% url 'config:root' as config %}
+            <a href="{{ config }}" class="nav-link text-white {% if config in request.path_info %}active{% endif %}">
+                <i class="bi bi-sliders me-1 pe-none"></i>
+                Settings
+            </a>
+        </li>
+    {% endif %}
+
+    {% if log_read_permissions %}
+        <li class="nav-item">
+            {% url 'log:server_log' as server_log %}
+            <a href="{{ server_log }}" class="nav-link text-white {% if server_log in request.path_info %}active{% endif %}">
+                <i class="bi bi-card-text me-1 pe-none"></i>
+                Log
+            </a>
+        </li>
+    {% endif %}
+</ul>
+
+{% if modules and user.is_authenticated %}
+    <hr>
+    <ul class="nav nav-pills flex-column">
+        <li class="nav-item">
+            <a class="nav-link text-secondary">
+                Modules
+            </a>
+        </li>
+        {% for module in modules %}
+            {% with namespace=module.name|add:':info' module_base_url='/modules/'|add:module.name %}
+                {% if module.global_module %}
+                    {% if request.user.is_admin %}
+                        <li class="nav-item">
+                            {% url namespace as module_url %}
+                            <a href="{{ module_url }}" class="nav-link text-white {% if module_url and module_base_url in request.path_info %}active{% endif %}">
+                                {{ module.verbose_name }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    {% check_user_permissions module.name as module_read_permissions %}
+
+                    {% if module_read_permissions %}
+                        <li class="nav-item">
+                            {% url namespace as module_url %}
+                            <a href="{{ module_url }}" class="nav-link text-white {% if module_url and module_base_url in request.path_info %}active{% endif %}">
+                                {{ module.verbose_name }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+    </ul>
+{% endif %}

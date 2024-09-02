@@ -1,0 +1,1 @@
+default_app_config = 'xabber_server_panel.base_modules.users.apps.UsersConfig'

@@ -1,0 +1,64 @@
+{% load base_tags users_tags %}
+
+{% if groups %}
+    {% paginate groups 8 as paginated_groups %}
+    {% check_user_permissions 'groups' 'write' as groups_write_permissions %}
+
+    <div class="table-adaptive position-relative">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Chat identifier</th>
+                    <th>Owner</th>
+                    <th>Members</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group in paginated_groups %}
+                    <tr>
+                        <td data-title="#">
+                            {{ forloop.counter }}
+                        </td>
+                        <td data-title="Chat identifier">
+                            {{ group.localpart }}
+                        </td>
+                        <td data-title="Owner">
+                            {% get_user_by_jid group.owner as user %}
+                            <a {% if user %}href="{% url 'users:detail' id=user.id %}"{% endif %}>
+                                {{ group.owner }}
+                            </a>
+                        </td>
+                        <td data-title="Members">
+                            {{ group.user_count }}
+                        </td>
+                        <td data-title="Actions">
+                            {% if groups_write_permissions %}
+                                <div class="d-flex">
+                                    <div class="dropdown">
+                                        <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical d-flex"></i>
+                                        </div>
+
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'groups:delete' localpart=group.localpart %}" data-delete-name="Group" data-delete-target="{{ group.localpart }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                     Delete group
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if groups|length > 8 %}
+        {% include 'parts/pagination.html' with objects=paginated_groups %}
+    {% endif %}
+{% endif %}

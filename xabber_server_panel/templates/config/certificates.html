@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load config_tags base_tags %}
+
+{% block content_title %}
+    Server settings
+{% endblock %}
+
+{% block content %}
+    {% url 'config:tabs' as url %}
+    <div class="mb-4 col-12">
+        {% include 'config/parts/links.html' %}
+    </div>
+    <div class="table-adaptive">
+        {% include 'config/parts/cert_list.html' %}
+    </div>
+
+    <div class="mt-4">
+        <form class="check-change-js" action="{% url 'config:upload_cert' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label h5" for="formFile">
+                    Upload certificate
+                </label>
+
+                <input class="form-control" id="formFile" type="file" name="file" accept=".pem">
+            </div>
+
+            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
+        </form>
+    </div>
+{% endblock %}

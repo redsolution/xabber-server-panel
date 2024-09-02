@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block section_title %}{% endblock %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'registration:list' %}">
+                            Registration
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        URL
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {{ registration_url.host }}
+            </h6>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="mb-0">
+            Current URL:
+            <span class="current-url-js">
+                {{ registration_url.url|default:'' }}
+            </span>
+        </h5>
+    </div>
+
+    <div class="col-12">
+        <form class="check-change-js" action="{% url 'registration:url' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Change to</label>
+                <input class="form-control" type="text" placeholder="https://example.com" name="url" required>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" name="all" id="all_domains">
+                    <label class="form-check-label" for="all_domains">
+                        Set for all domains
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
+        </form>
+    </div>
+{% endblock %}

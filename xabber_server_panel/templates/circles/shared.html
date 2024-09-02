@@ -1,0 +1,75 @@
+{% extends 'circles/base.html' %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'circles:list' %}">
+                            Circles
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        {{ circle.circle }}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {{ circle.host }}
+            </h6>
+        </div>
+    </div>
+
+    <div class="mb-4 col-12">
+        {% include 'circles/parts/links.html' %}
+    </div>
+
+    <div class="alert alert-warning mb-4">
+        Contact lists for members of this circle will be updated to include members from the selected circles.
+    </div>
+
+    <div class="pb-5 mb-5 col-12">
+        <form class="check-change-js" action="{% url 'circles:shared' id=circle.id %}" method="post">
+            {% csrf_token %}
+
+            <ul class="list-group">
+                {% for obj in circles %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="form-check me-2 mb-0">
+                            <input class="form-check-input" type="checkbox" name="contacts" {% if obj.circle in circle.get_subscribes %}checked{% endif %} value="{{ obj.circle }}" id="circle_{{ obj.circle }}" {% if not circles_write_permissions %}disabled{% endif %}>
+                            <label class="form-check-label" for="circle_{{ obj.circle }}">
+                                {{ obj.circle }}
+                            </label>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            {{ obj.get_members_count }} members
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if circles_write_permissions %}
+                <div class="fixed-bottom row col-md-9 col-lg-10 m-0 ms-auto py-4 px-0 px-md-4 bg-body border-top shadow">
+                    <div class="col-12 p-md-0">
+                        <div class="container-xxl p-0">
+                            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

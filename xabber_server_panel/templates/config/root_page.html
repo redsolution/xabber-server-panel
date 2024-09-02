@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load config_tags base_tags %}
+
+{% block content_title %}
+    Server settings
+{% endblock %}
+
+{% block content %}
+    {% url 'config:tabs' as url %}
+    <div class="mb-4 col-12">
+        {% include 'config/parts/links.html' %}
+    </div>
+
+    {% get_items_by_model_name 'rootpage' num=1 as rp %}
+    <div class="col-12 pb-5 mb-5">
+        <form class="check-change-js" action="{% url 'config:root_page' %}" method="post">
+            {% csrf_token %}
+
+            <div class="d-flex flex-column">
+                <h4 class="text-secondary mt-0">
+                    Root page
+                </h4>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3">
+                        Module
+                    </label>
+                    <div class="col-12 col-md-9">
+                        <select class="form-select" name="module" {% if not settings_write_permissions %}disabled{% endif %}>
+                            <option value="home">
+                                Home page
+                            </option>
+                            {% for module in modules %}
+                                {% if module.root_page %}
+                                    <option value="{{ module.name }}" {% if rp.0.module == module.name %}selected{% endif %}>
+                                        {{ module.verbose_name }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <span class="form-text text-secondary">Select a module for the project's root page.</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if settings_write_permissions %}
+                <div class="fixed-bottom row col-md-9 col-xl-10 m-0 ms-auto py-4 px-0 px-md-4 bg-body border-top shadow">
+                    <div class="col-12 p-md-0">
+                        <div class="container-xxl p-0">
+                            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

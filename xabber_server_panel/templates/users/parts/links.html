@@ -1,0 +1,30 @@
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        {% url 'users:detail' id=user.id as detail %}
+        <a class="nav-link {% if request.path_info == detail %}active{% endif %}" aria-current="page" href="{{ detail }}">
+            Details
+        </a>
+    </li>
+    <li class="nav-item">
+        {% url 'users:vcard' id=user.id as vcard %}
+        <a class="nav-link {% if request.path_info == vcard %}active{% endif %}" href="{{ vcard }}">
+            vCard
+        </a>
+    </li>
+    {% if circles_read_permissions %}
+        <li class="nav-item">
+            {% url 'users:circles' id=user.id as circles %}
+            <a class="nav-link {% if request.path_info == circles %}active{% endif %}" href="{{ circles }}">
+                Circles
+            </a>
+        </li>
+    {% endif %}
+    {% if request.user.is_admin and request.user != user %}
+        <li class="nav-item">
+            {% url 'users:permissions' id=user.id as permissions %}
+            <a class="nav-link {% if request.path_info == permissions %}active{% endif %}" href="{{ permissions }}">
+                Permissions
+            </a>
+        </li>
+    {% endif %}
+</ul>

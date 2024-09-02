@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load config_tags %}
+
+{% block content_title %}
+    Server settings
+{% endblock %}
+
+{% block content %}
+    {% url 'config:tabs' as url %}
+    <div class="mb-4 col-12">
+        {% include 'config/parts/links.html' %}
+    </div>
+
+    {% if modules %}
+        <div class="table-adaptive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Module</th>
+                        <th>Version</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for module in modules %}
+                        <tr>
+                            <td data-title="#">{{ forloop.counter }}</td>
+                            <td data-title="Module">
+                                {{ module.verbose_name }}
+                            </td>
+                            <td data-title="Version">
+                                {{ module.version }}
+                            </td>
+                            <td data-title="Actions">
+                                {% if settings_write_permissions %}
+                                    <div class="d-flex">
+                                        <div class="dropdown">
+                                            <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical d-flex"></i>
+                                            </div>
+
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'config:delete_module' module=module.name %}" data-delete-name="Module" data-delete-target="{{ module.verbose_name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                         Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if settings_write_permissions %}
+        <div class="mt-4">
+            <form class="check-change-js" action="{% url 'config:modules' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label h5" for="formFile">
+                        You can only upload a module in TAR.GZ or TGZ format.
+                    </label>
+
+                    <input class="form-control" id="formFile" type="file" name="file" accept=".tar.gz, .tgz">
+                </div>
+
+                <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}

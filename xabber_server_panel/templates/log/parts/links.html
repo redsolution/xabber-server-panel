@@ -1,0 +1,18 @@
+<ul class="nav nav-tabs">
+    {% if log_read_permissions %}
+        <li class="nav-item">
+            {% url 'log:server_log' as server_log %}
+            <a class="nav-link {% if server_log == request.path_info %}active{% endif %}" href="{{ server_log }}">
+                Server log
+            </a>
+        </li>
+    {% endif %}
+    {% if log_read_permissions %}
+        <li class="nav-item">
+            {% url 'log:django_log' as django_log %}
+            <a class="nav-link {% if django_log == request.path_info %}active{% endif %}" href="{{ django_log }}">
+                Django log
+            </a>
+        </li>
+    {% endif %}
+</ul>

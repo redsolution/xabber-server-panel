@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content_title %}
+    Server is not running
+{% endblock %}
+
+{% block content %}
+    {% if dashboard_write_permissions %}
+        <div class="col-12">
+            Start server in
+            <a href="{% url 'dashboard:dashboard' %}">
+                dashboard.
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

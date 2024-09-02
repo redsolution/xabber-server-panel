@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load users_tags %}
+
+{% block content_title %}
+    Dashboard
+{% endblock %}
+
+{% block content %}
+    <div class="col-12">
+        <h5 class="mb-3">
+            XMPP Server
+        </h5>
+
+        <h5 class="mb-3 loader-startserver-js">
+            Status:
+            {% if started %}
+                <span class="text-success" role="status">
+                    started
+                </span>
+            {% else %}
+                <span class="text-danger" role="status">
+                    stopped
+                </span>
+            {% endif %}
+            <span class="d-none spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+        </h5>
+
+        {% if request.user.is_admin %}
+            <div class="mb-3 overflow-hidden">
+                <form method="post" action="{% url 'dashboard:dashboard' %}">
+                    {% csrf_token %}
+
+                    <div class="d-flex flex-wrap mb-n3 me-n3">
+                        <a class="btn btn-success me-3 mb-3 {% if started %}disabled{% endif %}" data-bs-toggle="modal" data-bs-target="#start_server" role="button">
+                             Start server
+                        </a>
+                        <button class="btn btn-primary me-3 mb-3" name="restart" value="restart" {% if not started %}disabled{% endif %}>
+                            Restart server
+                        </button>
+                        <button class="btn btn-danger me-3 mb-3" name="stop" value="stop" {% if not started %}disabled{% endif %}>
+                            Stop server
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <h5 class="pb-2">
+            Virtual hosts and users
+        </h5>
+        <div class="table-adaptive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            Virtual host
+                        </th>
+                        <th>
+                            All users
+                        </th>
+                        <th>
+                            Online users
+                        </th>
+                        <th>DNS</th>
+                        <th>
+                            Certificates
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in data.hosts %}
+                        <tr>
+                            <td data-title="#">
+                                {{ forloop.counter }}
+                            </td>
+                            <td data-title="Virtual host">
+                                {{ obj.host }}
+                            </td>
+                            <td data-title="All users">
+                                {{ obj.total|default:'--' }}
+                            </td>
+                            <td data-title="Online users">
+                                {{ obj.online|default:'--' }}
+                            </td>
+                            <td class="align-middle" data-title="DNS">
+                               {% if not obj.host.srv_records %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-link text-warning fs-5 me-2">
+                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                        </div>
+                                        <a href="{% url 'config:host_detail' id=obj.host.id %}">
+                                            DNS records failed
+                                        </a>
+                                    </div>
+                               {% endif %}
+                            </td>
+
+                            <td class="align-middle" data-title="Certificates">
+                                {% if obj.host.cert_errors %}
+                                    <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{% for error in obj.host.cert_errors %}{{ error }} {% endfor %}">
+                                        <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                    </div>
+                               {% else %}
+                                    Expires on {{ obj.host.certificate.expiration_date|date:"d.m.Y H:i" }}
+                               {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="d-none d-lg-table-cell"></td>
+                        <td class="d-none d-lg-table-cell"></td>
+                        <td data-title="Total users">
+                            {{ data.total }}
+                        </td>
+                        <td data-title="Total online users">
+                            {{ data.online|default:'--' }}
+                        </td>
+                        <td class="d-none d-lg-table-cell"></td>
+                        <td class="d-none d-lg-table-cell"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+{% endblock %}

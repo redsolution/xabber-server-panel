@@ -1,0 +1,111 @@
+{% load base_tags users_tags %}
+
+{% if users %}
+    {% paginate users 12 as paginated_users %}
+    {% check_user_permissions 'users' 'write' as users_write_permissions %}
+
+    <div class="table-adaptive position-relative">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Expires(UTC)</th>
+                    <th>Auth</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in paginated_users %}
+                    <tr>
+                        <td data-title="Username">
+                            <div class="d-flex">
+                                <a class="d-flex align-items-center text-decoration-none" href="{% url 'users:detail' id=user.id %}">
+                                    {% if user.is_admin %}
+                                        <div class="icon-link fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Server administrator">
+                                            <i class="bi bi-person-fill-gear d-flex"></i>
+                                        </div>
+                                    {% endif %}
+                                    <span class="text-decoration-underline">
+                                        {{ user.username }}
+                                    </span>
+                                </a>
+                            </div>
+                        </td>
+                        <td data-title="Name">
+                            {% if user.nickname %}
+                                {{ user.nickname|truncatechars:'15' }}
+                            {% else %}
+                                {{ user.full_name|truncatechars:'15' }}
+                            {% endif %}
+                        </td>
+                        <td data-title="Expires(UTC)">
+                            <span class="text-body-secondary">
+                                {% if user.expires %}
+                                    {{ user.expires|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td data-title="Auth">
+                            <span class="text-body-secondary">
+                                {{ user.get_auth_backend_display }}
+                            </span>
+                        </td>
+                        <td data-title="Status">
+                            <span class="text-success {% if not user.is_active %}text-danger{% endif %}">
+                                {{ user.status|title }}
+                            </span>
+                        </td>
+                        <td data-title="Actions">
+                            <div class="d-flex">
+                                <div class="dropdown">
+                                    <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical d-flex"></i>
+                                    </div>
+
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item text-wrap" href="{% url 'users:vcard' id=user.id %}">
+                                                Edit vcard
+                                            </a>
+                                        </li>
+
+                                        {% if user != request.user %}
+                                            {% if users_write_permissions and not user.auth_backend_is_ldap %}
+                                                <li>
+                                                    <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'users:delete' id=user.id %}" data-delete-name="User" data-delete-target='{{ user.username }}' data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                         Delete user
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            {% if users_write_permissions %}
+                                                <li>
+                                                    {% if user.status != 'BLOCKED' %}
+                                                        <a class="dropdown-item text-wrap text-info" data-block-href="{% url 'users:block' id=user.id %}" data-bs-toggle="modal" data-bs-target="#block_user" type="button">
+                                                             Block user
+                                                        </a>
+                                                    {% else %}
+                                                        <a class="dropdown-item text-wrap text-info" href="{% url 'users:unblock' id=user.id %}">
+                                                             Unblock user
+                                                        </a>
+                                                    {% endif %}
+                                                </li>
+                                            {% endif %}
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if users.count > 12 %}
+        {% include 'parts/pagination.html' with objects=paginated_users %}
+    {% endif %}
+{% endif %}

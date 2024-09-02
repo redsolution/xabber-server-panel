@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content_title %}
+    Create new circle
+{% endblock %}
+
+{% block content %}
+    <div class="col-12">
+        <form action="{% url 'circles:create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.circle.errors %}text-danger{% endif %}">Circle *</label>
+                <div class="col-12 col-md-9">
+                    <div class="input-group">
+                        <input class="form-control {% if form.circle.errors %}is-invalid{% endif %}" type="text" name="circle" placeholder="Circle identifier" {% if form.circle.data %}value="{{ form.cleaned_data.circle|default:form.circle.data }}"{% endif %}>
+
+                        {% if request.hosts %}
+                            <select class="form-select {% if request.hosts|length < 2 %}custom-disabled{% endif %}" name="host">
+                                {% for host in request.hosts %}
+                                    <option value="{{ host.name }}"
+                                        {% if form.cleaned_data.host %}
+                                            {% if form.cleaned_data.host == host.name %}selected{% endif %}
+                                        {% elif request.current_host == host %}selected{% endif %}>
+                                        @{{ host.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3">Name</label>
+                <div class="col-12 col-md-9">
+                    <input class="form-control" type="text" placeholder="Name" name="name" {% if form.name.data %}value="{{ form.name.data }}"{% endif %}>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3">Description</label>
+                <div class="col-12 col-md-9">
+                    <textarea class="form-control" name="description" cols="30" rows="6">
+                        {% if form.description.data %}{{ form.description.data }}{% endif %}
+                    </textarea>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-3"></div>
+                <div class="col-12 col-md-9">
+                    <div class="d-flex">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" id="autoshare" type="checkbox" name="autoshare" {% if form.autoshare.data or not form.data %}checked{% endif %}>
+                            <label class="form-check-label" for="autoshare">
+                                Autoshare circle
+                            </label>
+                        </div>
+                        <div class="icon-link text-primary fs-5 ms-2" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Share members of this circle among themselves.">
+                            <i class="bi bi-info-circle-fill d-flex"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-3"></div>
+                <div class="col-12 col-md-9">
+                    <div class="d-flex">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" id="all_users" type="checkbox" name="all_users" {% if form.all_users.data %}checked{% endif %}>
+                            <label class="form-check-label" for="all_users">
+                                Include all users
+                            </label>
+                        </div>
+                        <div class="icon-link text-primary fs-5 ms-2" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Create global circle including all users in selected host.">
+                            <i class="bi bi-info-circle-fill d-flex"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Create circle</button>
+        </form>
+    </div>
+{% endblock %}

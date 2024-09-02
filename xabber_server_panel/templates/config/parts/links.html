@@ -1,0 +1,54 @@
+<ul class="nav nav-tabs">
+    {% if request.user.is_admin %}
+        <li class="nav-item">
+            {% url 'config:hosts' as hosts %}
+            <a class="nav-link {% if hosts == request.path_info %}active{% endif %}" aria-current="page" href="{{ hosts }}">
+                Virtual hosts
+            </a>
+        </li>
+        <li class="nav-item">
+            {% url 'config:admins' as admins %}
+            <a class="nav-link {% if admins == request.path_info %}active{% endif %}" href="{{ admins }}">
+                Administrators
+            </a>
+        </li>
+    {% endif %}
+    <li class="nav-item">
+        {% url 'config:ldap' as ldap %}
+        <a class="nav-link {% if ldap == request.path_info %}active{% endif %}" href="{{ ldap }}">
+            LDAP
+        </a>
+    </li>
+    {% if request.user.is_admin %}
+        <li class="nav-item">
+            {% url 'config:modules' as modules %}
+            <a class="nav-link {% if modules == request.path_info %}active{% endif %}" href="{{ modules }}">
+                Modules
+            </a>
+        </li>
+    {% endif %}
+    {% if modules %}
+        <li class="nav-item">
+            {% url 'config:root_page' as root_page %}
+            <a class="nav-link {% if root_page == request.path_info %}active{% endif %}" href="{{ root_page }}">
+                Root page
+            </a>
+        </li>
+    {% endif %}
+    {% if request.user.is_admin %}
+        <li class="nav-item">
+            {% url 'config:cron_jobs' as cron_jobs %}
+            <a class="nav-link {% if cron_jobs == request.path_info %}active{% endif %}" href="{{ cron_jobs }}">
+                Cron jobs
+            </a>
+        </li>
+    {% endif %}
+    {% if request.user.is_admin %}
+        <li class="nav-item">
+            {% url 'config:certificates' as certificates %}
+            <a class="nav-link {% if certificates == request.path_info %}active{% endif %}" href="{{ certificates }}">
+                Certificates
+            </a>
+        </li>
+    {% endif %}
+</ul>

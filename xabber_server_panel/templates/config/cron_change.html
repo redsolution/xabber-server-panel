@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load base_tags %}
+
+{% block section_title %}{% endblock %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'config:cron_jobs' %}">
+                            Cron jobs
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        Change cron
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="col-12">
+
+        <h4 class="text-secondary mt-0">
+            Change command {{ cron_job.command }}
+        </h4>
+
+        <form class="check-change-js" method="post">
+            {% csrf_token %}
+
+            <input type="hidden" value="{{ cron_job.command }}" name="command">
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.schedule.errors %}text-danger{% endif %}">Schedule</label>
+                <div class="col-12 col-md-9">
+                    <input class="form-control {% if form.schedule.errors %}is-invalid{% endif %} {% if cron_job.type == 'built_in_job' %}custom-disabled{% endif %}" type="text" name="schedule" placeholder="*/5 * * * *" {% if form.data %}value="{{ form.schedule.data }}"{% else %}value="{{ cron_job.schedule }}"{% endif %}>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.args.errors %}text-danger{% endif %}">Args</label>
+                <div class="col-12 col-md-9">
+                    <textarea class="form-control {% if form.args.errors %}is-invalid{% endif %} {% if cron_job.type == 'built_in_job' %}custom-disabled{% endif %}" placeholder="['arg1', 'arg2']" name="args" cols="30" rows="6">{% if form.data %}{{ form.args.data }}{% else %}{{ cron_job.args|default:'' }}{% endif %}</textarea>
+                    <span class="form-text text-secondary">{{ form.args.help_text }}</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.kwargs.errors %}text-danger{% endif %}">Kwargs</label>
+                <div class="col-12 col-md-9">
+                    <textarea class="form-control {% if form.kwargs.errors %}is-invalid{% endif %} {% if cron_job.type == 'built_in_job' %}custom-disabled{% endif %}" placeholder='{"indent": 4}' name="kwargs" cols="30" rows="6">{% if form.data %}{{ form.kwargs.data }}{% else %}{{ cron_job.kwargs|default:'' }}{% endif %}</textarea>
+                    <span class="form-text text-secondary">{{ form.kwargs.help_text }}</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.type.errors %}text-danger{% endif %}">Type</label>
+                <div class="col-12 col-md-9">
+                    <select class="form-select {% if cron_job.type == 'built_in_job' %}custom-disabled{% endif %}" name="type">
+                        <option value="internal_command" {% if form.data %}{% if form.type.data == 'internal_command' %}selected{% endif %}{% elif cron_job.type == 'internal_command' %}selected{% endif %}>
+                            Internal command
+                        </option>
+                        <option value="function" {% if form.data %}{% if form.type.data == 'function' %}selected{% endif %}{% elif cron_job.type == 'function' %}selected{% endif %}>
+                            Function
+                        </option>
+                        <option value="console_command" {% if form.data %}{% if form.type.data == 'console_command' %}selected{% endif %}{% elif cron_job.type == 'console_command' %}selected{% endif %}>
+                            Console command
+                        </option>
+
+                        {% if cron_job.type == 'built_in_job' %}
+                            <option value="built_in_job" {% if form.data %}{% if form.type.data == 'built_in_job' %}selected{% endif %}{% elif cron_job.type == 'built_in_job' %}selected{% endif %}>
+                                Built-in job
+                            </option>
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-3"></div>
+                <div class="col-12 col-md-9">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" id="active" type="checkbox" name="active" {% if form.data %}{% if form.active.data %}checked{% endif %}{% else %}{% if cron_job.active %}checked{% endif %}{% endif %}>
+                        <label class="form-check-label" for="active">
+                            Active
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,58 @@
+<table class="table table-striped mb-0">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Domain</th>
+            <th>Expiration date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cert in certificates_info %}
+            <tr>
+                <td class="align-middle" data-title="#">
+                    {{ forloop.counter }}
+                </td>
+                <td class="align-middle" data-title="Name">
+                    {{ cert.name }}
+                </td>
+                <td class="align-middle" data-title="Domain">
+                    {{ cert.domain }}
+                </td>
+                <td class="align-middle" data-title="Expiration date">
+                    {{ cert.expiration_date|date:"d.m.Y H:i" }}
+                </td>
+                <td class="align-middle {% if cert.status == 0 %}text-success{% elif cert.status == 1 %}text-warning{% else %}text-danger{% endif %}" data-title="Status">
+                    <div class="d-flex align-items-center">
+                        {% if cert.status == 2 %}
+                            <div class="icon-link fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{ cert.reason }}">
+                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                            </div>
+                        {% endif %}
+
+                        {{ cert.get_status_display }}
+                    </div>
+                </td>
+                <td data-title="Actions">
+                    <div class="d-flex">
+                        <div class="dropdown">
+                            <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical d-flex"></i>
+                            </div>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'config:delete_cert' name=cert.name %}" data-delete-name="Certificate" data-delete-target="{{ cert.name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                         Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

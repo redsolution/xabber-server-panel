@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load config_tags %}
+
+{% block content_title %}
+    Server settings
+{% endblock %}
+
+{% block content %}
+    {% url 'config:tabs' as url %}
+    <div class="mb-4 col-12">
+        {% include 'config/parts/links.html' %}
+    </div>
+    <form method="POST" class="check-change-js">
+        {% csrf_token %}
+        <div class="host-list-js">
+            {% include 'config/parts/host_list.html' %}
+        </div>
+
+        {% if settings_write_permissions %}
+            <div class="mt-4 mb-n3 me-n3 d-flex justify-content-end flex-wrap">
+                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
+                    Save
+                </button>
+                <a class="btn btn-primary me-3 mb-3" href="{% url 'config:host_create' %}">
+                    Add virtual host
+                </a>
+                <button class="btn btn-success me-3 mb-3 check-records-js" type="button" data-url="{% url 'config:check_records' %}">
+                    <span class="d-none spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                    <span role="status">Check DNS records</span>
+                </button>
+            </div>
+        {% endif %}
+    </form>
+{% endblock %}

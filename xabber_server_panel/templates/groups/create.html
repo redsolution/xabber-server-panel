@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block content_title %}
+    Create new group
+{% endblock %}
+
+{% block content %}
+    <div class="col-12">
+        <form method="POST" novalidate autocomplete="off">
+            {% csrf_token %}
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.localpart.errors %}text-danger{% endif %}">Localpart *</label>
+                <div class="col-12 col-md-9">
+                    <div class="input-group">
+                        <input class="form-control {% if form.localpart.errors %}is-invalid{% endif %}" {% if form.localpart.data %}value="{{ form.cleaned_data.localpart|default:form.localpart.data }}"{% endif %} type="text" name="localpart" placeholder="Localpart" required>
+
+                        {% if request.hosts %}
+                            <select class="form-select {% if request.hosts|length < 2 %}custom-disabled{% endif %}" name="host" required>
+                                {% for host in request.hosts %}
+                                    <option value="{{ host.name }}" {% if form.cleaned_data.host %}{% if form.cleaned_data.host == host.name %}selected{% endif %}{% elif request.current_host == host %}selected{% endif %}>
+                                        @{{ host.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.name.errors %}text-danger{% endif %}">Group name *</label>
+                <div class="col-12 col-md-9">
+                    <input class="form-control {% if form.name.errors %}is-invalid{% endif %}" {% if form.name.data %}value="{{ form.name.data }}"{% endif %} type="text" required placeholder="Group name" name="name">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 {% if form.owner.errors %}text-danger{% endif %}">Owner *</label>
+                <div class="col-12 col-md-9">
+                    <div class="position-relative suggestions-custom suggestions-custom-js">
+                        <input class="form-control {% if form.owner.errors %}is-invalid{% endif %} suggestions-custom__input"
+                               {% if form.owner.data %}value="{{ form.cleaned_data.owner|default:form.owner.data }}"{% endif %}
+                               type="text" required placeholder="username@example.com" name="owner" data-objects="users"
+                               data-url="{% url 'suggestions' %}" data-target="owner-suggestions-js">
+                        <ul class="owner-suggestions-js suggestions-custom__list position-absolute top-100 start-0 w-100 h-auto list-group mt-2 shadow-sm"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 pt-0 {% if form.privacy.errors %}text-danger{% endif %}">Privacy</label>
+
+                <div class="col-12 col-md-9">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="privacy_public" type="radio" name="privacy" value="public" {% if form.privacy.data == 'public' or not form.privacy.data %}checked{% endif %}>
+                        <label class="form-check-label" for="privacy_public">public</label>
+                    </div>
+
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="privacy_incognito" type="radio" name="privacy" value="incognito" {% if form.privacy.data == 'incognito' %}checked{% endif %}>
+                        <label class="form-check-label" for="privacy_incognito">incognito</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 pt-0 {% if form.index.errors %}text-danger{% endif %}">Index</label>
+
+                <div class="col-12 col-md-9">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="index_none" type="radio" name="index" value="none" {% if form.index.data == 'none' or not form.index.data %}checked{% endif %}>
+                        <label class="form-check-label" for="index_none">none</label>
+                    </div>
+
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="index_local" type="radio" name="index" value="local" {% if form.index.data == 'local' %}checked{% endif %}>
+                        <label class="form-check-label" for="index_local">local</label>
+                    </div>
+
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="index_global" type="radio" name="index" value="global" {% if form.index.data == 'global' %}checked{% endif %}>
+                        <label class="form-check-label" for="index_global">global</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-form-label col-12 col-md-3 pt-0 {% if form.membership.errors %}text-danger{% endif %}">Membership</label>
+
+                <div class="col-12 col-md-9">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="membership_open" type="radio" name="membership" value="open" {% if form.membership.data == 'open' or not form.membership.data %}checked{% endif %}>
+                        <label class="form-check-label" for="membership_open">open</label>
+                    </div>
+
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" id="membership_member_only" type="radio" name="membership" value="member-only" {% if form.membership.data == 'member-only' %}checked{% endif %}>
+                        <label class="form-check-label" for="membership_member_only">member-only</label>
+                    </div>
+                </div>
+            </div>
+
+
+            <button class="btn btn-primary" type="submit">Create group</button>
+        </form>
+    </div>
+{% endblock %}

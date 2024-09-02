@@ -1,0 +1,106 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        <a class="fs-4" href="{% url 'users:list' %}">
+                            Users
+                        </a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        {{ user.full_jid }}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="vr mx-3"></div>
+
+            <h6 class="mb-0 text-body-tertiary">
+                {% if user.is_active %}Active{% else %}Blocked{% endif %}
+            </h6>
+        </div>
+    </div>
+
+    <div class="mb-4 col-12">
+        {% include 'users/parts/links.html' %}
+    </div>
+
+    <div class="col-12 pb-5 mb-5">
+        <form class="check-change-js" action="{% url 'users:permissions' id=user.id %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <h4 class="mt-0">
+                    Server
+                </h4>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex align-items-center">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" {% if user.is_admin %}checked{% endif %} name="is_admin" id="is_admin">
+                            <label class="form-check-label" for="is_admin">
+                                Administrator
+                            </label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <hr class="border border-2">
+
+            <h4 class="mt-0">
+                {{ user.host }}
+            </h4>
+
+            {% for app, data in permissions.items %}
+                {% if data %}
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ data.app_name }}
+                        </label>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item d-flex flex-wrap align-items-center">
+                                <div class="form-check form-check-inline mb-0">
+                                    <input class="form-check-input" type="radio" name="permissions_{{ app }}" checked value="0" id="permissions_{{ app }}_forbidden" {% if user.is_admin %}disabled{% endif %}>
+                                    <label class="form-check-label" for="permissions_{{ app }}_forbidden">
+                                        forbidden
+                                    </label>
+                                </div>
+
+                                {% for permission in data.permissions %}
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="permissions_{{ app }}" {% if permission in user.permissions.all %}checked{% endif %} value="{{ permission.id }}" id="permissions_{{ permission.id }}" {% if user.is_admin %}disabled{% endif %}>
+                                        <label class="form-check-label" for="permissions_{{ permission.id }}">
+                                            {{ permission.get_permission_display }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {% if users_write_permissions %}
+                <div class="fixed-bottom row col-md-9 col-xl-10 m-0 ms-auto py-4 px-0 px-md-4 bg-body border-top shadow">
+                    <div class="col-12 p-md-0">
+                        <div class="container-xxl p-0">
+                            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}
