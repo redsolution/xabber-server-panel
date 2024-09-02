@@ -4,6 +4,7 @@
 *.pyc
 __pycache__
 db.sqlite3
+panel.sqlite3
 media
 
 # Backup files #
@@ -123,6 +124,9 @@ venv.bak/
 
 # sftp configuration file
 sftp-config.json
+
+# predefined config for installation
+predefined_config.json
 
 # Package control specific files Package
 Control.last-run
