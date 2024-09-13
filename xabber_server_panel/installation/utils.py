@@ -107,7 +107,7 @@ def migrate_db(data):
         cursor = conn.cursor()
 
         # Read the SQL dump file
-        with open(settings.EJABBERD_DUMP, 'r') as f:
+        with open(settings.EJABBERD_DUMP, 'r', encoding='utf-8') as f:
             sql_commands = f.read()
 
         # Execute each command from the dump file

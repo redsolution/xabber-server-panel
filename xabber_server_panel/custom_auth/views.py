@@ -20,7 +20,6 @@ class CustomLoginView(TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-
         next = request.POST.get('next')
 
         if is_ejabberd_started():

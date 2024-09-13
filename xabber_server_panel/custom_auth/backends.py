@@ -1,14 +1,15 @@
 from xabber_server_panel.base_modules.users.models import User
 
 
-class CustomAuthBackend(object):
+class CustomAuthBackend:
 
     """
         Customized to allow authorization for administrators and users with any permissions.
          Also backend writes api token in user.token field if ejabberd server is started.
     """
 
-    def authenticate(self, username, password, check_password=True, **kwargs):
+    def authenticate(self, request, username, password, check_password=True, **kwargs):
+
         try:
             username, host = username.split('@')
             user = User.objects.get(
