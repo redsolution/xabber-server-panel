@@ -150,8 +150,6 @@ default_ram_db: mnesia
 
 modules:
   mod_adhoc: {}
-  mod_favorites: {}
-  mod_notify: {}
   mod_admin_extra: {}
   mod_announce: # recommends mod_adhoc
     access: announce
@@ -210,9 +208,9 @@ modules:
   mod_panel: {}
   mod_favorites: {}
   mod_notify: {}
-  nick_generator:
-    pre_generated_images: "{{ settings.PROJECT_DIR }}/pre_images"
-    pre_generated_images_count: 20
+  mod_nick_avatar:
+    store_path: "{{ settings.MOD_NICK_AVATAR_FILES }}"
+    amount: 20
   mod_block_users: {}
   mod_ws_proxy_detect: {}
   mod_xabber_push:
