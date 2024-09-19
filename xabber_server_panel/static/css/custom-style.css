@@ -1,0 +1,295 @@
+/*Body*/
+@media (max-width: 767.98px) {
+    .body {
+        overflow-y: auto!important;
+    }
+}
+
+/*Header*/
+.header {
+    height: 64px;
+}
+
+@media (max-width: 767.98px) {
+    .header {
+        height: auto;
+        position: sticky;
+    }
+}
+
+@media (min-width: 1200px) {
+    .header-create .btn {
+        width: 92px;
+    }
+}
+
+.header-create .dropdown-menu {
+    width: 400px;
+}
+
+@media (max-width: 575.98px) {
+    .header-create .dropdown-menu {
+        width: 230px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .header-search {
+        max-width: calc(100% - 16.66666667% - 1.5rem - 92px - 1.5rem - 1.5rem - 160px - 1.5rem - 48px);
+    }
+
+    .header-host form {
+        width: 160px;
+    }
+}
+
+/*Main*/
+.main {
+    padding-top: 64px;
+}
+
+@media (max-width: 767.98px) {
+    .main {
+        padding-top: 0px;
+        height: auto!important;
+    }
+}
+
+/*Content*/
+@media (max-width: 767.98px) {
+    .content {
+        overflow-y: hidden!important;
+    }
+}
+
+/*Sidebar*/
+@media (max-width: 767.98px) {
+    .sidebar .offcanvas-body {
+        flex-grow: initial;
+        min-height: auto!important;
+        overflow: initial!important;
+    }
+}
+
+/*Custom with/height*/
+.mw-480 {
+    width: 100%;
+    max-width: 480px;
+}
+
+.mhp-100 {
+    min-height: 100%;
+}
+
+.mh-400 {
+    min-height: 400px;
+}
+
+@media (min-width: 768px) {
+    .vh-md-100 {
+        height: 100vh;
+    }
+}
+
+/*Login page*/
+.login-page__bottom {
+    position: relative;
+    margin-left: calc((var(--bs-gutter-x) * .5) * -1);
+    margin-right: calc((var(--bs-gutter-x) * .5) * -1);
+    height: 100px;
+    min-height: 100px;
+    min-width: 100%;
+}
+
+.login-page__wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background-image: url('../img/wave.png');
+    background-size: 1000px 100px;
+}
+
+.login-page__wave--1 {
+    animation: wave 30s linear infinite;
+    z-index: 2;
+    opacity: 1;
+    animation-delay: 0s;
+    bottom: 0;
+}
+
+.login-page__wave--2 {
+    animation: wave2 15s linear infinite;
+    z-index: 1;
+    opacity: 0.5;
+    animation-delay: -5s;
+    bottom: 10px;
+}
+
+.login-page__wave--3 {
+    animation: wave 30s linear infinite;
+    z-index: 0;
+    opacity: 0.2;
+    animation-delay: -2s;
+    bottom: 15px;
+}
+
+.login-page__wave--4 {
+    animation: wave2 5s linear infinite;
+    z-index: -1;
+    opacity: 0.7;
+    animation-delay: -5s;
+    bottom: 20px;
+}
+
+@keyframes wave {
+    0%{
+        background-position-x: 0px;
+    }
+    100%{
+        background-position-x: 1000px;
+    }
+}
+
+@keyframes wave2 {
+    0%{
+        background-position-x: 0px;
+    }
+    100%{
+        background-position-x: -1000px;
+    }
+}
+
+/*Custom change for bootstrap*/
+.form-control::-moz-placeholder {
+    color: var(--bs-tertiary-color);
+}
+
+.form-control::placeholder {
+    color: var(--bs-tertiary-color);
+}
+
+.fs-min {
+    font-size: 0.95rem;
+}
+
+/*Input password*/
+.input-group:not(.has-validation)> .password >:not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(.form-floating) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.password {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 0px;
+}
+
+.password.active .password-input {
+    padding-right: calc(1.5em + 0.75rem);
+}
+
+.password-btn {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: calc(1.5em + 0.75rem);
+    height: 100%;
+    border-radius: 0px;
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.password.active .password-btn {
+    display: flex;
+}
+
+.password-icon {
+    width: calc(.75em + .375rem);
+    height: auto;
+    display: flex;
+}
+
+.password-icon:last-child {
+    display: none;
+}
+
+.password-btn.active-show .password-icon:last-child {
+    display: flex;
+}
+
+.password-btn.active-show .password-icon:first-child {
+    display: none;
+}
+
+.password.active .password-input.is-invalid {
+    padding-right: calc(1.5em + 0.75rem + 1.5em + 0.75rem);
+}
+
+.password.active .password-input.is-invalid + .password-btn {
+    right: calc(1.5em + 0.75rem);
+}
+
+/*Custom disabled controls*/
+.custom-disabled {
+    background-color: var(--bs-secondary-bg);
+    opacity: 1;
+    pointer-events: none;
+}
+
+/*Selector Custom*/
+.selector-custom select {
+    min-height: 110px;
+}
+
+/*Suggestions Custom*/
+.suggestions-custom .list-group-item {
+    padding: var(--bs-list-group-item-padding-y) 0.75rem;
+}
+
+.suggestions-custom__list {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.suggestions-custom__list.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/*Modal*/
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+/*Custom scroll*/
+.scroll-custom-y {
+	overflow: hidden;
+	overflow-y: auto;
+	scrollbar-color: var(--bs-gray) var(--bs-gray-700);
+}
+
+.scroll-custom-y::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroll-custom-y::-webkit-scrollbar-track {
+    background-color: var(--bs-gray);
+}
+
+.scroll-custom-y::-webkit-scrollbar-thumb {
+    background-color: var(--bs-gray-700);
+}

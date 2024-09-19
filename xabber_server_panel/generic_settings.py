@@ -103,7 +103,7 @@ EJABBERD_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'xmppserver/etc/ejabberd/')
 EJABBERD_MODULES_CONFIG_FILE = 'modules_config.yml'
 EJABBERD_ADD_CONFIG_FILE = 'additional_config.yml'
 EJABBERDCTL = os.path.join(PROJECT_ROOT, 'xmppserver/bin/ejabberdctl')
-EJABBERD_SHOULD_RELOAD = False
+
 EJABBERD_STATE = os.path.join(PROJECT_ROOT, 'server_state')
 EJABBERD_STATE_ON = 1
 EJABBERD_STATE_OFF = 0
