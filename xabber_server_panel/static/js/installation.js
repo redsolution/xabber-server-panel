@@ -31,4 +31,12 @@ $(function () {
         });
     });
 
+    $(document).on('keydown', function (event) {
+        if (event.which == 13 && $('.installation-form').length > 0) {
+            event.preventDefault();
+
+            $('.installation-content.active').find('.installation-next').click();
+        }
+    });
+
 });
