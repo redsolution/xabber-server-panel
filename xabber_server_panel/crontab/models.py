@@ -57,7 +57,7 @@ class CronJob(models.Model):
             return []
 
     def get_job(self):
-        if self.type == 'internal_command':
+        if self.type in ('internal_command', 'built_in_job'):
             job = (self.schedule, 'django.core.management.call_command', [self.command], self.get_kwargs())
         elif self.type == 'function':
             job = (self.schedule, 'xabber_server_panel.crontab.utils.%s' % self.command, self.get_args(), self.get_kwargs())
