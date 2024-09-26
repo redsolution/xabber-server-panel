@@ -67,6 +67,13 @@ class InstallationForm(forms.Form):
         return not self.step_1_errors()
 
     def validate_2_step(self):
+        self._validate_field('db_host')
+        self._validate_field('db_name')
+        self._validate_field('db_user')
+        self._validate_field('db_user_pass')
+        return not self.step_2_errors()
+
+    def validate_3_step(self):
         self._validate_field('username')
 
         username = self.data.get('username')
@@ -77,13 +84,6 @@ class InstallationForm(forms.Form):
             self.step_errors['username'] = result.get('error_message')
 
         self._validate_field('password')
-        return not self.step_2_errors()
-
-    def validate_3_step(self):
-        self._validate_field('db_host')
-        self._validate_field('db_name')
-        self._validate_field('db_user')
-        self._validate_field('db_user_pass')
         return not self.step_3_errors()
 
     def _validate_field(self, field_name):
@@ -102,10 +102,10 @@ class InstallationForm(forms.Form):
         return 'host' in self.step_errors.keys()
 
     def step_2_errors(self):
-        return any(field in self.step_errors.keys() for field in ['username', 'password'])
+        return any(field in self.step_errors.keys() for field in ['server_name', 'db_name', 'db_user'])
 
     def step_3_errors(self):
-        return any(field in self.step_errors.keys() for field in ['server_name', 'db_name', 'db_user'])
+        return any(field in self.step_errors.keys() for field in ['username', 'password'])
 
     def clean_host(self):
         host = self.cleaned_data['host']

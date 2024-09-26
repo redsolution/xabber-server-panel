@@ -21,9 +21,19 @@ class Steps(TemplateView):
         if server_installed():
             return HttpResponseRedirect(reverse('root'))
 
+        data = load_predefined_config()
+        form = InstallationForm(data)
+        step = '1'
+
+        if form.validate_1_step() and form.validate_2_step():
+            step = '3'
+        elif form.validate_1_step():
+            step = '2'
+
         context = {
             'form': InstallationForm(),
-            'step': '1'
+            'data': data,
+            'step': step
         }
 
         return self.render_to_response(context)
