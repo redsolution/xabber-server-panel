@@ -17,7 +17,7 @@
 
                             <div class="bs-stepper">
                                 <div class="bs-stepper-header flex-wrap flex-lg-nowrap mb-4" role="tablist">
-                                    <div class="step col-6 col-lg-auto {% if step == '1' %}active{% endif %}" data-target="#host_tab">
+                                    <div class="step col-6 col-lg-auto {% if step == '1' %}active{% elif step > '1' %}green{% endif %}" data-target="#host_tab">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="host_tab" id="host_tab-trigger">
                                             <span class="bs-stepper-circle">1</span>
                                             <span class="bs-stepper-label">XMPP host</span>
@@ -25,7 +25,7 @@
                                     </div>
                                     <div class="line d-none d-lg-block"></div>
 
-                                    <div class="step col-6 col-lg-auto {% if step == '2' %}active{% endif %}" data-target="#database_settings">
+                                    <div class="step col-6 col-lg-auto {% if step == '2' %}active{% elif step > '2' %}green{% endif %}" data-target="#database_settings">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="database_settings" id="database_settings-trigger">
                                             <span class="bs-stepper-circle">2</span>
                                             <span class="bs-stepper-label">Database settings</span>
@@ -33,10 +33,10 @@
                                     </div>
                                     <div class="line d-none d-lg-block"></div>
 
-                                    <div class="step col-6 col-lg-auto {% if step == '3' %}active{% endif %}" data-target="#admin_settings">
+                                    <div class="step col-6 col-lg-auto {% if step == '3' %}active{% elif step > '3' %}green{% endif %}" data-target="#admin_settings">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="admin_settings" id="admin_settings-trigger">
                                             <span class="bs-stepper-circle">3</span>
-                                            <span class="bs-stepper-label">Admin settings</span>
+                                            <span class="bs-stepper-label">Create admin</span>
                                         </button>
                                     </div>
                                     <div class="line d-none d-lg-block"></div>
@@ -128,9 +128,9 @@
                                                     <label class="form-label {% if form.step_errors.username %}text-danger{% endif %}">{{ form.username.label }}</label>
                                                     <div class="input-group">
                                                         <input class="form-control {% if form.step_errors.username %}is-invalid{% endif %} {% if step == '3' %}installation-required{% endif %}" type="text" name="username" {% if form.username.data %}value="{{ form.username.data }}"{% endif %} placeholder="admin" maxlength="100" id="id_username">
-                                                        {% if form.host.data %}
+                                                        {% if form.host.data or data.host %}
                                                             <span class="input-group-text">
-                                                                @{{ form.data.host }}
+                                                                @{% if form.host.data %}{{ form.data.host }}{% else %}{{ data.host }}{% endif %}
                                                             </span>
                                                         {% endif %}
                                                     </div>
