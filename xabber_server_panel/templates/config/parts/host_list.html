@@ -26,7 +26,9 @@
                         </td>
 
                         <td class="align-middle" data-title="SRV Records">
-                           {% if not host.srv_records %}
+                           {% if host.srv_records %}
+                             OK
+                            {% else %}
                                 <div class="d-flex align-items-center">
                                     <div class="icon-link text-warning fs-5 me-2">
                                         <i class="bi bi-exclamation-triangle-fill d-flex"></i>

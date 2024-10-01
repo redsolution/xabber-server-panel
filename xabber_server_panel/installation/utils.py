@@ -289,7 +289,7 @@ def assign_group_to_all(data):
 
 
 def activate_base_cronjobs():
-    CronJob.objects.filter(base=True).update(active=True)
+    CronJob.objects.filter(type='built_in_job').update(active=True)
 
 
 def start_installation_process(data):

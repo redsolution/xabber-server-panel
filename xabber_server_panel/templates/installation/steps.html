@@ -61,7 +61,7 @@
                                             <div class="mw-480 mx-auto">
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.host %}text-danger{% endif %}">{{ form.host.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.host %}is-invalid{% endif %} {% if step == 1 %}installation-required{% endif %}" id="id_host" type="text" name="host" value="{% if form.host.data %}{{ form.host.data }}{% else %}{{ data.host }}{% endif %}" placeholder="example.com" maxlength="128">
+                                                    <input class="form-control {% if form.step_errors.host %}is-invalid{% endif %} {% if step == 1 %}installation-required{% endif %}" id="id_host" type="text" name="host" value="{% if form.host.data %}{{ form.host.data }}{% endif %}" placeholder="example.com" maxlength="128">
                                                 </div>
 
                                                 <div class="d-flex justify-content-between align-items-center mt-4">
@@ -84,22 +84,22 @@
                                             <div class="mw-480 mx-auto">
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_host %}text-danger{% endif %}">{{ form.db_host.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_host %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_host" value="{% if form.db_host.data %}{{ form.db_host.data }}{% else %}{{ data.db_host }}{% endif %}" placeholder="localhost" maxlength="100" id="id_db_host">
+                                                    <input class="form-control {% if form.step_errors.db_host %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_host" value="{% if form.db_host.data %}{{ form.db_host.data }}{% endif %}" placeholder="localhost" maxlength="100" id="id_db_host">
                                                 </div>
 
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_name %}text-danger{% endif %}">{{ form.db_name.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_name %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_name" value="{% if form.db_name.data %}{{ form.db_name.data }}{% else %}{{ data.db_name }}{% endif %}" placeholder="xabberserver" maxlength="100" id="id_db_name">
+                                                    <input class="form-control {% if form.step_errors.db_name %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_name" value="{% if form.db_name.data %}{{ form.db_name.data }}{% endif %}" placeholder="xabberserver" maxlength="100" id="id_db_name">
                                                 </div>
 
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_user %}text-danger{% endif %}">{{ form.db_user.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_user %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_user" value="{% if form.db_user.data %}{{ form.db_user.data }}{% else %}{{ data.db_user }}{% endif %}" placeholder="admin" maxlength="100" id="id_db_user">
+                                                    <input class="form-control {% if form.step_errors.db_user %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_user" value="{% if form.db_user.data %}{{ form.db_user.data }}{% endif %}" placeholder="admin" maxlength="100" id="id_db_user">
                                                 </div>
 
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_user_pass %}text-danger{% endif %}">{{ form.db_user_pass.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_user_pass %}is-invalid{% endif %}" type="password" name="db_user_pass" value="{% if form.db_user_pass.data %}{{ form.db_user_pass.data }}{% else %}{{ data.db_user_pass }}{% endif %}" placeholder="Password" maxlength="100" id="id_db_user_pass">
+                                                    <input class="form-control {% if form.step_errors.db_user_pass %}is-invalid{% endif %}" type="password" name="db_user_pass" value="{% if form.db_user_pass.data %}{{ form.db_user_pass.data }}{% endif %}" placeholder="Password" maxlength="100" id="id_db_user_pass">
                                                 </div>
 
                                                 <div class="d-flex justify-content-between align-items-center mt-4">
@@ -128,9 +128,9 @@
                                                     <label class="form-label {% if form.step_errors.username %}text-danger{% endif %}">{{ form.username.label }}</label>
                                                     <div class="input-group">
                                                         <input class="form-control {% if form.step_errors.username %}is-invalid{% endif %} {% if step == 3 %}installation-required{% endif %}" type="text" name="username" {% if form.username.data %}value="{{ form.username.data }}"{% endif %} placeholder="admin" maxlength="100" id="id_username">
-                                                        {% if form.host.data or data.host %}
+                                                        {% if form.host.data %}
                                                             <span class="input-group-text">
-                                                                @{% if form.host.data %}{{ form.data.host }}{% else %}{{ data.host }}{% endif %}
+                                                                @{% if form.host.data %}{{ form.data.host }}{% endif %}
                                                             </span>
                                                         {% endif %}
                                                     </div>

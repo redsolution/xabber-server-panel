@@ -43,13 +43,12 @@ class Steps(InstallationAbstractView):
             return HttpResponseRedirect(reverse('root'))
 
         data = load_predefined_config()
-        form = InstallationForm(data)
+        self.form = InstallationForm(data)
 
-        step = form.get_step(default_step=3)
+        step = self.form.get_step(default_step=3)
 
         context = {
-            'form': InstallationForm(),
-            'data': data,
+            'form': self.form,
             'step': step
         }
 
@@ -57,7 +56,7 @@ class Steps(InstallationAbstractView):
 
     def post(self, request, *args, **kwargs):
 
-        form = InstallationForm(request.POST)
+        self.form = InstallationForm(request.POST)
 
         try:
             previous = int(request.POST.get('previous'))
@@ -74,17 +73,20 @@ class Steps(InstallationAbstractView):
         # don't validate form if previous
         if previous:
             return self.render_to_response({
-                "form": form,
+                "form": self.form,
                 'step': previous
             })
 
         else:
-            step = form.get_step(current_step=current_step)
+            step = self.form.get_step(current_step=current_step)
 
             if not step:
                 try:
-                    form.full_clean()
-                    success, message = install_cmd(request, data=form.cleaned_data)
+                    self.form.full_clean()
+                    predefined_config = load_predefined_config()
+                    self.form.cleaned_data['base_cronjobs'] = predefined_config.get('base_cronjobs')
+
+                    success, message = install_cmd(request, data=self.form.cleaned_data)
                 except Exception as e:
                     success, message = False, e
                     print(e)
@@ -97,7 +99,7 @@ class Steps(InstallationAbstractView):
                     context['installation_error'] = message
 
         context['step'] = step
-        context['form'] = form
+        context['form'] = self.form
         return self.render_to_response(context)
 
 

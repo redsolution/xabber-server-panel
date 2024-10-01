@@ -88,7 +88,9 @@
                                 {{ obj.online|default:'--' }}
                             </td>
                             <td class="align-middle" data-title="DNS">
-                               {% if not obj.host.srv_records %}
+                               {% if obj.host.srv_records %}
+                                OK
+                                {% else %}
                                     <div class="d-flex align-items-center">
                                         <div class="icon-link text-warning fs-5 me-2">
                                             <i class="bi bi-exclamation-triangle-fill d-flex"></i>
