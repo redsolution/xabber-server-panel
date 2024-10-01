@@ -1,0 +1,9 @@
+{
+  "host": "example.com",
+  "db_host": "localhost",
+  "db_name": "test",
+  "db_user": "admin",
+  "db_user_pass": "admin",
+  "quick_install": false, // Enable quick installation mode. Required parameters: host, db_host, db_name, db_user
+  "base_cronjobs": false // Enable base cronjobs
+}

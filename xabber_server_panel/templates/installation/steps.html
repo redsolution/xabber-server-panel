@@ -17,7 +17,7 @@
 
                             <div class="bs-stepper">
                                 <div class="bs-stepper-header flex-wrap flex-lg-nowrap mb-4" role="tablist">
-                                    <div class="step col-6 col-lg-auto {% if step == '1' %}active{% elif step > '1' %}complete{% endif %}" data-target="#host_tab">
+                                    <div class="step col-6 col-lg-auto {% if step == 1 %}active{% elif step > 1 %}complete{% endif %}" data-target="#host_tab">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="host_tab" id="host_tab-trigger">
                                             <span class="bs-stepper-circle">1</span>
                                             <span class="bs-stepper-label">XMPP host</span>
@@ -25,7 +25,7 @@
                                     </div>
                                     <div class="line d-none d-lg-block"></div>
 
-                                    <div class="step col-6 col-lg-auto {% if step == '2' %}active{% elif step > '2' %}complete{% endif %}" data-target="#database_settings">
+                                    <div class="step col-6 col-lg-auto {% if step == 2 %}active{% elif step > 2 %}complete{% endif %}" data-target="#database_settings">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="database_settings" id="database_settings-trigger">
                                             <span class="bs-stepper-circle">2</span>
                                             <span class="bs-stepper-label">Database settings</span>
@@ -33,7 +33,7 @@
                                     </div>
                                     <div class="line d-none d-lg-block"></div>
 
-                                    <div class="step col-6 col-lg-auto {% if step == '3' %}active{% elif step > '3' %}complete{% endif %}" data-target="#admin_settings">
+                                    <div class="step col-6 col-lg-auto {% if step == 3 %}active{% elif step > 3 %}complete{% endif %}" data-target="#admin_settings">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="admin_settings" id="admin_settings-trigger">
                                             <span class="bs-stepper-circle">3</span>
                                             <span class="bs-stepper-label">Create admin</span>
@@ -41,7 +41,7 @@
                                     </div>
                                     <div class="line d-none d-lg-block"></div>
 
-                                    <div class="step col-6 col-lg-auto {% if step == '4' %}active{% endif %}" data-target="#installation">
+                                    <div class="step col-6 col-lg-auto {% if step == 4 %}active{% endif %}" data-target="#installation">
                                         <button type="button" class="step-trigger" role="tab" aria-controls="installation" id="installation-trigger">
                                             <span class="bs-stepper-circle">4</span>
                                             <span class="bs-stepper-label">Installation</span>
@@ -50,7 +50,7 @@
                                 </div>
 
                                 <div class="bs-stepper-content">
-                                    <div id="host_tab" class="installation-content content {% if step == '1' %}active{% endif %}" role="tabpanel" aria-labelledby="host_tab-trigger">
+                                    <div id="host_tab" class="installation-content content {% if step == 1 %}active{% endif %}" role="tabpanel" aria-labelledby="host_tab-trigger">
                                         <div class="col-12 col-lg-8 mx-auto">
                                             <div class="mb-4">
                                                 <p>
@@ -61,7 +61,7 @@
                                             <div class="mw-480 mx-auto">
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.host %}text-danger{% endif %}">{{ form.host.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.host %}is-invalid{% endif %} {% if step == '1' %}installation-required{% endif %}" id="id_host" type="text" name="host" value="{% if form.host.data %}{{ form.host.data }}{% else %}{{ data.host }}{% endif %}" placeholder="example.com" maxlength="128">
+                                                    <input class="form-control {% if form.step_errors.host %}is-invalid{% endif %} {% if step == 1 %}installation-required{% endif %}" id="id_host" type="text" name="host" value="{% if form.host.data %}{{ form.host.data }}{% else %}{{ data.host }}{% endif %}" placeholder="example.com" maxlength="128">
                                                 </div>
 
                                                 <div class="d-flex justify-content-between align-items-center mt-4">
@@ -73,7 +73,7 @@
                                         </div>
                                     </div>
 
-                                    <div id="database_settings" class="installation-content content {% if step == '2' %}active{% endif %}" role="tabpanel" aria-labelledby="database_settings-trigger">
+                                    <div id="database_settings" class="installation-content content {% if step == 2 %}active{% endif %}" role="tabpanel" aria-labelledby="database_settings-trigger">
                                         <div class="col-12 col-lg-8 mx-auto">
                                             <div class="mb-4">
                                                 <p>
@@ -84,17 +84,17 @@
                                             <div class="mw-480 mx-auto">
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_host %}text-danger{% endif %}">{{ form.db_host.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_host %}is-invalid{% endif %} {% if step == '2' %}installation-required{% endif %}" type="text" name="db_host" value="{% if form.db_host.data %}{{ form.db_host.data }}{% else %}{{ data.db_host }}{% endif %}" placeholder="localhost" maxlength="100" id="id_db_host">
+                                                    <input class="form-control {% if form.step_errors.db_host %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_host" value="{% if form.db_host.data %}{{ form.db_host.data }}{% else %}{{ data.db_host }}{% endif %}" placeholder="localhost" maxlength="100" id="id_db_host">
                                                 </div>
 
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_name %}text-danger{% endif %}">{{ form.db_name.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_name %}is-invalid{% endif %} {% if step == '2' %}installation-required{% endif %}" type="text" name="db_name" value="{% if form.db_name.data %}{{ form.db_name.data }}{% else %}{{ data.db_name }}{% endif %}" placeholder="xabberserver" maxlength="100" id="id_db_name">
+                                                    <input class="form-control {% if form.step_errors.db_name %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_name" value="{% if form.db_name.data %}{{ form.db_name.data }}{% else %}{{ data.db_name }}{% endif %}" placeholder="xabberserver" maxlength="100" id="id_db_name">
                                                 </div>
 
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.db_user %}text-danger{% endif %}">{{ form.db_user.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.db_user %}is-invalid{% endif %} {% if step == '2' %}installation-required{% endif %}" type="text" name="db_user" value="{% if form.db_user.data %}{{ form.db_user.data }}{% else %}{{ data.db_user }}{% endif %}" placeholder="admin" maxlength="100" id="id_db_user">
+                                                    <input class="form-control {% if form.step_errors.db_user %}is-invalid{% endif %} {% if step == 2 %}installation-required{% endif %}" type="text" name="db_user" value="{% if form.db_user.data %}{{ form.db_user.data }}{% else %}{{ data.db_user }}{% endif %}" placeholder="admin" maxlength="100" id="id_db_user">
                                                 </div>
 
                                                 <div class="mb-3">
@@ -115,7 +115,7 @@
                                     </div>
 
 
-                                    <div id="admin_settings" class="installation-content content {% if step == '3' %}active{% endif %}" role="tabpanel" aria-labelledby="admin_settings-trigger">
+                                    <div id="admin_settings" class="installation-content content {% if step == 3 %}active{% endif %}" role="tabpanel" aria-labelledby="admin_settings-trigger">
                                         <div class="col-12 col-lg-8 mx-auto">
                                             <div class="mb-4">
                                                 <p>
@@ -127,7 +127,7 @@
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.username %}text-danger{% endif %}">{{ form.username.label }}</label>
                                                     <div class="input-group">
-                                                        <input class="form-control {% if form.step_errors.username %}is-invalid{% endif %} {% if step == '3' %}installation-required{% endif %}" type="text" name="username" {% if form.username.data %}value="{{ form.username.data }}"{% endif %} placeholder="admin" maxlength="100" id="id_username">
+                                                        <input class="form-control {% if form.step_errors.username %}is-invalid{% endif %} {% if step == 3 %}installation-required{% endif %}" type="text" name="username" {% if form.username.data %}value="{{ form.username.data }}"{% endif %} placeholder="admin" maxlength="100" id="id_username">
                                                         {% if form.host.data or data.host %}
                                                             <span class="input-group-text">
                                                                 @{% if form.host.data %}{{ form.data.host }}{% else %}{{ data.host }}{% endif %}
@@ -138,7 +138,7 @@
 
                                                 <div class="mb-3">
                                                     <label class="form-label {% if form.step_errors.password %}text-danger{% endif %}">{{ form.password.label }}</label>
-                                                    <input class="form-control {% if form.step_errors.password %}is-invalid{% endif %} {% if step == '3' %}installation-required{% endif %}" type="password" name="password" {% if form.password.data %}value="{{ form.password.data }}"{% endif %} placeholder="Password" maxlength="100" id="id_password">
+                                                    <input class="form-control {% if form.step_errors.password %}is-invalid{% endif %} {% if step == 3 %}installation-required{% endif %}" type="password" name="password" {% if form.password.data %}value="{{ form.password.data }}"{% endif %} placeholder="Password" maxlength="100" id="id_password">
                                                 </div>
 
                                                 <div class="d-flex justify-content-between align-items-center mt-4">

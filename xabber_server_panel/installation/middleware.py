@@ -24,7 +24,14 @@ class InstallationMiddleware:
         if not server_installed() and not request.path.startswith(settings.MEDIA_URL):
 
             config_data = load_predefined_config()
-            if config_data.get('quick_install'):
+
+            host = config_data.get("host")
+            db_host = config_data.get("db_host")
+            db_name = config_data.get("db_name")
+            db_user = config_data.get("db_user")
+            quick_install = config_data.get("quick_install")
+
+            if host and db_host and db_name and db_user and quick_install:
                 # redirect to quick install
                 if request.path != reverse('installation:quick'):
                     return HttpResponseRedirect(reverse('installation:quick'))

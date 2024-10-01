@@ -8,6 +8,11 @@ class InstallationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.step_errors = {}
+        self.steps = {
+            1: ['host'],
+            2: ['db_host', 'db_name', 'db_user', 'db_user_pass'],
+            3: ['username', 'password'],
+        }
         super(InstallationForm, self).__init__(*args, **kwargs)
 
     host = forms.CharField(
@@ -55,38 +60,7 @@ class InstallationForm(forms.Form):
         required=False
     )
 
-    def validate_1_step(self):
-        self._validate_field('host')
-        host = self.data.get('host', '')
-
-        # validate and normalize host
-        result = validate_host(host)
-        if not result.get('success'):
-            self.step_errors['host'] = result.get('error_message')
-
-        return not self.step_1_errors()
-
-    def validate_2_step(self):
-        self._validate_field('db_host')
-        self._validate_field('db_name')
-        self._validate_field('db_user')
-        self._validate_field('db_user_pass')
-        return not self.step_2_errors()
-
-    def validate_3_step(self):
-        self._validate_field('username')
-
-        username = self.data.get('username')
-
-        # validate username
-        result = validate_localpart(username)
-        if not result.get('success'):
-            self.step_errors['username'] = result.get('error_message')
-
-        self._validate_field('password')
-        return not self.step_3_errors()
-
-    def _validate_field(self, field_name):
+    def _validate_field(self, field_name, add_error=False):
 
         """ Validate concrete form field by field name """
 
@@ -96,20 +70,32 @@ class InstallationForm(forms.Form):
             try:
                 field.clean(data)
             except forms.ValidationError as e:
-                self.step_errors[field_name] = e
+                if add_error:
+                    self.step_errors[field_name] = e
+                return False
+
+            return True
+
+    def get_step(self, default_step=None, current_step=0):
+        for step, fields in self.steps.items():
+            add_error = step <= current_step
+            for field in fields:
+                if not self._validate_field(field, add_error=add_error):
+                    return step
+
+        return default_step
 
     def step_1_errors(self):
-        return 'host' in self.step_errors.keys()
+        return any(field in self.step_errors.keys() for field in self.steps.get(1, []))
 
     def step_2_errors(self):
-        return any(field in self.step_errors.keys() for field in ['server_name', 'db_name', 'db_user'])
+        return any(field in self.step_errors.keys() for field in self.steps.get(2, []))
 
     def step_3_errors(self):
-        return any(field in self.step_errors.keys() for field in ['username', 'password'])
+        return any(field in self.step_errors.keys() for field in self.steps.get(3, []))
 
     def clean_host(self):
         host = self.cleaned_data['host']
-
         # validate and normalize host
         result = validate_host(host)
         if result.get('success'):
