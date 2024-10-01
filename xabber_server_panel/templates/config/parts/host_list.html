@@ -26,8 +26,12 @@
                         </td>
 
                         <td class="align-middle" data-title="SRV Records">
-                           {% if host.srv_records %}
-                             OK
+                            {% if host.srv_records %}
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-link text-success fs-5">
+                                        <i class="bi bi-check-lg d-flex"></i>
+                                    </div>
+                                </div>
                             {% else %}
                                 <div class="d-flex align-items-center">
                                     <div class="icon-link text-warning fs-5 me-2">
