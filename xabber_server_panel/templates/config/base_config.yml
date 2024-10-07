@@ -7,7 +7,7 @@ log_rotate_count: 1
 log_rate_limit: 100
 
 certfiles:
- - "{{ settings.CERTS_DIR }}*.pem"
+ - "{{ settings.CERTS_DIR }}/*.pem"
 ca_file: "{{ CA_FILE }}"
 
 listen:
