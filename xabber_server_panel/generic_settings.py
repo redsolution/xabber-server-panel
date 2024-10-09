@@ -219,6 +219,7 @@ CERT_API = "v2"
 CERT_AUTHORITY = "https://acme-staging-v02.api.letsencrypt.org"
 CHALLENGE_URL = "https://acme-challenge.xabber.com/challenge/"
 CHALLENGE_RECORD = 'alias_acme-challenge.xabber.com.'
+CERT_ACTION = None
 
 # ============ WEBHOOKS ===============#
 INSTALLED_APPS += ['xabber_server_panel.webhooks']

@@ -364,13 +364,13 @@ def update_cert_config():
     for host in hosts:
         key = "%s *.%s" % (host.name, host.name)
 
-        host_data = [
-            {
-                "path": os.path.join(settings.CERTS_DIR, "%s.pem" % host.name),
-                "format": "key,crt,ca"
+        host_data = {
+            "path": os.path.join(settings.CERTS_DIR, "%s.pem" % host.name),
+            "format": "key,crt,ca"
             }
-        ]
-        domain_config_data[key] = host_data
+        if isinstance(settings.CERT_ACTION, str) and settings.CERT_ACTION.strip():
+            host_data["action"] = settings.CERT_ACTION
+        domain_config_data[key] = [host_data]
 
     domain_config = os.path.join(
         settings.CERT_CONF_DIR,
