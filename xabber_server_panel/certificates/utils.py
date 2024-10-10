@@ -226,7 +226,7 @@ def main(
 
             Certificate.objects.update_or_create(
                 domain=domain,
-                name='%s.pem' % domain,
+                name='auto-renew_%s.pem' % domain,
                 defaults={
                     'status': 1,
                 }
@@ -262,7 +262,7 @@ def main(
 
                 Certificate.objects.update_or_create(
                     domain=domain,
-                    name='%s.pem' % domain,
+                    name='auto-renew_%s.pem' % domain,
                     defaults={
                         'status': 0,
                         'reason': '',
@@ -273,7 +273,7 @@ def main(
             except Exception as e:
                 Certificate.objects.update_or_create(
                     domain=domain,
-                    name='%s.pem' % domain,
+                    name='auto-renew_%s.pem' % domain,
                     defaults={
                         'status': 2,
                         'reason': str(e)
@@ -365,7 +365,7 @@ def update_cert_config():
         key = "%s *.%s" % (host.name, host.name)
 
         host_data = {
-            "path": os.path.join(settings.CERTS_DIR, "%s.pem" % host.name),
+            "path": os.path.join(settings.CERTS_DIR, "auto-renew_%s.pem" % host.name),
             "format": "key,crt,ca"
             }
         if isinstance(settings.CERT_ACTION, str) and settings.CERT_ACTION.strip():
