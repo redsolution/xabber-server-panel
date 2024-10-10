@@ -172,7 +172,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'rotate_file': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
             'maxBytes': 1024 * 1024,  # 1 MB
@@ -189,7 +189,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['rotate_file'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': True,
         },
     },

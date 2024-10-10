@@ -460,3 +460,11 @@ class EjabberdAPI(object):
 
         self._call_method('delete', '/users/ban', data=data)
         return self.response
+
+    def reload_config(self):
+        """
+            Args: none
+        """
+
+        self._call_method('post', '/config/reload', data=None)
+        return self.response

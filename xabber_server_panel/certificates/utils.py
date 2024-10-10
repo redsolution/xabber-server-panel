@@ -336,7 +336,7 @@ def main(
         return exceptions
 
 
-def update_or_create_certs(domain=''):
+def update_or_create_certs(domain='', api=None):
     result = {'success': True, 'errors': []}
 
     try:
@@ -348,6 +348,9 @@ def update_or_create_certs(domain=''):
     if errors:
         result['success'] = False
         result['errors'] = errors
+
+    if result['success'] and api is not None:
+        api.reload_config()
 
     return result
 

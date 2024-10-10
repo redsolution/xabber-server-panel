@@ -175,7 +175,7 @@ class CreateHost(LoginRequiredMixin, TemplateView):
             host.save()
 
             # Create a thread to create certificates
-            thread = threading.Thread(target=update_or_create_certs)
+            thread = threading.Thread(target=update_or_create_certs, args=('', self.api))
             thread.start()
 
             # update config after creating new host
@@ -232,7 +232,7 @@ class CheckDnsRecords(LoginRequiredMixin, View):
         check_hosts_dns()
 
         # Create a thread to create certificates
-        thread = threading.Thread(target=update_or_create_certs)
+        thread = threading.Thread(target=update_or_create_certs, args=('', get_api(request)))
         thread.start()
 
         check_certificates()
@@ -796,8 +796,7 @@ class UpdateCert(LoginRequiredMixin, TemplateView):
 
     @permission_admin
     def get(self, request, domain, *args, **kwargs):
-        update_or_create_certs(domain)
-
+        update_or_create_certs(domain, get_api(request))
         check_certificates()
 
         context = {}
