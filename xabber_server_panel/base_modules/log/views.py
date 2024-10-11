@@ -20,13 +20,13 @@ class ServerLog(ServerStartedMixin, LoginRequiredMixin, TemplateView):
         except:
             self.lines = 500
 
-        self.log_files = [filename for filename in os.listdir(settings.EJABBERD_LOG_DIR) if filename.endswith('.log')]
+        self.log_files = [filename for filename in os.listdir(settings.XMPP_SERVER_LOG_DIR) if filename.endswith('.log')]
 
         file = request.GET.get('file')
         if file and file in self.log_files:
-            self.log_path = os.path.join(settings.EJABBERD_LOG_DIR, file)
+            self.log_path = os.path.join(settings.XMPP_SERVER_LOG_DIR, file)
         else:
-            self.log_path = settings.EJABBERD_LOG
+            self.log_path = settings.XMPP_SERVER_LOG_FILE
 
         log = self.get_log()
         full = request.GET.get('full')

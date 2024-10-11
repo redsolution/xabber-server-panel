@@ -12,7 +12,7 @@ class EjabberdAPI(object):
     def __init__(self, request=None):
         self.token = None
         self.session = requests.Session()
-        self.base_url = settings.EJABBERD_API_URL
+        self.base_url = settings.XMPP_SERVER_API_URL
         self.raw_response = None
         self.response = {}
         self.errors = []

@@ -206,8 +206,8 @@ class CreateHost(LoginRequiredMixin, TemplateView):
             Circle.objects.create(
                 circle=host,
                 host=host,
-                name=settings.EJABBERD_DEFAULT_GROUP_NAME,
-                description=settings.EJABBERD_DEFAULT_GROUP_DESCRIPTION,
+                name=settings.XMPP_SERVER_DEFAULT_GROUP_NAME,
+                description=settings.XMPP_SERVER_DEFAULT_GROUP_DESCRIPTION,
                 prefix=get_system_group_suffix(),
                 all_users=True
             )
@@ -219,8 +219,8 @@ class CreateHost(LoginRequiredMixin, TemplateView):
             {
                 'circle': host,
                 'host': host,
-                'name': settings.EJABBERD_DEFAULT_GROUP_NAME,
-                'description': settings.EJABBERD_DEFAULT_GROUP_DESCRIPTION,
+                'name': settings.XMPP_SERVER_DEFAULT_GROUP_NAME,
+                'description': settings.XMPP_SERVER_DEFAULT_GROUP_DESCRIPTION,
                 'all_users': True
             }
         )
@@ -506,15 +506,15 @@ class Modules(LoginRequiredMixin, TemplateView):
 
     def install_server_files(self, server_path):
 
-        if not os.path.exists(settings.MODULE_SERVER_FILES_DIR):
-            os.mkdir(settings.MODULE_SERVER_FILES_DIR)
+        if not os.path.exists(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR):
+            os.mkdir(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
 
         if os.path.exists(server_path):
 
             # copy list files
             for filename in os.listdir(server_path):
                 path_from = os.path.join(server_path, filename)
-                path_to = os.path.join(settings.MODULE_SERVER_FILES_DIR, filename)
+                path_to = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
 
                 # delete existing file
                 if os.path.exists(path_to):
@@ -622,7 +622,7 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
             if module.files:
                 file_list = module.files.split(',')
                 for filename in file_list:
-                    file_path = os.path.join(settings.MODULE_SERVER_FILES_DIR, filename)
+                    file_path = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
                     if os.path.exists(file_path):
                         os.remove(file_path)
 

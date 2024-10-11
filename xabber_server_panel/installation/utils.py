@@ -107,7 +107,7 @@ def migrate_db(data):
         cursor = conn.cursor()
 
         # Read the SQL dump file
-        with open(settings.EJABBERD_DUMP, 'r', encoding='utf-8') as f:
+        with open(settings.XMPP_SERVER_DB_DUMP, 'r', encoding='utf-8') as f:
             sql_commands = f.read()
 
         # Execute each command from the dump file
@@ -198,9 +198,9 @@ def generate_cronjob_token(data):
 
 
 def create_config(data):
-    add_config = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_ADD_CONFIG_FILE)
-    data['VHOST_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_VHOSTS_CONFIG_FILE)
-    data['MODULES_FILE'] = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_MODULES_CONFIG_FILE)
+    add_config = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_ADD_CONFIG_FILE)
+    data['VHOST_FILE'] = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_VHOSTS_CONFIG_FILE)
+    data['MODULES_FILE'] = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_MODULES_CONFIG_FILE)
     data['ADD_CONFIG'] = add_config
     data['CA_FILE'] = certs.where()
     data['settings'] = settings
@@ -211,7 +211,7 @@ def create_config(data):
 
     # main config
     config_template = get_template('config/base_config.yml')
-    config_path = os.path.join(settings.EJABBERD_CONFIG_PATH, 'ejabberd.yml')
+    config_path = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, 'ejabberd.yml')
     create_config_file(config_path, config_template.render(context=data))
 
     # vhosts config
@@ -228,7 +228,7 @@ def create_admin(data):
     if form.is_valid():
         # create user on server
         cmd_create_admin = [
-            settings.EJABBERDCTL,
+            settings.XMPP_SERVER_CTL,
             'register',
             data['username'],
             data['host'],
@@ -248,7 +248,7 @@ def create_admin(data):
 
 
 def set_created_user_as_admin(data):
-    cmd_create_admin = [settings.EJABBERDCTL, 'panel_set_admin',
+    cmd_create_admin = [settings.XMPP_SERVER_CTL, 'panel_set_admin',
                           data['username'],
                           data['host']]
     cmd = subprocess.Popen(cmd_create_admin,
@@ -260,11 +260,11 @@ def set_created_user_as_admin(data):
 
 
 def create_group(data):
-    cmd_create_group = [settings.EJABBERDCTL, 'srg_create',
+    cmd_create_group = [settings.XMPP_SERVER_CTL, 'srg_create',
                         data['host'],
                         data['host'],
-                        settings.EJABBERD_DEFAULT_GROUP_NAME,
-                        settings.EJABBERD_DEFAULT_GROUP_DESCRIPTION,
+                        settings.XMPP_SERVER_DEFAULT_GROUP_NAME,
+                        settings.XMPP_SERVER_DEFAULT_GROUP_DESCRIPTION,
                         ""]
     cmd = subprocess.Popen(cmd_create_group,
                            stdin=subprocess.PIPE,
@@ -275,7 +275,7 @@ def create_group(data):
 
 
 def assign_group_to_all(data):
-    cmd_assign_to_all = [settings.EJABBERDCTL, 'srg_user_add',
+    cmd_assign_to_all = [settings.XMPP_SERVER_CTL, 'srg_user_add',
                          '@all@',
                          data['host'],
                          data['host'],
@@ -388,8 +388,8 @@ def create_circles(data):
     circle = Circle.objects.create(
         circle=data['host'],
         host=data['host'],
-        name=settings.EJABBERD_DEFAULT_GROUP_NAME,
-        description=settings.EJABBERD_DEFAULT_GROUP_DESCRIPTION,
+        name=settings.XMPP_SERVER_DEFAULT_GROUP_NAME,
+        description=settings.XMPP_SERVER_DEFAULT_GROUP_DESCRIPTION,
         prefix=get_system_group_suffix(),
         all_users=True
     )

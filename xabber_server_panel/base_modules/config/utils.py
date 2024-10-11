@@ -71,7 +71,7 @@ def make_xmpp_config():
     module_configs = get_modules_config()
 
     # Define the path for the Ejabberd configuration file
-    config_path = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_MODULES_CONFIG_FILE)
+    config_path = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_MODULES_CONFIG_FILE)
 
     # Get all virtual hosts
     hosts = VirtualHost.objects.all()
@@ -157,7 +157,7 @@ def update_vhosts_config(hosts=None):
     if not hosts:
         return
 
-    vhosts_config_path = os.path.join(settings.EJABBERD_CONFIG_PATH, settings.EJABBERD_VHOSTS_CONFIG_FILE)
+    vhosts_config_path = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_VHOSTS_CONFIG_FILE)
     xml = render_to_string(template, {'hosts': hosts})
     create_config_file(vhosts_config_path, xml)
 

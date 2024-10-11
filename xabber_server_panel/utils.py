@@ -17,13 +17,13 @@ import re
 # ========== XABBER SERVER =============
 
 def write_ejabberd_state(state):
-    server_state_file = open(settings.EJABBERD_STATE, "w+")
+    server_state_file = open(settings.XMPP_SERVER_STATE, "w+")
     server_state_file.write(str(state))
     server_state_file.close()
 
 
 def execute_ejabberd_cmd(cmd):
-    cmd_ejabberd = [settings.EJABBERDCTL, cmd]
+    cmd_ejabberd = [settings.XMPP_SERVER_CTL, cmd]
     command = subprocess.call(
         cmd_ejabberd,
         stdin=subprocess.PIPE,
@@ -54,7 +54,7 @@ def start_ejabberd(first_start=False):
         print('wait 1 sec')
         time.sleep(1)
 
-    write_ejabberd_state(settings.EJABBERD_STATE_ON)
+    write_ejabberd_state(settings.XMPP_SERVER_STATE_ON)
     return response
 
 
@@ -67,7 +67,7 @@ def restart_ejabberd():
     while not is_ejabberd_started():
         time.sleep(1)
 
-    write_ejabberd_state(settings.EJABBERD_STATE_ON)
+    write_ejabberd_state(settings.XMPP_SERVER_STATE_ON)
     return response
 
 
@@ -79,7 +79,7 @@ def stop_ejabberd(change_state=True):
         time.sleep(1)
 
     if change_state:
-        write_ejabberd_state(settings.EJABBERD_STATE_OFF)
+        write_ejabberd_state(settings.XMPP_SERVER_STATE_OFF)
 
     return response
 

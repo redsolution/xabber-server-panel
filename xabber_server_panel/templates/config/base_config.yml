@@ -7,7 +7,10 @@ log_rotate_count: 1
 log_rate_limit: 100
 
 certfiles:
- - "{{ settings.CERTS_DIR }}/*.pem"
+  - "{{ settings.CERTS_DIR }}/*.pem"
+{% for dir in settings.XMPP_SERVER_ADD_CERTS_DIRS %}
+  - "{{ dir }}/*.pem"
+{% endfor %}
 ca_file: "{{ CA_FILE }}"
 
 listen:

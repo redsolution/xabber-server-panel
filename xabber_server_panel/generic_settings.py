@@ -94,39 +94,34 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MODULES_DIR = os.path.join(BASE_DIR, 'modules')
 
-# ======== Ejabberd settings ============= #
+# ======== XMPP Server settings ============= #
 
 INSTALLATION_LOCK = os.path.join(PROJECT_ROOT, '.installation_lock')
-EJD_DIR = os.path.join(BASE_DIR, "xmppserver")
-EJABBERD_DUMP = os.path.join(PROJECT_ROOT, 'utils/psql/pg.sql')
-EJABBERD_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'xmppserver/etc/ejabberd/')
-EJABBERD_MODULES_CONFIG_FILE = 'modules_config.yml'
-EJABBERD_ADD_CONFIG_FILE = 'additional_config.yml'
-EJABBERDCTL = os.path.join(PROJECT_ROOT, 'xmppserver/bin/ejabberdctl')
-
-EJABBERD_STATE = os.path.join(PROJECT_ROOT, 'server_state')
-EJABBERD_STATE_ON = 1
-EJABBERD_STATE_OFF = 0
-EJABBERD_DEFAULT_GROUP_NAME = "All"
-EJABBERD_DEFAULT_GROUP_DESCRIPTION = "Contains all users on this virtual host"
-
-PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
-
-EJABBERD_VHOSTS_CONFIG_FILE = 'virtual_hosts.yml'
-
-EJABBERD_API_URL = 'http://127.0.0.1:5280/panel'
-EJABBERD_API_TOKEN_TTL = 60 * 60 * 24 * 365
-EJABBERD_API_SCOPES = 'sasl_auth'
-
-MODULE_SERVER_FILES_DIR = ''
+XMPP_SERVER_DIR = os.path.join(BASE_DIR, "xmppserver")
+XMPP_SERVER_DB_DUMP = os.path.join(PROJECT_ROOT, 'pg.sql')
+XMPP_SERVER_CONFIG_PATH = os.path.join(XMPP_SERVER_DIR, '/etc/ejabberd/')
+XMPP_SERVER_VHOSTS_CONFIG_FILE = 'virtual_hosts.yml'
+XMPP_SERVER_MODULES_CONFIG_FILE = 'modules_config.yml'
+XMPP_SERVER_ADD_CONFIG_FILE = 'additional_config.yml'
+XMPP_SERVER_CTL = os.path.join(XMPP_SERVER_DIR, '/bin/ejabberdctl')
+XMPP_SERVER_STATE = os.path.join(PROJECT_ROOT, 'server_state')
+XMPP_SERVER_STATE_ON = 1
+XMPP_SERVER_STATE_OFF = 0
+XMPP_SERVER_DEFAULT_GROUP_NAME = "All"
+XMPP_SERVER_DEFAULT_GROUP_DESCRIPTION = "Contains all users on this virtual host"
+XMPP_SERVER_ADD_CERTS_DIRS = []
+XMPP_SERVER_EXTERNAL_MODULES_DIR = os.path.join(BASE_DIR, 'xmppserver_modules')
+XMPP_SERVER_API_URL = 'http://127.0.0.1:5280/panel'
 XMPP_CLIENT_PORT = '5222'
 XMPP_SERVER_PORT = '5269'
 XMPP_HTTP_PORT = '5443'
 XMPP_HTTPS_PORT = '5280'
 XMPPS_CLIENT_PORT = '5223'
 
-USER_FILES = os.path.join(PROJECT_DIR, 'user_files')
+USER_FILES = os.path.join(BASE_DIR, 'user_files')
 MOD_NICK_AVATAR_FILES = os.path.join(PROJECT_DIR, 'rand_avatars')
+
+PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 
 PAGINATION_PAGE_SIZE = 30
 HTTP_REQUEST_TIMEOUT = 5
@@ -163,8 +158,8 @@ INSTALLED_APPS += ['xabber_server_panel.base_modules.registration']
 
 # ============ LOG ===============#
 INSTALLED_APPS += ['xabber_server_panel.base_modules.log']
-EJABBERD_LOG_DIR = os.path.join(EJD_DIR, 'var', 'log', 'ejabberd')
-EJABBERD_LOG = os.path.join(EJABBERD_LOG_DIR, 'ejabberd.log')
+XMPP_SERVER_LOG_DIR = os.path.join(XMPP_SERVER_DIR, 'var', 'log', 'ejabberd')
+XMPP_SERVER_LOG_FILE = os.path.join(XMPP_SERVER_LOG_DIR, 'ejabberd.log')
 DJANGO_LOG_DIR = os.path.join(BASE_DIR, 'logs')
 DJANGO_LOG = os.path.join(DJANGO_LOG_DIR, 'django.log')
 LOGGING = {
@@ -172,7 +167,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'rotate_file': {
-            'level': 'ERROR',
+            'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
             'maxBytes': 1024 * 1024,  # 1 MB
@@ -189,7 +184,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['rotate_file'],
-            'level': 'ERROR',
+            'level': 'WARNING',
             'propagate': True,
         },
     },

@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
         # change password on server
         cmd_create_admin = [
-            settings.EJABBERDCTL,
+            settings.XMPP_SERVER_CTL,
             'change_password',
             username,
             host,
