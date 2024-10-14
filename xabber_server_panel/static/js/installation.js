@@ -4,6 +4,10 @@ $(function () {
         let btnNext = $(this);
         let input = $(btnNext).parents('.installation-content').find('.installation-required');
 
+        //Prevent double form submit
+        let form = btnNext.parents('.installation-form');
+        form.attr('disabled', true);
+
         let inputValue = input.filter(function() {
             return this.value === '';
         });
