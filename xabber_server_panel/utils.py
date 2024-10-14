@@ -4,7 +4,6 @@ from collections import OrderedDict
 from django.contrib import messages
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-from datetime import datetime
 
 import subprocess
 import time
@@ -82,10 +81,6 @@ def stop_ejabberd(change_state=True):
         write_ejabberd_state(settings.XMPP_SERVER_STATE_OFF)
 
     return response
-
-
-def reload_ejabberd_config():
-    return execute_ejabberd_cmd('reload_config')
 
 
 def update_app_list(app_list):

@@ -119,6 +119,7 @@ class DeleteHost(LoginRequiredMixin, TemplateView):
 
         host.delete()
         update_ejabberd_config()
+        api.reload_config()
         return HttpResponseRedirect(
             reverse('config:hosts')
         )
@@ -180,6 +181,7 @@ class CreateHost(LoginRequiredMixin, TemplateView):
 
             # update config after creating new host
             update_ejabberd_config()
+            self.api.reload_config()
 
             # create groups after update config
             self.create_everybody_group(request, host.name)
@@ -299,7 +301,6 @@ class Admins(LoginRequiredMixin, TemplateView):
         if not error_messages:
             messages.success(request, 'Admins changed successfully.')
 
-        update_ejabberd_config()
         context = {
             'admins': User.objects.filter(is_admin=True),
             'users': users

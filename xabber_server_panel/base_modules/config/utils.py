@@ -5,7 +5,7 @@ from django.urls import reverse, resolve, NoReverseMatch
 import stat
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
-from xabber_server_panel.utils import reload_ejabberd_config, is_ejabberd_started
+from xabber_server_panel.utils import is_ejabberd_started
 from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls
 
 import copy
@@ -165,7 +165,6 @@ def update_vhosts_config(hosts=None):
 def update_ejabberd_config():
     update_vhosts_config()
     make_xmpp_config()
-    reload_ejabberd_config()
 
 
 def get_mod_disco_urls_items():

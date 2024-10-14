@@ -8,7 +8,7 @@ from datetime import datetime
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, ModuleSettings
 from xabber_server_panel.base_modules.config.utils import make_xmpp_config
-from xabber_server_panel.utils import reload_ejabberd_config, get_error_messages, validate_link
+from xabber_server_panel.utils import get_error_messages, validate_link
 from xabber_server_panel.base_modules.users.decorators import permission_admin
 from xabber_server_panel.api.utils import get_api
 from xabber_server_panel.mixins import ServerStartedMixin
@@ -79,7 +79,7 @@ class RegistrationList(ServerStartedMixin, LoginRequiredMixin, TemplateView):
             self.context['registration_url'] = url
 
             make_xmpp_config()
-            reload_ejabberd_config()
+            self.api.reload_config()
 
             if self.status == 'link' and not self.keys:
                 return HttpResponseRedirect(
@@ -184,7 +184,7 @@ class RegistrationCreate(ServerStartedMixin, LoginRequiredMixin, TemplateView):
             )
 
             make_xmpp_config()
-            reload_ejabberd_config()
+            api.reload_config()
 
             # check api errors
             if not response.get('errors'):
@@ -266,7 +266,7 @@ class RegistrationChange(ServerStartedMixin, LoginRequiredMixin, TemplateView):
             )
 
             make_xmpp_config()
-            reload_ejabberd_config()
+            api.reload_config()
 
             if not response.get('errors'):
                 messages.success(request, 'Registration key changed successfully.')

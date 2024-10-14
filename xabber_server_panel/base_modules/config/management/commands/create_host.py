@@ -24,7 +24,8 @@ class Command(BaseCommand):
         form = VirtualHostForm(data)
         if form.is_valid():
             host = form.save()
-            print('Host "%s" created successfully!' % host)
+            update_ejabberd_config()
+            print('Host "%s" created successfully! A reboot of the xmpp server is required.' % host)
 
         else:
             print(form.errors)
