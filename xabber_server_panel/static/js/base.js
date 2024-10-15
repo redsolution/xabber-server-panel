@@ -519,8 +519,8 @@ $(function () {
         for (let i = 0; i < form_data.length; i++)
             data[form_data[i].name] = form_data[i].value;
 
-        $.get(url, data, function(data){
-            $('.log-list-js').html(data['log']);
+        $.get(url, data, function(returned_data){
+            $('.log-list-js').html(returned_data);
             console.log('Log list updated');
         });
     };
