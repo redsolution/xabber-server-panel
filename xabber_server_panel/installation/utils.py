@@ -290,6 +290,9 @@ def assign_group_to_all(data):
 
 def activate_base_cronjobs():
     CronJob.objects.filter(type='built_in_job').update(active=True)
+    # update crontab
+    from django.db.models.signals import post_save
+    post_save.send(sender=CronJob, instance=CronJob(), created=False)
 
 
 def start_installation_process(data):
