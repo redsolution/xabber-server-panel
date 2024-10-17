@@ -6,7 +6,6 @@ import json
 import string
 import secrets
 import threading
-import base64
 
 from django.template.loader import get_template
 from django.conf import settings
@@ -161,7 +160,7 @@ def create_vhost(data):
 
 def generate_webhooks_secret(data):
     # generate webhook secret
-    webhooks_secret = base64.b64encode(secrets.token_bytes(32)).decode()
+    webhooks_secret = generate_secret()
     module_settings, created = ModuleSettings.objects.get_or_create(
         host='global',
         module='mod_webhooks'

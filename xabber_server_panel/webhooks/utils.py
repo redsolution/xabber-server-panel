@@ -74,8 +74,7 @@ def check_jwt(request):
     iat = payload.get('iat', False)
     if not iat or (int(time.time()) - iat) > 60:
         return False
-    msg = (token['header'] + '.' + token['payload']).encode()
-    digest = hmac.new(base64.b64decode(key), msg, hashlib.sha256).digest()
+    digest = hmac.new(key.encode(), (token['header'] + '.' + token['payload']).encode(), hashlib.sha256).digest()
     signature = base64.urlsafe_b64encode(digest).decode().replace('=', '')
     return signature == token['signature']
 
