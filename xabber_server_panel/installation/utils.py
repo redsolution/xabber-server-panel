@@ -172,7 +172,7 @@ def generate_webhooks_secret(data):
     elif panel_address:
         webhooks_url = panel_address.value
     else:
-        webhooks_url = "https://xabber.%s/webhooks/" % data['host']
+        webhooks_url = "https://xabber.%s/webhooks/xmppserver/" % data['host']
 
     module_settings.set_options(
         {
