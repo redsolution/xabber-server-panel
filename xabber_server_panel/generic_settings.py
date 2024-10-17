@@ -144,6 +144,8 @@ INSTALLED_APPS += ['xabber_server_panel.base_modules.users']
 
 AUTH_USER_MODEL = 'users.User'
 
+DEFAULT_ACCOUNT_LIFETIME = 0  # infinite
+
 # ============ API ============#
 INSTALLED_APPS += ['xabber_server_panel.api']
 
