@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+    {% extends 'base.html' %}
 {% load config_tags %}
 
 {% block content_title %}
@@ -70,7 +70,7 @@
 
     <div class="col-12 mh-400 position-relative flex-grow-1">
         <div class="overflow-hidden overflow-y-auto scroll-custom-y d-flex flex-column-reverse p-4 bg-dark text-light fs-min position-absolute top-0 bottom-0 end-0 start-0 h-100">
-            <div class="log-list-js d-flex flex-column" data-url="{% url 'log:server_log' %}">
+            <div class="log-list-js d-flex flex-column text-break" data-url="{% url 'log:server_log' %}">
                 {% include 'log/parts/log_list.html' %}
             </div>
         </div>
