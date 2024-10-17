@@ -167,7 +167,9 @@ def generate_webhooks_secret(data):
     )
 
     panel_address = AddSettings.objects.filter(module_name='webhooks', key='panel_address').first()
-    if panel_address:
+    if getattr(settings, 'MOD_WEBHOOKS_URL', False):
+        webhooks_url = settings.MOD_WEBHOOKS_URL
+    elif panel_address:
         webhooks_url = panel_address.value
     else:
         webhooks_url = "https://xabber.%s/webhooks/" % data['host']

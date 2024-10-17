@@ -118,8 +118,11 @@ XMPP_HTTP_PORT = '5443'
 XMPP_HTTPS_PORT = '5280'
 XMPPS_CLIENT_PORT = '5223'
 
+# ======== XMPP Server modules settings ============= #
+
 USER_FILES = os.path.join(BASE_DIR, 'user_files')
 MOD_NICK_AVATAR_FILES = os.path.join(PROJECT_DIR, 'rand_avatars')
+# MOD_WEBHOOKS_URL = 'http://localhost/webhooks/'
 
 PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 
