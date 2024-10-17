@@ -3,6 +3,7 @@ import hmac
 import base64
 import json
 import time
+import ast
 
 from django.conf import settings
 
@@ -17,8 +18,8 @@ def get_webhook_secret():
 
     if webhook_settings is None:
         return None
-
-    return webhook_settings.get_options().get('secret')
+    secret_raw = webhook_settings.get_options().get('secret')
+    return ast.literal_eval(secret_raw)
 
 
 def check_signature(request):
