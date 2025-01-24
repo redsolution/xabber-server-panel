@@ -96,3 +96,16 @@ def bytes_to_mb(value):
         return "%s" % int(math.floor(mb_value))
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def strp_date(date, to):
+    format = '%Y-%m-%d'
+
+    try:
+        dt_object = datetime.strptime(date, format).date()
+    except:
+        dt_object = None
+
+    if dt_object:
+        return dt_object.strftime('%Y.%m.%d')

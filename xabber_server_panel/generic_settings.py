@@ -225,6 +225,9 @@ CERT_ACTION = None
 INSTALLED_APPS += ['xabber_server_panel.webhooks']
 WEBHOOKS_SIGNATURE_HEADER = 'x-xmpp-server-signature'
 
+# ============ MODULES ===============#
+
+PLUGINS_API_URL = ''
 # external modules
 if os.path.exists(MODULES_DIR):
     for folder in os.listdir(MODULES_DIR):

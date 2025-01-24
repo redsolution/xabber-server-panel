@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load config_tags %}
+{% load config_tags base_tags %}
 
 {% block content_title %}
     Server settings
@@ -11,14 +11,16 @@
         {% include 'config/parts/links.html' %}
     </div>
 
-    {% if modules %}
+    {% if modules or avaliable_modules %}
         <div class="table-adaptive">
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Module</th>
+                        <th>Name</th>
+                        <th>Status</th>
                         <th>Version</th>
+                        <th>Creation Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -26,12 +28,19 @@
                     {% for module in modules %}
                         <tr>
                             <td data-title="#">{{ forloop.counter }}</td>
-                            <td data-title="Module">
+                            <td data-title="Name">
                                 {{ module.verbose_name }}
+                            </td>
+                            <td>
+                                Installed
                             </td>
                             <td data-title="Version">
                                 {{ module.version }}
+                                {% if module.custom %}
+                                    custom
+                                {% endif %}
                             </td>
+                            <td data-title="Creation Date"></td>
                             <td data-title="Actions">
                                 {% if settings_write_permissions %}
                                     <div class="d-flex">
@@ -48,6 +57,36 @@
                                                 </li>
                                             </ul>
                                         </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                    {% for module in avaliable_modules %}
+                        <tr>
+                            <td data-title="#">{{ forloop.counter }}</td>
+                            <td data-title="Name">
+                                {{ module.display_name }}
+                                {% if module.description %}
+                                    <div>
+                                        {{ module.description }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td data-title="Status"></td>
+                            <td data-title="Version">
+                                {{ module.release }}
+                            </td>
+                            <td data-title="Creation Date">
+                                {{ module.created|strp_date:'Y' }}
+                            </td>
+                            <td data-title="Actions">
+                                {% if settings_write_permissions %}
+                                    <div class="d-flex">
+                                        <a class="dropdown-item text-wrap text-primary" href="{% url 'config:upload_module' %}?url={{ module.download }}">
+                                             Install
+                                        </a>
                                     </div>
                                 {% endif %}
                             </td>

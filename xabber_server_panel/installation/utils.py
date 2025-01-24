@@ -36,7 +36,8 @@ def database_exists(data):
             password=data['db_user_pass'],
             host=data['db_host']
         )
-    except psycopg2.Error:
+    except psycopg2.Error as e:
+        print(e)
         print("Can't connect to database. Maybe you enter wrong data.")
         return False
 

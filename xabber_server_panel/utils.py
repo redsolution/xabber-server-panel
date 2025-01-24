@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
+from datetime import datetime
+
 import subprocess
 import time
 import os
@@ -190,3 +192,11 @@ def check_versions(current_version, new_version):
         response['success'] = False
 
     return response
+
+
+def get_xmpp_version():
+    version_path = os.path.join(settings.XMPP_SERVER_DIR, 'version')
+
+    with open(version_path, 'r') as f:
+        version = f.readline()
+    return version

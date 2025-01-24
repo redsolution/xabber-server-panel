@@ -22,6 +22,7 @@ urlpatterns = [
     # modules
     path('modules/', views.Modules.as_view(), name='modules'),
     path('modules/delete/<str:module>/', views.DeleteModule.as_view(), name='delete_module'),
+    path('modules/upload/', views.UploadModule.as_view(), name='upload_module'),
 
     # root
     path('root_page/', views.RootPageView.as_view(), name='root_page'),

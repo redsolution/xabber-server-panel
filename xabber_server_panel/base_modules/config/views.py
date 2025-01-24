@@ -1,14 +1,16 @@
 from django.shortcuts import reverse, loader, render, Http404
 from django.views.generic import TemplateView, View
 from django.http import HttpResponseRedirect, JsonResponse
-from django.template.utils import get_app_template_dirs
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.conf import settings
-from ldap3 import Server, Connection, ALL
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core import management
 from django.apps import apps
-from importlib import import_module
+
+import xml.etree.ElementTree as ET
+from ldap3 import Server, Connection, ALL
+from io import BytesIO
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
 from xabber_server_panel.base_modules.circles.models import Circle
@@ -23,14 +25,17 @@ from xabber_server_panel.crontab.models import CronJob
 from xabber_server_panel.crontab.forms import CronJobForm
 from xabber_server_panel.certificates.utils import update_or_create_certs, check_certificates, validate_certificate
 from xabber_server_panel.certificates.models import Certificate
-from xabber_server_panel.utils import check_versions
+from xabber_server_panel.utils import get_xmpp_version
+from xabber_server_panel import version as xabber_server_panel_version
 
 from .models import LDAPSettings, LDAPServer, RootPage, DiscoUrls
 from .forms import LDAPSettingsForm, VirtualHostForm
+from .mixins import UploadModuleMixin
 
 import threading
-import tarfile
 import shutil
+import requests
+import tempfile
 import os
 import re
 
@@ -399,177 +404,85 @@ class Ldap(LoginRequiredMixin, TemplateView):
         ldap_settings.servers.exclude(server__in=self.server_list).delete()
 
 
-class Modules(LoginRequiredMixin, TemplateView):
+class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
     template_name = 'config/modules.html'
 
     @permission_admin
     def get(self, request, *args, **kwargs):
-        return self.render_to_response({})
+
+        avaliable_modules = self._get_avaliable_modules()
+
+        context = {
+            'avaliable_modules': avaliable_modules
+        }
+        return self.render_to_response(context)
+
+    def _get_avaliable_modules(self):
+        # get avaliable plugins
+        plugins_api_url = settings.PLUGINS_API_URL
+        plugins = []
+
+        if plugins_api_url:
+            plugin_list_url = f'{plugins_api_url}/{os.path.join("api", "v1", "plugins")}'
+
+            try:
+                data = {
+                    'xabber_server_panel_version': xabber_server_panel_version,
+                    'xmpp_server_version': get_xmpp_version()
+                }
+                response = requests.get(plugin_list_url, data=data)
+
+                if response.ok:
+                    xml_data = ET.fromstring(response.content)
+
+                    # Convert XML to list of dicts
+                    for plugin in xml_data.findall('plugin'):
+                        plugin_dict = {
+                            child.tag: child.text.strip() if child.text else None
+                            for child in plugin
+                        }
+                        plugins.append(plugin_dict)
+            except requests.RequestException as e:
+                print(f"HTTP Request failed: {e}")
+            except ET.ParseError as e:
+                print(f"XML parsing failed: {e}")
+
+        return plugins
 
     @permission_admin
     def post(self, request, *args, **kwargs):
         self.uploaded_file = request.FILES.get('file')
-
         if self.uploaded_file:
-            self.handle_upload()
+            self._handle_upload(custom=True)
 
         return HttpResponseRedirect(reverse('config:modules'))
 
-    def handle_upload(self):
-        self.temp_extract_dir = os.path.join(settings.BASE_DIR, 'temp_extract')
 
-        try:
-            # Create temporary dir for unpack
-            os.makedirs(self.temp_extract_dir, exist_ok=True)
+class UploadModule(LoginRequiredMixin, View, UploadModuleMixin):
 
-            # Unpack archieve in temporary dir
-            with tarfile.open(fileobj=self.uploaded_file, mode='r:gz') as tar:
-                tar.extractall(self.temp_extract_dir)
+    @permission_admin
+    def get(self, request, *args, **kwargs):
+        download_url = request.GET.get('url')
 
-            module_name, version = self.check_version()
+        if download_url:
+            try:
+                # Download the file from the URL
+                response = requests.get(download_url, stream=True)
+                response.raise_for_status()
 
-            # Get nested dir inside 'panel'
-            panel_path = os.path.join(self.temp_extract_dir, 'panel')
-            server_path = os.path.join(self.temp_extract_dir, 'server')
-            module_path = os.path.join(panel_path, module_name)
+                self.uploaded_file = response.raw
+                self._handle_upload()
 
-            if os.path.isdir(module_path):
+            except requests.exceptions.RequestException as e:
+                messages.error(request, f"An error occurred while trying to download the file: {e}")
+            except Exception as e:
+                messages.error(request, e)
 
-                # Copy module in modules dir
-                self.install_module(panel_path, module_name)
-
-                # Copy server files if it exists
-                self.install_server_files(server_path)
-
-                # after installation actions
-                self.after_install(module_name, version, server_path)
-
-                messages.success(self.request, 'Modules added successfully.')
-            else:
-                raise Exception('Module folder is missed.')
-        except Exception as e:
-            # Delete temporary dir
-            shutil.rmtree(self.temp_extract_dir, ignore_errors=True)
-            messages.error(self.request, e)
-
-    def install_module(self, panel_path, module_dir, ):
-
-        app_name = 'modules.%s' % module_dir
-
-        target_path = os.path.join(settings.MODULES_DIR, module_dir)
-        module_path = os.path.join(panel_path, module_dir)
-
-        if os.path.exists(target_path):
-            shutil.rmtree(target_path)
-
-        shutil.copytree(module_path, target_path)
-
-        if not apps.is_installed(app_name):
-            # Append app in settings.py
-            settings.INSTALLED_APPS += [app_name]
-
-            # update app list
-            update_app_list(settings.INSTALLED_APPS)
-
-        # migrate db if module has migrations
-        if os.path.exists(os.path.join(target_path, 'migrations', '__init__.py')):
-            management.call_command('migrate', module_dir, interactive=False)
-
-        management.call_command('collectstatic', '--noinput', interactive=False)
-
-    def check_version(self):
-
-        # read module spec
-        spec_path = os.path.join(self.temp_extract_dir, 'module.spec')
-        if os.path.exists(spec_path):
-            with open(spec_path, 'r') as file:
-                content = file.read()
         else:
-            raise Exception('Module spec information is missed.')
+            # If no URL is provided, return an error message or a 400 Bad Request.
+            messages.error(request, "No download URL provided")
 
-        name_match = re.search(r'NAME\s*=\s*([^\n]+)', content)
-        version_match = re.search(r'VERSION\s*=\s*([^\n]+)', content)
-
-        if name_match and version_match:
-            module_name = name_match.group(1).strip().lower()
-            version = version_match.group(1).strip().lower()
-        else:
-            raise Exception('Module spec is incorrect.')
-
-        module = Module.objects.filter(name=module_name).first()
-        if module:
-            # check version if module already installed
-            version_result = check_versions(module.version, version)
-            if not version_result.get('success'):
-                raise Exception(version_result.get('error'))
-
-        return module_name, version
-
-    def install_server_files(self, server_path):
-
-        if not os.path.exists(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR):
-            os.mkdir(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
-
-        if os.path.exists(server_path):
-
-            # copy list files
-            for filename in os.listdir(server_path):
-                path_from = os.path.join(server_path, filename)
-                path_to = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
-
-                # delete existing file
-                if os.path.exists(path_to):
-                    os.remove(path_to)
-
-                shutil.copy(path_from, path_to)
-
-    def after_install(self, module_name, version, server_path):
-
-        # get module verbose name
-        try:
-            module_app = import_module('.apps', package='modules.%s' % module_name)
-        except:
-            module_app = None
-
-        verbose_name = ''
-        root_page = False
-        global_module = False
-        if module_app:
-            module_config = getattr(module_app, 'ModuleConfig', None)
-
-            if module_config:
-                verbose_name = getattr(module_config, 'verbose_name', module_name)
-                root_page = getattr(module_config, 'root_page', False)
-                global_module = getattr(module_config, 'global_module', False)
-
-        # prepare server files paths
-        if os.path.exists(server_path):
-            server_files = ','.join(os.listdir(server_path))
-        else:
-            server_files = ''
-        print('global_module:', global_module)
-        # update module info
-        Module.objects.update_or_create(
-            name=module_name,
-            defaults={
-                'version': version,
-                'verbose_name': verbose_name,
-                'files': server_files,
-                'root_page': root_page,
-                'global_module': global_module
-            }
-        )
-
-        # create permissions for new modules
-        management.call_command('update_permissions')
-
-        # Delete temporary dir
-        shutil.rmtree(self.temp_extract_dir)
-
-        make_xmpp_config()
-        get_app_template_dirs.cache_clear()
-
-        reload_server()
+        return HttpResponseRedirect(reverse('config:modules'))
 
 
 class DeleteModule(LoginRequiredMixin, TemplateView):
