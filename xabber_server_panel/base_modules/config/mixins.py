@@ -15,14 +15,17 @@ import tarfile
 import shutil
 import os
 import re
+from datetime import date
 
 
 class UploadModuleMixin:
     uploaded_file = None
+    custom = False
+    track = ''
+    description = ''
+    created = date.today()
 
-    def _handle_upload(self, custom=False):
-        self.custom = custom
-
+    def _handle_upload(self):
         self.temp_extract_dir = os.path.join(settings.BASE_DIR, 'temp_extract')
 
         try:
@@ -109,7 +112,8 @@ class UploadModuleMixin:
         module = Module.objects.filter(name=module_name).first()
         if module:
             # check version if module already installed
-            version_result = check_versions(module.version, version)
+            equals_ok = module.track == 'free' and self.track == 'paid'
+            version_result = check_versions(module.version, version, equals_ok=equals_ok)
             if not version_result.get('success'):
                 raise Exception(version_result.get('error'))
 
@@ -167,7 +171,10 @@ class UploadModuleMixin:
                 'files': server_files,
                 'root_page': root_page,
                 'global_module': global_module,
-                'custom': self.custom
+                'custom': self.custom,
+                'track': self.track,
+                'created': self.created,
+                'description': self.description,
             }
         )
 

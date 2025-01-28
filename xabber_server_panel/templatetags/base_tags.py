@@ -3,9 +3,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.html import strip_spaces_between_tags
 from django.contrib.contenttypes.models import ContentType
 from datetime import datetime
+from django.shortcuts import reverse
 import math
 
-from xabber_server_panel.utils import get_success_messages, get_error_messages
+from xabber_server_panel.utils import get_success_messages, get_error_messages, check_versions
+from xabber_server_panel.base_modules.config.models import Module
 
 
 register = template.Library()
@@ -99,7 +101,7 @@ def bytes_to_mb(value):
 
 
 @register.filter
-def strp_date(date, to):
+def strp_date(date, to='%Y.%m.%d'):
     format = '%Y-%m-%d'
 
     try:
@@ -108,4 +110,20 @@ def strp_date(date, to):
         dt_object = None
 
     if dt_object:
-        return dt_object.strftime('%Y.%m.%d')
+        return dt_object.strftime(to)
+
+
+@register.simple_tag
+def get_dict_value(obj, key):
+    if isinstance(obj, dict):
+        return obj.get(key)
+
+
+@register.filter()
+def to_list(obj):
+    result = []
+    try:
+        result = list(obj)
+    except:
+        pass
+    return result

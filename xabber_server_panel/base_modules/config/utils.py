@@ -5,13 +5,15 @@ from django.urls import reverse, resolve, NoReverseMatch
 import stat
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
-from xabber_server_panel.utils import is_ejabberd_started
+from xabber_server_panel.utils import is_ejabberd_started, get_xmpp_version
 from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls
+from xabber_server_panel import version as xabber_server_panel_version
 
 import copy
 import os
 import requests
 from importlib import util, import_module
+import xml.etree.ElementTree as ET
 
 
 # ========== XABBERSERVER CONFIG ==============
@@ -388,3 +390,39 @@ def check_hosts(api):
             hosts_to_delete = VirtualHost.objects.exclude(name__in=registered_hosts)
             if hosts_to_delete:
                 hosts_to_delete.delete()
+
+
+def get_available_modules():
+    # get available plugins
+    plugins_api_url = settings.PLUGINS_API_URL
+    plugins = {}
+
+    if plugins_api_url:
+        plugin_list_url = f'{plugins_api_url}/{os.path.join("api", "v1", "plugins")}'
+
+        try:
+            data = {
+                'xabber_server_panel_version': xabber_server_panel_version,
+                'xmpp_server_version': get_xmpp_version()
+            }
+            response = requests.get(plugin_list_url, params=data)
+
+            if response.ok:
+                xml_data = ET.fromstring(response.content)
+
+                # Convert XML to list of dicts
+                for plugin in xml_data.findall('plugin'):
+                    plugin_dict = {
+                        child.tag: child.text.strip() if child.text else None
+                        for child in plugin
+                    }
+                    if not plugin_dict.get('name') in plugins:
+                        plugins[plugin_dict.get('name')] = {}
+                    plugins[plugin_dict.get('name')][plugin_dict.get('track')] = plugin_dict
+
+        except requests.RequestException as e:
+            print(f"HTTP Request failed: {e}")
+        except ET.ParseError as e:
+            print(f"XML parsing failed: {e}")
+
+    return plugins

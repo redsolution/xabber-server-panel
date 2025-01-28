@@ -32,7 +32,7 @@ $(function () {
             selectorResult.trigger('change');
         };
 
-        //Filter avaliable members
+        //Filter available members
         selectorFilterFrom.on('input', function() {
             let filter = $(this).val().toLowerCase();
             selectorFrom.find('option').each(function() {

@@ -162,6 +162,20 @@ class Module(models.Model):
     custom = models.BooleanField(
         default=False
     )
+    created = models.DateField(
+        auto_now_add=True,
+        blank=True,
+        null=True
+    )
+    track = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255
+    )
+    description = models.TextField(
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         return self.name

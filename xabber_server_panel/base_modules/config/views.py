@@ -1,22 +1,21 @@
 from django.shortcuts import reverse, loader, render, Http404
 from django.views.generic import TemplateView, View
 from django.http import HttpResponseRedirect, JsonResponse
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core import management
 from django.apps import apps
 
-import xml.etree.ElementTree as ET
+
 from ldap3 import Server, Connection, ALL
-from io import BytesIO
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
 from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.users.models import User
 from xabber_server_panel.base_modules.users.utils import check_users
-from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, make_xmpp_config, check_hosts, get_dns_records, check_hosts_dns
+from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, make_xmpp_config, check_hosts,\
+    get_dns_records, check_hosts_dns, get_available_modules
 from xabber_server_panel.utils import get_system_group_suffix, update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
@@ -25,8 +24,7 @@ from xabber_server_panel.crontab.models import CronJob
 from xabber_server_panel.crontab.forms import CronJobForm
 from xabber_server_panel.certificates.utils import update_or_create_certs, check_certificates, validate_certificate
 from xabber_server_panel.certificates.models import Certificate
-from xabber_server_panel.utils import get_xmpp_version
-from xabber_server_panel import version as xabber_server_panel_version
+
 
 from .models import LDAPSettings, LDAPServer, RootPage, DiscoUrls
 from .forms import LDAPSettingsForm, VirtualHostForm
@@ -35,7 +33,6 @@ from .mixins import UploadModuleMixin
 import threading
 import shutil
 import requests
-import tempfile
 import os
 import re
 
@@ -410,50 +407,21 @@ class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
     @permission_admin
     def get(self, request, *args, **kwargs):
 
-        avaliable_modules = self._get_avaliable_modules()
+        available_modules = get_available_modules()
+        installed_modules = {module.name: module for module in Module.objects.all()}
 
         context = {
-            'avaliable_modules': avaliable_modules
+            'available_modules': available_modules,
+            'installed_modules': installed_modules
         }
         return self.render_to_response(context)
-
-    def _get_avaliable_modules(self):
-        # get avaliable plugins
-        plugins_api_url = settings.PLUGINS_API_URL
-        plugins = []
-
-        if plugins_api_url:
-            plugin_list_url = f'{plugins_api_url}/{os.path.join("api", "v1", "plugins")}'
-
-            try:
-                data = {
-                    'xabber_server_panel_version': xabber_server_panel_version,
-                    'xmpp_server_version': get_xmpp_version()
-                }
-                response = requests.get(plugin_list_url, data=data)
-
-                if response.ok:
-                    xml_data = ET.fromstring(response.content)
-
-                    # Convert XML to list of dicts
-                    for plugin in xml_data.findall('plugin'):
-                        plugin_dict = {
-                            child.tag: child.text.strip() if child.text else None
-                            for child in plugin
-                        }
-                        plugins.append(plugin_dict)
-            except requests.RequestException as e:
-                print(f"HTTP Request failed: {e}")
-            except ET.ParseError as e:
-                print(f"XML parsing failed: {e}")
-
-        return plugins
 
     @permission_admin
     def post(self, request, *args, **kwargs):
         self.uploaded_file = request.FILES.get('file')
         if self.uploaded_file:
-            self._handle_upload(custom=True)
+            self.custom = True
+            self._handle_upload()
 
         return HttpResponseRedirect(reverse('config:modules'))
 
@@ -461,8 +429,12 @@ class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
 class UploadModule(LoginRequiredMixin, View, UploadModuleMixin):
 
     @permission_admin
-    def get(self, request, *args, **kwargs):
-        download_url = request.GET.get('url')
+    def get(self, request, module_name, track, **kwargs):
+
+        available_modules = get_available_modules()
+
+        module_data = available_modules.get(module_name, {}).get(track, {})
+        download_url = module_data.get('download')
 
         if download_url:
             try:
@@ -471,6 +443,10 @@ class UploadModule(LoginRequiredMixin, View, UploadModuleMixin):
                 response.raise_for_status()
 
                 self.uploaded_file = response.raw
+                self.track = track
+                self.created = module_data.get('created')
+                self.description = module_data.get('description')
+
                 self._handle_upload()
 
             except requests.exceptions.RequestException as e:
@@ -480,7 +456,7 @@ class UploadModule(LoginRequiredMixin, View, UploadModuleMixin):
 
         else:
             # If no URL is provided, return an error message or a 400 Bad Request.
-            messages.error(request, "No download URL provided")
+            messages.error(request, "There is no available modules to update.")
 
         return HttpResponseRedirect(reverse('config:modules'))
 
