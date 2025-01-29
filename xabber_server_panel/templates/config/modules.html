@@ -30,7 +30,7 @@
                             <td data-title="#">{{ forloop.counter }}</td>
                             <td data-title="Name">
                                 {{ module.display_name }}
-                                {% if module.track == 'paid' %}
+                                {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
                                     Premium
                                 {% endif %}
                                 {% if module.description %}

@@ -28,7 +28,7 @@ from xabber_server_panel.certificates.models import Certificate
 
 from .models import LDAPSettings, LDAPServer, RootPage, DiscoUrls
 from .forms import LDAPSettingsForm, VirtualHostForm
-from .mixins import UploadModuleMixin
+from .module_uploader import ModuleUploader
 
 import threading
 import shutil
@@ -401,19 +401,19 @@ class Ldap(LoginRequiredMixin, TemplateView):
         ldap_settings.servers.exclude(server__in=self.server_list).delete()
 
 
-class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
+class Modules(LoginRequiredMixin, TemplateView):
     template_name = 'config/modules.html'
 
     @permission_admin
     def get(self, request, *args, **kwargs):
-        available_modules = get_available_modules()  # Получаем доступные модули
-        installed_modules = {module.name: module for module in Module.objects.all()}  # Установленные модули
+        available_modules = get_available_modules()
+        installed_modules = {module.name: module for module in Module.objects.all()}
 
         modules_data = []
         processed_modules = set()
         grouped_available_modules = {}
 
-        # Обработка установленных модулей
+        # Handle installed modules
         for module_name, installed_module in installed_modules.items():
             available_module_data = available_modules.get(module_name, {})
             module_info = {
@@ -432,7 +432,7 @@ class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
             modules_data.append(module_info)
             processed_modules.add(module_name)
 
-        # Группировка доступных модулей по (name, version)
+        # Group available modules by name and version
         for module_name, tracks in available_modules.items():
             for track, module in tracks.items():
                 key = (module_name, module.get('release'))
@@ -444,20 +444,19 @@ class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
                         'version': module.get('release'),
                         'created': module.get('created'),
                         'description': module.get('description'),
-                        'tracks': [],  # Будем собирать треки (free, paid)
+                        'tracks': [],
                         'installed': False,
                         'update_links': {},
                     }
 
                 grouped_available_modules[key]['tracks'].append(track)
 
-        # Формируем список доступных модулей без дублирования
+        # Add available modules excluding installed modules
         for module_info in grouped_available_modules.values():
             if module_info['name'] not in processed_modules:
-              # Не добавляем установленные модули
                 modules_data.append(module_info)
 
-        # Сортировка: установленные модули в начале
+        # Sort by installed status
         modules_data.sort(key=lambda x: not x['installed'])
 
         context = {
@@ -466,13 +465,13 @@ class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
         return self.render_to_response(context)
 
     def check_module_versions(self, module: Module, available_module_data: dict):
-        """ Проверить доступные обновления для установленного модуля и вернуть ссылки """
+        """ Check available updates and return links list """
         result = {}
 
         if isinstance(module, Module) and isinstance(available_module_data, dict):
             new_module_free = available_module_data.get('free')
             new_module_paid = available_module_data.get('paid')
-            if not module.custom:  # Только если модуль не кастомный
+            if not module.custom:
                 if module.track == 'free':
                     if new_module_free:
                         if check_versions(module.version, new_module_free.get('release')).get('success'):
@@ -493,15 +492,23 @@ class Modules(LoginRequiredMixin, TemplateView, UploadModuleMixin):
 
     @permission_admin
     def post(self, request, *args, **kwargs):
-        self.uploaded_file = request.FILES.get('file')
-        if self.uploaded_file:
-            self.custom = True
-            self._handle_upload()
+        uploaded_file = request.FILES.get('file')
+
+        if uploaded_file:
+            try:
+                module_uploader = ModuleUploader(
+                    uploaded_file=uploaded_file,
+                    custom=True
+                )
+                module_uploader.handle_upload()
+                messages.success(self.request, 'Module installed successfully.')
+            except Exception as e:
+                messages.error(self.request, e)
 
         return HttpResponseRedirect(reverse('config:modules'))
 
 
-class UploadModule(LoginRequiredMixin, View, UploadModuleMixin):
+class UploadModule(LoginRequiredMixin, View):
 
     @permission_admin
     def get(self, request, module_name, track, **kwargs):
@@ -517,12 +524,14 @@ class UploadModule(LoginRequiredMixin, View, UploadModuleMixin):
                 response = requests.get(download_url, stream=True)
                 response.raise_for_status()
 
-                self.uploaded_file = response.raw
-                self.track = track
-                self.created = module_data.get('created')
-                self.description = module_data.get('description')
-
-                self._handle_upload()
+                module_uploader = ModuleUploader(
+                    uploaded_file=response.raw,
+                    track=track,
+                    created=module_data.get('created'),
+                    description=module_data.get('description'),
+                )
+                module_uploader.handle_upload()
+                messages.success(self.request, 'Module installed successfully.')
 
             except requests.exceptions.RequestException as e:
                 messages.error(request, f"An error occurred while trying to download the file: {e}")

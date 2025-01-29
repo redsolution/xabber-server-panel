@@ -18,16 +18,24 @@ import re
 from datetime import date
 
 
-class UploadModuleMixin:
-    uploaded_file = None
-    custom = False
-    track = ''
-    description = ''
-    created = date.today()
+class ModuleUploader:
 
-    def _handle_upload(self):
+    def __init__(
+        self,
+        uploaded_file=None,
+        custom=False,
+        track='',
+        description='',
+        created=date.today()
+    ):
+        self.uploaded_file = uploaded_file
+        self.custom = custom
+        self.track = track
+        self.description = description
+        self.created = created
         self.temp_extract_dir = os.path.join(settings.BASE_DIR, 'temp_extract')
 
+    def handle_upload(self):
         try:
             if not self.uploaded_file:
                 raise Exception('Uploaded file is None.')
@@ -56,14 +64,12 @@ class UploadModuleMixin:
 
                 # after installation actions
                 self._after_install(module_name, version, server_path)
-
-                messages.success(self.request, 'Modules added successfully.')
             else:
                 raise Exception('Module folder is missed.')
         except Exception as e:
             # Delete temporary dir
             shutil.rmtree(self.temp_extract_dir, ignore_errors=True)
-            messages.error(self.request, e)
+            raise
 
     def _install_module(self, panel_path, module_dir, ):
 
@@ -111,6 +117,11 @@ class UploadModuleMixin:
 
         module = Module.objects.filter(name=module_name).first()
         if module:
+            if module.custom and not self.custom:
+                raise Exception('You can not install original module over custom.')
+            elif not module.custom and self.custom:
+                raise Exception('You can not install custom module over original.')
+
             # check version if module already installed
             equals_ok = module.track == 'free' and self.track == 'paid'
             version_result = check_versions(module.version, version, equals_ok=equals_ok)
