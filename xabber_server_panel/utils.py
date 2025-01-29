@@ -167,7 +167,7 @@ def get_system_group_suffix():
     return ''.join(random.choices(string.ascii_lowercase, k=8))
 
 
-def check_versions(current_version, new_version):
+def check_versions(current_version, new_version, equals_ok=False):
 
     """ Returns success = True if new version more than current version. """
 
@@ -187,7 +187,7 @@ def check_versions(current_version, new_version):
     if new_version < current_version:
         response['error'] = "You have a newer version installed. Downgrade is not allowed."
         response['success'] = False
-    elif new_version == current_version:
+    elif new_version == current_version and not equals_ok:
         response['error'] = "You already have this version installed."
         response['success'] = False
 
