@@ -12,143 +12,185 @@
     </div>
 
     {% if modules_data %}
-        <div class="table-adaptive">
-            <table class="table table-striped mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Version</th>
-                        <th>Creation Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for module in modules_data %}
+        <div class="mb-4">
+            <div class="table-adaptive">
+                <table class="table table-striped mb-0">
+                    <thead>
                         <tr>
-                            <td data-title="#">{{ forloop.counter }}</td>
-                            <td data-title="Name">
-                                {{ module.display_name }}
-                                {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
-                                    Premium
-                                {% endif %}
-                                {% if module.description %}
-                                    <div>{{ module.description }}</div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if module.installed %}
-                                    Installed
-                                {% else %}
-                                    Available
-                                {% endif %}
-                            </td>
-                            <td data-title="Version">
-                                {% if module.installed %}
-                                    {{ module.version }}
-                                    {% if module.custom %}
-                                        <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is a handle uploaded module. Can't update this module from modules market.">
-                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
-                                        </div>
-                                    {% elif module.update_links.upgrade %}
-                                        <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="New version available.">
-                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
-                                        </div>
-                                    {% elif module.update_links.buy %}
-                                        <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Premium version available.">
-                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
-                                        </div>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Version</th>
+                            <th>Creation Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for module in modules_data %}
+                            <tr>
+                                <td data-title="#">{{ forloop.counter }}</td>
+                                <td data-title="Name">
+                                    {{ module.display_name }}
+                                    {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
+                                        Premium
                                     {% endif %}
-                                {% else %}
-                                    {{ module.version }}
-                                {% endif %}
-                            </td>
-                            <td data-title="Creation Date">
-                                {% if module.installed %}
-                                    {{ module.created_installed|date:'Y.m.d' }}
-                                {% else %}
-                                    {{ module.created|strp_date }}
-                                {% endif %}
-                            </td>
-                            {% if settings_write_permissions %}
-                                <td data-title="Actions">
-                                    {% if module.installed %}
-                                        {% if module.update_links.upgrade %}
-                                            <div class="d-flex">
-                                                <a href="{{ module.update_links.upgrade }}" class="text-primary {% if module.track == 'paid' %}check-token-js{% endif %}">Upgrade</a>
-                                            </div>
-                                        {% endif %}
-                                        {% if module.update_links.buy %}
-                                            <div class="d-flex">
-                                                <a href="{{ module.update_links.buy }}" class="text-primary check-token-js">Buy Premium</a>
-                                            </div>
-                                        {% endif %}
-                                        <div class="d-flex">
-                                            <div class="dropdown">
-                                                <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="bi bi-three-dots-vertical d-flex"></i>
-                                                </div>
-
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li>
-                                                        <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'config:delete_module' module=module.name %}" data-delete-name="Module" data-delete-target="{{ module.verbose_name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
-                                                             Delete
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        {% for track in module.tracks %}
-                                            <div class="d-flex">
-                                                <a href="{% url 'config:upload_module' module_name=module.name track=track %}" class="text-primary {% if track == 'paid' %}check-token-js{% endif %}">
-                                                    {% if track == 'free' %}
-                                                        Install
-                                                    {% elif track == 'paid' %}
-                                                        Buy
-                                                    {% endif %}
-                                                </a>
-                                            </div>
-                                        {% endfor %}
+                                    {% if module.description %}
+                                        <div>{{ module.description }}</div>
                                     {% endif %}
                                 </td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
+                                <td>
+                                    {% if module.installed %}
+                                        Installed
+                                    {% else %}
+                                        Available
+                                    {% endif %}
+                                </td>
+                                <td data-title="Version">
+                                    {% if module.installed %}
+                                        {{ module.version }}
+                                        {% if module.custom %}
+                                            <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is a handle uploaded module. Can't update this module from modules market.">
+                                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                            </div>
+                                        {% elif module.update_links.upgrade %}
+                                            <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="New version available.">
+                                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                            </div>
+                                        {% elif module.update_links.buy %}
+                                            <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Premium version available.">
+                                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        {{ module.version }}
+                                    {% endif %}
+                                </td>
+                                <td data-title="Creation Date">
+                                    {% if module.installed %}
+                                        {{ module.created_installed|date:'Y.m.d' }}
+                                    {% else %}
+                                        {{ module.created|strp_date }}
+                                    {% endif %}
+                                </td>
+                                {% if settings_write_permissions %}
+                                    <td data-title="Actions">
+                                        {% if module.installed %}
+                                            <div class="d-flex">
+                                                <div class="dropdown">
+                                                    <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-three-dots-vertical d-flex"></i>
+                                                    </div>
 
-    {% if settings_write_permissions %}
-        <div class="mt-4">
-            <form class="check-change-js" action="{% url 'config:modules' %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'config:delete_module' module=module.name %}" data-delete-name="Module" data-delete-target="{{ module.verbose_name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                                 Delete
+                                                            </a>
+                                                        </li>
+                                                        {% if module.update_links.upgrade %}
+                                                            <li>
+                                                                <a class="dropdown-item text-wrap {% if module.track == 'paid' %}enter-token-js{% endif %}" href="{{ module.update_links.upgrade }}">
+                                                                    Upgrade
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        {% if module.update_links.buy %}
+                                                            <li>
+                                                                <a class="dropdown-item text-wrap enter-token-js" href="{{ module.update_links.buy }}">
+                                                                    Buy Premium
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex">
+                                                <div class="dropdown">
+                                                    <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-three-dots-vertical d-flex"></i>
+                                                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label h5" for="formFile">
-                        You can only upload a module in TAR.GZ or TGZ format.
-                    </label>
-
-                    <input class="form-control" id="formFile" type="file" name="file" accept=".tar.gz, .tgz">
-                </div>
-
-                <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
-            </form>
-        </div>
-    {% endif %}
-
-    {% if settings_write_permissions %}
-        <form class="check-change-js" action="" method="GET">
-            <div class="mb-3">
-                <label class="form-label h5" for="FormToken">
-                    Enter your token to download premium module.
-                </label>
-
-                <input class="form-control" id="FormToken" type="text" name="token">
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        {% for track in module.tracks %}
+                                                            <li>
+                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}enter-token-js{% endif %}" href="{% url 'config:upload_module' module_name=module.name track=track %}">
+                                                                    {% if track == 'free' %}
+                                                                        Install
+                                                                    {% elif track == 'paid' %}
+                                                                        Buy
+                                                                    {% endif %}
+                                                                </a>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Upload</button>
-        </form>
+        </div>
+    {% endif %}
+
+    <div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#upload_module" role="button">
+            Upload module
+        </button>
+    </div>
+
+    {% if settings_write_permissions %}
+        <div class="modal fade" id="upload_module" tabindex="-1" aria-labelledby="upload_module_label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <form class="check-change-js modal-content" action="{% url 'config:modules' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="upload_module_label">Upload module</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body mt-3 pt-0">
+                        <label class="form-label">You can only upload a module in TAR.GZ or TGZ format.</label>
+                        <input class="form-control" id="formFile" type="file" name="file" accept=".tar.gz, .tgz">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if settings_write_permissions %}
+        <div class="modal fade" id="enter_token" tabindex="-1" aria-labelledby="enter_token_label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <form class="check-change-js modal-content" action="" method="GET">
+                    {% csrf_token %}
+
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="enter_token_label">Enter your token to download premium module</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body mt-3 pt-0">
+                        <input class="form-control" id="formToken" type="text" name="token">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     {% endif %}
 {% endblock %}

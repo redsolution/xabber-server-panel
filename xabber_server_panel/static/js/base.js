@@ -539,4 +539,18 @@ $(function () {
         }, range * 1000); //60000 milliseconds = 1 minute
     };
 
+	//Function for modal (#enter-token)
+	let enterTokenModal = $('#enter_token');
+	$(document).on('click', '.enter-token-js', function(event) {
+		event.preventDefault();
+
+		//Add action
+		let url = $(this).attr('href');
+		$(enterTokenModal).find('form').attr('action', url);
+
+		//Open modal
+		let enterTokenModalBs = new bootstrap.Modal(enterTokenModal);
+		enterTokenModalBs.show();
+	});
+
 });
