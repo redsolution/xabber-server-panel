@@ -405,7 +405,7 @@ def get_available_modules():
                 'xabber_server_panel_version': xabber_server_panel_version,
                 'xmpp_server_version': get_xmpp_version()
             }
-            response = requests.get(plugin_list_url, params=data)
+            response = requests.get(plugin_list_url, params=data, timeout=10)
 
             if response.ok:
                 xml_data = ET.fromstring(response.content)

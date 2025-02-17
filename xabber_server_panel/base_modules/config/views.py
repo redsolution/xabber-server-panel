@@ -529,7 +529,7 @@ class UploadModule(LoginRequiredMixin, View):
                     auth_header = {}
 
                 # Download the file from the URL
-                response = requests.get(download_url, stream=True, headers=auth_header)
+                response = requests.get(download_url, stream=True, headers=auth_header, timeout=10)
                 if response.ok:
                     module_uploader = ModuleUploader(
                         uploaded_file=response.raw,

@@ -197,6 +197,7 @@ def check_versions(current_version, new_version, equals_ok=False):
 def get_xmpp_version():
     version_path = os.path.join(settings.XMPP_SERVER_DIR, 'version')
 
-    with open(version_path, 'r') as f:
-        version = f.readline()
-    return version
+    if os.path.exists(version_path):
+        with open(version_path, 'r') as f:
+            version = f.readline()
+        return version
