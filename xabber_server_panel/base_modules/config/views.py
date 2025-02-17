@@ -520,21 +520,33 @@ class UploadModule(LoginRequiredMixin, View):
 
         if download_url:
             try:
+                if track == 'paid':
+                    token = request.GET.get('token')
+                    if not token:
+                        raise Exception('Token is not provided')
+                    auth_header = {'Authorization': f'Token {token}'}
+                else:
+                    auth_header = {}
+
                 # Download the file from the URL
-                response = requests.get(download_url, stream=True)
-                response.raise_for_status()
-
-                module_uploader = ModuleUploader(
-                    uploaded_file=response.raw,
-                    track=track,
-                    created=module_data.get('created'),
-                    description=module_data.get('description'),
-                )
-                module_uploader.handle_upload()
-                messages.success(self.request, 'Module installed successfully.')
-
-            except requests.exceptions.RequestException as e:
-                messages.error(request, f"An error occurred while trying to download the file: {e}")
+                response = requests.get(download_url, stream=True, headers=auth_header)
+                if response.ok:
+                    module_uploader = ModuleUploader(
+                        uploaded_file=response.raw,
+                        track=track,
+                        created=module_data.get('created'),
+                        description=module_data.get('description'),
+                    )
+                    module_uploader.handle_upload()
+                    messages.success(self.request, 'Module installed successfully.')
+                elif response.status_code == 403:
+                    raise Exception('Wrong access token.')
+                elif response.status_code == 401:
+                    raise Exception('Not authenticated.')
+                elif response.status_code == 400:
+                    raise Exception('Malformed data.')
+                else:
+                    raise Exception('Service is not available.')
             except Exception as e:
                 messages.error(request, e)
 

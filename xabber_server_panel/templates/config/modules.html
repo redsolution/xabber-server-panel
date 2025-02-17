@@ -76,12 +76,12 @@
                                     {% if module.installed %}
                                         {% if module.update_links.upgrade %}
                                             <div class="d-flex">
-                                                <a href="{{ module.update_links.upgrade }}" class="text-primary">Upgrade</a>
+                                                <a href="{{ module.update_links.upgrade }}" class="text-primary {% if module.track == 'paid' %}check-token-js{% endif %}">Upgrade</a>
                                             </div>
                                         {% endif %}
                                         {% if module.update_links.buy %}
                                             <div class="d-flex">
-                                                <a href="{{ module.update_links.buy }}" class="text-primary">Buy Premium</a>
+                                                <a href="{{ module.update_links.buy }}" class="text-primary check-token-js">Buy Premium</a>
                                             </div>
                                         {% endif %}
                                         <div class="d-flex">
@@ -102,7 +102,7 @@
                                     {% else %}
                                         {% for track in module.tracks %}
                                             <div class="d-flex">
-                                                <a href="{% url 'config:upload_module' module_name=module.name track=track %}" class="text-primary">
+                                                <a href="{% url 'config:upload_module' module_name=module.name track=track %}" class="text-primary {% if track == 'paid' %}check-token-js{% endif %}">
                                                     {% if track == 'free' %}
                                                         Install
                                                     {% elif track == 'paid' %}
@@ -137,5 +137,18 @@
                 <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Save</button>
             </form>
         </div>
+    {% endif %}
+
+    {% if settings_write_permissions %}
+        <form action="/panel/config/modules/upload/xabber_web/paid/" method="GET">
+            <div class="mb-3">
+                <label class="form-label h5" for="FormToken">
+                    Enter your token to download premium module.
+                </label>
+
+                <input class="form-control" id="FormToken" type="text" name="token">
+            </div>
+            <button class="btn btn-primary" type="submit" name="save">Upload</button>
+        </form>
     {% endif %}
 {% endblock %}
