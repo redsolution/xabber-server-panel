@@ -114,7 +114,7 @@
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {% for track in module.tracks %}
                                                             <li>
-                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}enter-token-js{% endif %}" href="{% url 'config:upload_module' module_name=module.name track=track %}">
+                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}enter-token-js{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'config:upload_module' module_name=module.name track=track %}">
                                                                     {% if track == 'free' %}
                                                                         Install
                                                                     {% elif track == 'paid' %}
@@ -180,12 +180,12 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <div class="modal-body mt-3 pt-0">
+                    <div class="modal-body">
                         <input class="form-control" id="formToken" type="text" name="token">
                     </div>
 
                     <div class="modal-footer">
-                        <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
+                        <button class="btn btn-primary btn-secondary installing-module-js" type="submit" name="save" disabled>
                             Save
                         </button>
                     </div>
@@ -193,4 +193,40 @@
             </div>
         </div>
     {% endif %}
+
+    <div class="modal fade" id="installing_module" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="installing_module_label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="installing_module_label">Installing module, please wait...</h1>
+                </div>
+
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="spinner-border text-success m-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="removing_module" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="removing_module_label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="removing_module_label">Removing module, please wait...</h1>
+                </div>
+
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="spinner-border text-danger m-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

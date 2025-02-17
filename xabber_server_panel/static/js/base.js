@@ -539,7 +539,21 @@ $(function () {
         }, range * 1000); //60000 milliseconds = 1 minute
     };
 
-	//Function for modal (#enter-token)
+    //Close all modals
+    function closeModals() {
+		//Selected modal
+		const modals = document.querySelectorAll('.modal.show');
+
+		//Close all modals
+		modals.forEach(modal => {
+			const modalInstance = bootstrap.Modal.getInstance(modal);
+			if (modalInstance) {
+				modalInstance.hide();
+			}
+		});
+    };
+
+	//Function for modal (#enter_token)
 	let enterTokenModal = $('#enter_token');
 	$(document).on('click', '.enter-token-js', function(event) {
 		event.preventDefault();
@@ -551,6 +565,16 @@ $(function () {
 		//Open modal
 		let enterTokenModalBs = new bootstrap.Modal(enterTokenModal);
 		enterTokenModalBs.show();
+	});
+
+	//Function for modal (#installing_module)
+	let installingModuleModal = $('#installing_module');
+	$(document).on('click', '.installing-module-js', function() {
+		closeModals();
+
+		//Open installing modal
+		let installingModuleModalBs = new bootstrap.Modal(installingModuleModal);
+		installingModuleModalBs.show();
 	});
 
 });
