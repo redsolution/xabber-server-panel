@@ -140,7 +140,7 @@
     {% endif %}
 
     {% if settings_write_permissions %}
-        <form action="/panel/config/modules/upload/xabber_web/paid/" method="GET">
+        <form class="check-change-js" action="" method="GET">
             <div class="mb-3">
                 <label class="form-label h5" for="FormToken">
                     Enter your token to download premium module.
@@ -148,7 +148,7 @@
 
                 <input class="form-control" id="FormToken" type="text" name="token">
             </div>
-            <button class="btn btn-primary" type="submit" name="save">Upload</button>
+            <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>Upload</button>
         </form>
     {% endif %}
 {% endblock %}
