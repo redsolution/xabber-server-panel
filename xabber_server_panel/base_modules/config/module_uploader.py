@@ -26,12 +26,14 @@ class ModuleUploader:
         custom=False,
         track='',
         description='',
-        created=date.today()
+        created=date.today(),
+        refresh_token=''
     ):
         self.uploaded_file = uploaded_file
         self.custom = custom
         self.track = track
         self.description = description
+        self.refresh_token = refresh_token
         self.created = created
         self.temp_extract_dir = os.path.join(settings.BASE_DIR, 'temp_extract')
 
@@ -186,6 +188,7 @@ class ModuleUploader:
                 'track': self.track,
                 'created': self.created,
                 'description': self.description,
+                'refresh_token': self.refresh_token,
             }
         )
 

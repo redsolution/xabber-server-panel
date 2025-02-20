@@ -4,10 +4,12 @@ from django.conf import settings
 from django.contrib import messages
 
 from xabber_server_panel.custom_auth.exceptions import UnauthorizedException
-from xabber_server_panel.utils import get_error_messages, is_ejabberd_started
+from xabber_server_panel.utils import get_error_messages, is_ejabberd_started, get_xmpp_version
+from xabber_server_panel import version as xabber_server_panel_version
+from xabber_server_panel.base_modules.config.utils import parse_available_modules
 
 
-class EjabberdAPI(object):
+class EjabberdAPI:
 
     def __init__(self, request=None):
         self.token = None
@@ -467,4 +469,133 @@ class EjabberdAPI(object):
         """
 
         self._call_method('post', '/config/reload', data=None)
+        return self.response
+
+
+class PluginsApi:
+
+    def __init__(self, request=None):
+        self.session = requests.Session()
+        self.base_url = settings.PLUGINS_API_URL
+        self.raw_response = None
+        self.response = {}
+        self.errors = []
+        self.request = request
+
+    def fetch_token(self, token):
+        self.session.headers.update({'Authorization': 'Token {}'.format(token)})
+
+    def _wrapped_call(self, method, url, data, http_method, stream):
+
+        """ call session method and resolve exceptions """
+
+        try:
+            # check method and provide data
+            if http_method in ("post", "delete", "put"):
+                self.raw_response = method(url, data=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
+            elif http_method == "get":
+                self.raw_response = method(url, params=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
+
+        # resolve exceptions
+        except requests.exceptions.ConnectionError:
+            error = 'Connection error.'
+            if error not in self.errors:
+                self.errors += [error]
+        except requests.exceptions.RequestException as e:
+            error = 'Request error: %s' % e
+            if error not in self.errors:
+                self.errors += [error]
+        except Exception as e:
+            self.errors += [e]
+
+    def _call_method(self, http_method, relative_url, data, stream=False):
+
+        """
+             request data from api,
+             resolve exceptions and check response data
+         """
+
+        method = getattr(self.session, http_method)
+        url = self.base_url + relative_url
+
+        # request data from api
+        self._wrapped_call(method, url, data, http_method, stream)
+
+        # check errors and convert response to json
+        if self.raw_response is not None:
+            self._parse_response()
+
+        if settings.DEBUG:
+            print('request:', http_method, url, data)
+            print('raw response:', self.raw_response)
+            print('response', self.response)
+            print('errors:', self.errors)
+
+        self._create_error_messages()
+
+    def _parse_response(self):
+
+        """ Jsonify response or add errors if response is not ok """
+
+        if self.raw_response.ok:
+            self.response = self.raw_response
+            if self.raw_response.headers.get('content-type') == 'application/json':
+                try:
+                    json_raw_response = self.raw_response.json()
+                    if isinstance(json_raw_response, dict):
+                        self.response = json_raw_response
+                except Exception:
+                    pass
+        else:
+            # logout if user unauthorized
+            if self.raw_response.status_code in [401, 403] and self.request:
+                raise UnauthorizedException
+
+            if self.raw_response.reason not in self.errors:
+                self.errors += [self.raw_response.reason]
+
+    def _create_error_messages(self):
+
+        """ Add error messages to request if it exists """
+
+        if self.errors and self.request:
+            error_messages = get_error_messages(self.request)
+
+            for error in self.errors:
+                if error not in error_messages:
+                    messages.error(self.request, error)
+
+    def get_plugins(self):
+
+        url = '/plugins/'
+
+        data = {
+            'xabber_server_panel_version': xabber_server_panel_version,
+            'xmpp_server_version': get_xmpp_version()
+        }
+
+        self._call_method('get', url, data)
+
+        if not self.errors:
+            plugins = parse_available_modules(self.response.content)
+        else:
+            plugins = {}
+
+        return plugins
+
+    def get_access_token(self, release_id, data):
+        """
+            Args: key
+        """
+
+        url = '/token/%s/' % release_id
+
+        self._call_method('post', url, data=data)
+        return self.response
+
+    def download_release(self, release_id):
+
+        url = '/download/%s/' % release_id
+
+        self._call_method('get', url, {}, stream=True)
         return self.response

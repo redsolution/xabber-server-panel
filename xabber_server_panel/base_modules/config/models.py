@@ -176,6 +176,10 @@ class Module(models.Model):
         blank=True,
         null=True
     )
+    refresh_token = models.TextField(
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         return self.name

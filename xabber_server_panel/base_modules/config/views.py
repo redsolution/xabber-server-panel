@@ -15,10 +15,11 @@ from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.users.models import User
 from xabber_server_panel.base_modules.users.utils import check_users
 from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, make_xmpp_config, check_hosts,\
-    get_dns_records, check_hosts_dns, get_available_modules
+    get_dns_records, check_hosts_dns
 from xabber_server_panel.utils import get_system_group_suffix, update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
+from xabber_server_panel.api.api import PluginsApi
 from xabber_server_panel.utils import get_error_messages, restart_ejabberd, is_ejabberd_started, check_versions
 from xabber_server_panel.crontab.models import CronJob
 from xabber_server_panel.crontab.forms import CronJobForm
@@ -406,7 +407,10 @@ class Modules(LoginRequiredMixin, TemplateView):
 
     @permission_admin
     def get(self, request, *args, **kwargs):
-        available_modules = get_available_modules()
+        plugins_api = PluginsApi(request)
+
+        available_modules = plugins_api.get_plugins()
+
         installed_modules = {module.name: module for module in Module.objects.all()}
 
         modules_data = []
@@ -510,51 +514,88 @@ class Modules(LoginRequiredMixin, TemplateView):
 
 class UploadModule(LoginRequiredMixin, View):
 
+    refresh_token = ''
+    key = ''
+
     @permission_admin
     def get(self, request, module_name, track, **kwargs):
 
-        available_modules = get_available_modules()
+        self.plugins_api = PluginsApi(request)
 
-        module_data = available_modules.get(module_name, {}).get(track, {})
-        download_url = module_data.get('download')
+        # get token key refresh or license
+        module = Module.objects.filter(name=module_name).exclude(refresh_token='').first()
+        if module and module.refresh_token:
+            self.key = module.refresh_token
 
-        if download_url:
-            try:
-                if track == 'paid':
-                    token = request.GET.get('token')
-                    if not token:
-                        raise Exception('Token is not provided')
-                    auth_header = {'Authorization': f'Token {token}'}
-                else:
-                    auth_header = {}
-
-                # Download the file from the URL
-                response = requests.get(download_url, stream=True, headers=auth_header, timeout=10)
-                if response.ok:
-                    module_uploader = ModuleUploader(
-                        uploaded_file=response.raw,
-                        track=track,
-                        created=module_data.get('created'),
-                        description=module_data.get('description'),
-                    )
-                    module_uploader.handle_upload()
-                    messages.success(self.request, 'Module installed successfully.')
-                elif response.status_code == 403:
-                    raise Exception('Wrong access token.')
-                elif response.status_code == 401:
-                    raise Exception('Not authenticated.')
-                elif response.status_code == 400:
-                    raise Exception('Malformed data.')
-                else:
-                    raise Exception('Service is not available.')
-            except Exception as e:
-                messages.error(request, e)
-
-        else:
-            # If no URL is provided, return an error message or a 400 Bad Request.
-            messages.error(request, "There is no available modules to update.")
+        self._handle_upload(module_name, track)
 
         return HttpResponseRedirect(reverse('config:modules'))
+
+    @permission_admin
+    def post(self, request, module_name, track, **kwargs):
+
+        self.plugins_api = PluginsApi(request)
+        self.key = self.request.POST.get('key')
+        self._handle_upload(module_name, track)
+
+        return HttpResponseRedirect(reverse('config:modules'))
+
+    def _handle_upload(self, module_name, track):
+        available_modules = self.plugins_api.get_plugins()
+
+        module_data = available_modules.get(module_name, {}).get(track, {})
+        release_id = module_data.get('release_id')
+
+        if release_id:
+            if track == 'paid' and self.key:
+                self._get_access_token(release_id)
+
+            self._upload_module(
+                track,
+                release_id,
+                module_data.get('created'),
+                module_data.get('description')
+            )
+        else:
+            # If no URL is provided, return an error message or a 400 Bad Request.
+            messages.error(self.request, "There is no available modules to update.")
+
+    def _get_access_token(self, release_id):
+        data = {
+            "key": self.key
+        }
+        token_response = self.plugins_api.get_access_token(release_id, data=data)
+
+        if not self.plugins_api.errors:
+            access_token = token_response.get('access_token')
+            self.plugins_api.fetch_token(access_token)
+
+            # set refresh token
+            self.refresh_token = token_response.get('refresh_token')
+
+    def _upload_module(self, track, release_id, created, description):
+        try:
+            response = self.plugins_api.download_release(release_id)
+            if response.ok:
+                module_uploader = ModuleUploader(
+                    uploaded_file=response.raw,
+                    track=track,
+                    created=created,
+                    description=description,
+                    refresh_token=self.refresh_token
+                )
+                module_uploader.handle_upload()
+                messages.success(self.request, 'Module installed successfully.')
+            elif self.plugins_api.raw_response.status_code == 403:
+                raise Exception('Wrong access token.')
+            elif self.plugins_api.raw_response.status_code == 401:
+                raise Exception('Not authenticated.')
+            elif self.plugins_api.raw_response.status_code == 400:
+                raise Exception('Malformed data.')
+            else:
+                raise Exception('Service is not available.')
+        except Exception as e:
+            messages.error(self.request, e)
 
 
 class DeleteModule(LoginRequiredMixin, TemplateView):
