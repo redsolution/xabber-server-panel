@@ -537,8 +537,9 @@ class PluginsApi:
 
         """ Jsonify response or add errors if response is not ok """
 
+        self.response = self.raw_response
+
         if self.raw_response.ok:
-            self.response = self.raw_response
             if self.raw_response.headers.get('content-type') == 'application/json':
                 try:
                     json_raw_response = self.raw_response.json()
@@ -547,9 +548,6 @@ class PluginsApi:
                 except Exception:
                     pass
         else:
-            # logout if user unauthorized
-            if self.raw_response.status_code in [401, 403] and self.request:
-                raise UnauthorizedException
 
             if self.raw_response.reason not in self.errors:
                 self.errors += [self.raw_response.reason]
@@ -591,6 +589,26 @@ class PluginsApi:
         url = '/token/%s/' % release_id
 
         self._call_method('post', url, data=data)
+        return self.response
+
+    def refresh_token(self, release_id, data):
+        """
+            Args: key
+        """
+
+        url = '/token/refresh/%s/' % release_id
+
+        self._call_method('post', url, data=data)
+        return self.response
+
+    def delete_refresh_token(self):
+        """
+            Args: key
+        """
+
+        url = '/token/delete/'
+
+        self._call_method('get', url, data={})
         return self.response
 
     def download_release(self, release_id):

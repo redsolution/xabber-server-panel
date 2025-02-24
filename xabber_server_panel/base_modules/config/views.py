@@ -33,7 +33,6 @@ from .module_uploader import ModuleUploader
 
 import threading
 import shutil
-import requests
 import os
 import re
 
@@ -410,7 +409,6 @@ class Modules(LoginRequiredMixin, TemplateView):
         plugins_api = PluginsApi(request)
 
         available_modules = plugins_api.get_plugins()
-
         installed_modules = {module.name: module for module in Module.objects.all()}
 
         modules_data = []
@@ -515,17 +513,16 @@ class Modules(LoginRequiredMixin, TemplateView):
 class UploadModule(LoginRequiredMixin, View):
 
     refresh_token = ''
-    key = ''
+    license_key = ''
 
     @permission_admin
     def get(self, request, module_name, track, **kwargs):
 
         self.plugins_api = PluginsApi(request)
 
-        # get token key refresh or license
         module = Module.objects.filter(name=module_name).exclude(refresh_token='').first()
         if module and module.refresh_token:
-            self.key = module.refresh_token
+            self.refresh_token = module.refresh_token
 
         self._handle_upload(module_name, track)
 
@@ -535,10 +532,33 @@ class UploadModule(LoginRequiredMixin, View):
     def post(self, request, module_name, track, **kwargs):
 
         self.plugins_api = PluginsApi(request)
-        self.key = self.request.POST.get('key')
+
+        # load key from request.FILES
+        self.process_key_from_file()
+
         self._handle_upload(module_name, track)
 
         return HttpResponseRedirect(reverse('config:modules'))
+
+    def process_key_from_file(self):
+        # Check if the file is provided in the request
+        if 'key' not in self.request.FILES:
+            return
+
+        file = self.request.FILES['key']
+
+        # Check if the file is not empty
+        if file.size == 0:
+            return
+
+        # Read the key from the file
+        key = file.read().decode('utf-8').strip()
+
+        # Check if the key is not empty after stripping
+        if not key:
+            return
+
+        self.license_key = key
 
     def _handle_upload(self, module_name, track):
         available_modules = self.plugins_api.get_plugins()
@@ -547,8 +567,8 @@ class UploadModule(LoginRequiredMixin, View):
         release_id = module_data.get('release_id')
 
         if release_id:
-            if track == 'paid' and self.key:
-                self._get_access_token(release_id)
+            if track == 'paid':
+                self._get_access_token(release_id, module_name)
 
             self._upload_module(
                 track,
@@ -560,11 +580,18 @@ class UploadModule(LoginRequiredMixin, View):
             # If no URL is provided, return an error message or a 400 Bad Request.
             messages.error(self.request, "There is no available modules to update.")
 
-    def _get_access_token(self, release_id):
-        data = {
-            "key": self.key
-        }
-        token_response = self.plugins_api.get_access_token(release_id, data=data)
+    def _get_access_token(self, release_id, module_name):
+        if self.license_key:
+            # request access token by license_key
+            data = {
+                "key": self.license_key
+            }
+            token_response = self.plugins_api.get_access_token(release_id, data=data)
+        else:
+            data = {
+                'key': self.refresh_token
+            }
+            token_response = self.plugins_api.refresh_token(release_id, data=data)
 
         if not self.plugins_api.errors:
             access_token = token_response.get('access_token')
@@ -575,10 +602,10 @@ class UploadModule(LoginRequiredMixin, View):
 
     def _upload_module(self, track, release_id, created, description):
         try:
-            response = self.plugins_api.download_release(release_id)
-            if response.ok:
+            self.plugins_api.download_release(release_id)
+            if self.plugins_api.raw_response.ok:
                 module_uploader = ModuleUploader(
-                    uploaded_file=response.raw,
+                    uploaded_file=self.plugins_api.raw_response.raw,
                     track=track,
                     created=created,
                     description=description,
@@ -587,7 +614,7 @@ class UploadModule(LoginRequiredMixin, View):
                 module_uploader.handle_upload()
                 messages.success(self.request, 'Module installed successfully.')
             elif self.plugins_api.raw_response.status_code == 403:
-                raise Exception('Wrong access token.')
+                raise Exception('You have no access to this plugin.')
             elif self.plugins_api.raw_response.status_code == 401:
                 raise Exception('Not authenticated.')
             elif self.plugins_api.raw_response.status_code == 400:
@@ -644,6 +671,8 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
         """ Deletion from db logic """
 
+        plugins_api = PluginsApi(self.request)
+
         module_objects = Module.objects.filter(name=module_name)
         for module in module_objects:
             if module.files:
@@ -652,6 +681,11 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
                     file_path = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
                     if os.path.exists(file_path):
                         os.remove(file_path)
+
+            # delete module refresh token from plugins api
+            if module.refresh_token:
+                plugins_api.fetch_token(module.refresh_token)
+                plugins_api.delete_refresh_token()
 
         module_objects.delete()
 
