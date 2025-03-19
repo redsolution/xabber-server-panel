@@ -38,16 +38,13 @@ class CreateUser(ServerStartedMixin, LoginRequiredMixin, TemplateView):
         self.api = get_api(request)
 
         if form.is_valid():
-            # create user instance without save in db
-            user = form.save(commit=False)
+            user = form.save()
 
             self.create_user_api(user, form.cleaned_data)
 
             # check api errors
             error_messages = get_error_messages(request)
             if not error_messages:
-                # save user in db success
-                user.save()
                 messages.success(request, 'User "%s" created successfully.' % user.full_jid)
 
                 return HttpResponseRedirect(
@@ -58,12 +55,13 @@ class CreateUser(ServerStartedMixin, LoginRequiredMixin, TemplateView):
                         }
                     )
                 )
+            else:
+                user.delete()
         else:
             # add common errors
             common_error = form.errors.get('__all__')
             if common_error:
                 messages.error(request, common_error)
-
 
         context = {
             'form': form

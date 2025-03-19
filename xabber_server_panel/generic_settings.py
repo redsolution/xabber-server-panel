@@ -171,6 +171,14 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
+        'null': {
+            'class': 'logging.NullHandler',
+        },
+        "django.server": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "django.server",
+        },
         'rotate_file': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -185,12 +193,26 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
+        "django.server": {
+            "()": "django.utils.log.ServerFormatter",
+            "format": "[{server_time}] {message}",
+            "style": "{",
+        }
     },
     'loggers': {
+        'django.security.DisallowedHost': {
+            'handlers': ['null'],
+            'propagate': False,
+        },
         'django': {
             'handlers': ['rotate_file'],
             'level': 'WARNING',
             'propagate': True,
+        },
+        "django.server": {
+            "handlers": ["django.server"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
@@ -216,7 +238,9 @@ CERT_CONF_DIR = os.path.join(PROJECT_DIR, 'acertmgr')
 CERTS_DIR = os.path.join(PROJECT_DIR, 'certs')
 CERT_VALIDATE_OCSP = "sha1" # mandated by RFC5019
 CERT_API = "v2"
-CERT_AUTHORITY = "https://acme-staging-v02.api.letsencrypt.org"
+CERT_AUTHORITY = "https://acme-v02.api.letsencrypt.org"
+# in dev mode
+# CERT_AUTHORITY = "https://acme-staging-v02.api.letsencrypt.org"
 CHALLENGE_URL = "https://acme-challenge.xabber.com/challenge/"
 CHALLENGE_RECORD = 'alias_acme-challenge.xabber.com.'
 CERT_ACTION = None
