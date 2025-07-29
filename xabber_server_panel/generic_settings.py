@@ -149,6 +149,9 @@ DEFAULT_ACCOUNT_LIFETIME = 0  # infinite
 # ============ API ============#
 INSTALLED_APPS += ['xabber_server_panel.api']
 
+XABBER_SERVICES_API_URL = ''
+PLUGINS_API_URL = ''
+
 # ============ DASHBOARD ============#
 INSTALLED_APPS += ['xabber_server_panel.base_modules.dashboard']
 

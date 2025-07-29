@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.core import management
 from django.apps import apps
 
+from jid_validation.utils import validate_jid
 
 from ldap3 import Server, Connection, ALL
 
@@ -19,7 +20,7 @@ from xabber_server_panel.base_modules.config.utils import update_ejabberd_config
 from xabber_server_panel.utils import get_system_group_suffix, update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
-from xabber_server_panel.api.api import PluginsApi
+from xabber_server_panel.api.api import PluginsApi, XabberServicesApi
 from xabber_server_panel.utils import get_error_messages, restart_ejabberd, is_ejabberd_started, check_versions
 from xabber_server_panel.crontab.models import CronJob
 from xabber_server_panel.crontab.forms import CronJobForm
@@ -914,3 +915,131 @@ class DeleteCert(LoginRequiredMixin, TemplateView):
         return HttpResponseRedirect(
             reverse('config:certificates')
         )
+
+
+class LoginXabberServices(LoginRequiredMixin, View):
+
+    @permission_admin
+    def post(self, request, *args, **kwargs):
+        xservices_api = XabberServicesApi(request)
+
+        jid = request.POST.get('jid')
+        result = validate_jid(jid)
+        if not result.get('success'):
+            return JsonResponse(
+                {
+                    "message": str(result.get('error_message')),
+                },
+                status=400
+            )
+        
+        jid = result.get('full_jid')
+
+        request.session['xservises_jid'] = jid
+        request.session.modified = True
+
+        xservices_api.code_request(jid)
+
+        if xservices_api.errors:
+            return JsonResponse(
+                {
+                    "message": 'Request code service error.',
+                },
+                status=500
+            )
+
+        return JsonResponse(
+            {
+                "message": "Code requested successfully.",
+            }
+        )
+    
+
+class ConfirmXabberServices(LoginRequiredMixin, View):
+
+    @permission_admin
+    def post(self, request, *args, **kwargs):
+        xservices_api = XabberServicesApi(request)
+        jid = request.session.get('xservises_jid')
+        code = request.POST.get('code')
+
+        if not jid:
+            return JsonResponse(
+                {
+                    "message": "JID is required",
+                },
+                status=400
+            )
+            
+        if not code:
+            return JsonResponse(
+                {
+                    "message": "Code is required",
+                },
+                status=400
+            )
+
+        result = validate_jid(jid)
+        if not result.get('success'):
+            return JsonResponse(
+                {
+                    "message": str(result.get('error_message')),
+                },
+                status=400
+            )
+
+
+        jid = result.get('full_jid')
+        response = xservices_api.xmpp_auth(jid, code)
+
+        if xservices_api.errors:
+            return JsonResponse(
+                {
+                    "message": 'Confirm code service error.'
+                },
+                status=500
+            )
+        
+        token = response.get('token')
+        request.session['xservies_token'] = token
+
+        try:
+            del request.session['xservises_jid']
+        except:
+            pass
+
+        request.session.modified = True
+
+        return JsonResponse(
+            {
+                "message": "Code confirmed successfully.",
+            }
+        )
+    
+
+class LicenseKeyXabberServices(LoginRequiredMixin, View):
+
+    @permission_admin
+    def post(self, request, *args, **kwargs):
+        xservices_api = XabberServicesApi(request)
+        token = request.session.get('xservies_token')
+        
+        if not token:
+            return JsonResponse(
+                {"message": "User is not authenticated."},
+                status=401
+            )
+        
+        xservices_api.fetch_token(token)
+
+        response = xservices_api.license_key()
+
+        if xservices_api.errors:
+            return JsonResponse(
+                {"message": "License key request error.", "errors": xservices_api.errors},
+                status=400
+            )
+
+        return JsonResponse({
+            "license_key": response.get('license_key')
+        })

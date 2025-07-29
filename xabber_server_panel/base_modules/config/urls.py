@@ -38,4 +38,9 @@ urlpatterns = [
     path('update_cert/<str:domain>/', views.UpdateCert.as_view(), name='update_cert'),
     path('upload_cert/', views.UploadCert.as_view(), name='upload_cert'),
     path('delete_cert/<str:name>/', views.DeleteCert.as_view(), name='delete_cert'),
+
+    # Xabber Services
+    path('xservices/login/', views.LoginXabberServices.as_view(), name='xservices_login'),
+    path('xservices/confirm/', views.ConfirmXabberServices.as_view(), name='xservices_confirm'),
+    path('xservices/license_key/', views.LicenseKeyXabberServices.as_view(), name='xservices_license_key')
 ]

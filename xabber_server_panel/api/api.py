@@ -9,103 +9,83 @@ from xabber_server_panel import version as xabber_server_panel_version
 from xabber_server_panel.base_modules.config.utils import parse_available_modules
 
 
-class EjabberdAPI:
-
-    def __init__(self, request=None):
+class BaseAPI:
+    def __init__(self, base_url, request=None, token_prefix='Bearer'):
         self.token = None
         self.session = requests.Session()
-        self.base_url = settings.XMPP_SERVER_API_URL
+        self.base_url = base_url
         self.raw_response = None
         self.response = {}
         self.errors = []
         self.request = request
+        self.token_prefix = token_prefix
 
     def fetch_token(self, token):
         self.token = token
-        self.session.headers.update({'Authorization': 'Bearer {}'.format(token)})
+        self.session.headers.update({'Authorization': f'{self.token_prefix} {token}'})
 
-    def _wrapped_call(self, method, url, data, http_method):
-
-        """ call session method and resolve exceptions """
-
+    def _wrapped_call(self, method, url, data, http_method, stream=False):
         try:
-            # check method and provide data
             if http_method in ("post", "delete", "put"):
-                self.raw_response = method(url, json=data, timeout=settings.HTTP_REQUEST_TIMEOUT)
+                self.raw_response = method(url, json=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
             elif http_method == "get":
-                self.raw_response = method(url, params=data, timeout=settings.HTTP_REQUEST_TIMEOUT)
-
-        # resolve exceptions
+                self.raw_response = method(url, params=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
         except requests.exceptions.ConnectionError:
-            error = 'Connection error.'
-            if error not in self.errors:
-                self.errors += [error]
+            self._add_error('Connection error.')
         except requests.exceptions.RequestException as e:
-            error = 'Request error: %s' % e
-            if error not in self.errors:
-                self.errors += [error]
+            self._add_error(f'Request error: {e}')
         except Exception as e:
-            self.errors += [e]
+            self._add_error(str(e))
 
-    def _call_method(self, http_method, relative_url, data):
+    def _call_method(self, http_method, relative_url, data=None, stream=False):
+        method = getattr(self.session, http_method)
+        url = self.base_url + relative_url
+        self._wrapped_call(method, url, data or {}, http_method, stream)
+        self._parse_response()
+        self._create_error_messages()
 
-        """
-             request data from api,
-             resolve exceptions and check response data
-         """
-
-        if is_ejabberd_started():
-            method = getattr(self.session, http_method)
-            url = self.base_url + relative_url
-
-            # request data from api
-            self._wrapped_call(method, url, data, http_method)
-
-            # check errors and convert response to json
-            if self.raw_response is not None:
-                self._parse_response()
-
-            if settings.DEBUG:
-                print('request:', http_method, url, data)
-                print('raw response:', self.raw_response)
-                print('response', self.response)
-                print('errors:', self.errors)
-
-            self._create_error_messages()
-        else:
-            self.errors += ['Ejabberd is not started']
-
-        self.response['errors'] = self.errors
+        # if settings.DEBUG:
+        #     print('request:', http_method, url, data)
+        #     print('raw response:', self.raw_response)
+        #     print('response:', self.response)
+        #     print('errors:', self.errors)
 
     def _parse_response(self):
-
-        """ Jsonify response or add errors if response is not ok """
-
+        self.response = self.raw_response
         if self.raw_response.ok:
-            try:
-                json_raw_response = self.raw_response.json()
-                if isinstance(json_raw_response, dict):
-                    self.response = json_raw_response
-            except Exception:
-                self.errors += ['invalid_json_response']
+            content_type = self.raw_response.headers.get('content-type', '')
+            if 'application/json' in content_type:
+                try:
+                    self.response = self.raw_response.json()
+                except Exception:
+                    self._add_error('invalid_json_response')
         else:
-            # logout if user unauthorized
-            if self.raw_response.status_code in [401, 403] and self.request:
-                raise UnauthorizedException
-
             if self.raw_response.reason not in self.errors:
-                self.errors += [self.raw_response.reason]
+                self.errors.append(self.raw_response.reason)
 
     def _create_error_messages(self):
-
-        """ Add error messages to request if it exists """
-
         if self.errors and self.request:
             error_messages = get_error_messages(self.request)
-
             for error in self.errors:
                 if error not in error_messages:
                     messages.error(self.request, error)
+
+    def _add_error(self, message):
+        if message not in self.errors:
+            self.errors.append(message)
+
+
+class EjabberdAPI(BaseAPI):
+
+    def __init__(self, request=None):
+        super().__init__(base_url=settings.XMPP_SERVER_API_URL, request=request, token_prefix='Bearer')
+
+    def _call_method(self, http_method, relative_url, data=None):
+        if is_ejabberd_started():
+            super()._call_method(http_method, relative_url, data)
+        else:
+            self._add_error('Ejabberd is not started')
+        self.response['errors'] = self.errors
 
     def login(self, credentials):
         """
@@ -472,96 +452,10 @@ class EjabberdAPI:
         return self.response
 
 
-class PluginsApi:
+class PluginsApi(BaseAPI):
 
     def __init__(self, request=None):
-        self.session = requests.Session()
-        self.base_url = settings.PLUGINS_API_URL
-        self.raw_response = None
-        self.response = {}
-        self.errors = []
-        self.request = request
-
-    def fetch_token(self, token):
-        self.session.headers.update({'Authorization': 'Token {}'.format(token)})
-
-    def _wrapped_call(self, method, url, data, http_method, stream):
-
-        """ call session method and resolve exceptions """
-
-        try:
-            # check method and provide data
-            if http_method in ("post", "delete", "put"):
-                self.raw_response = method(url, data=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
-            elif http_method == "get":
-                self.raw_response = method(url, params=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
-
-        # resolve exceptions
-        except requests.exceptions.ConnectionError:
-            error = 'Connection error.'
-            if error not in self.errors:
-                self.errors += [error]
-        except requests.exceptions.RequestException as e:
-            error = 'Request error: %s' % e
-            if error not in self.errors:
-                self.errors += [error]
-        except Exception as e:
-            self.errors += [e]
-
-    def _call_method(self, http_method, relative_url, data, stream=False):
-
-        """
-             request data from api,
-             resolve exceptions and check response data
-         """
-
-        method = getattr(self.session, http_method)
-        url = self.base_url + relative_url
-
-        # request data from api
-        self._wrapped_call(method, url, data, http_method, stream)
-
-        # check errors and convert response to json
-        if self.raw_response is not None:
-            self._parse_response()
-
-        if settings.DEBUG:
-            print('request:', http_method, url, data)
-            print('raw response:', self.raw_response)
-            print('response', self.response)
-            print('errors:', self.errors)
-
-        self._create_error_messages()
-
-    def _parse_response(self):
-
-        """ Jsonify response or add errors if response is not ok """
-
-        self.response = self.raw_response
-
-        if self.raw_response.ok:
-            if self.raw_response.headers.get('content-type') == 'application/json':
-                try:
-                    json_raw_response = self.raw_response.json()
-                    if isinstance(json_raw_response, dict):
-                        self.response = json_raw_response
-                except Exception:
-                    pass
-        else:
-
-            if self.raw_response.reason not in self.errors:
-                self.errors += [self.raw_response.reason]
-
-    def _create_error_messages(self):
-
-        """ Add error messages to request if it exists """
-
-        if self.errors and self.request:
-            error_messages = get_error_messages(self.request)
-
-            for error in self.errors:
-                if error not in error_messages:
-                    messages.error(self.request, error)
+        super().__init__(base_url=settings.PLUGINS_API_URL, request=request, token_prefix='Token')
 
     def get_plugins(self):
 
@@ -616,4 +510,38 @@ class PluginsApi:
         url = '/download/%s/' % release_id
 
         self._call_method('get', url, {}, stream=True)
+        return self.response
+    
+
+class XabberServicesApi(BaseAPI):
+
+    def __init__(self, request=None):
+        super().__init__(base_url=settings.XABBER_SERVICES_API_URL, request=request, token_prefix='Token')
+
+    def code_request(self, jid, type='message'):
+        url = '/xmpp_auth/code_request/'
+
+        data = {
+            "jid": jid,
+            "type": type
+        }
+
+        self._call_method('post', url, data)
+        return self.response
+    
+    def xmpp_auth(self, jid, code):
+        url = '/xmpp_auth/confirm/'
+
+        data = {
+            "jid": jid,
+            "code": code
+        }
+
+        self._call_method('post', url, data)
+        return self.response
+    
+    def license_key(self, token):
+        url = '/api/v1/accounts/license-key/'
+
+        self._call_method('post', url, {})
         return self.response
