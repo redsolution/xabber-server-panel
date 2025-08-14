@@ -560,7 +560,7 @@ $(function () {
 
 		//Add action
 		let url = $(this).attr('href');
-		$(enterTokenModal).find('form').attr('action', url);
+		$(enterTokenModal).data('action', url);
 
 		//Open modal
 		let enterTokenModalBs = new bootstrap.Modal(enterTokenModal);

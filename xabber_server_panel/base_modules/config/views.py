@@ -474,6 +474,7 @@ class Modules(LoginRequiredMixin, TemplateView):
         if isinstance(module, Module) and isinstance(available_module_data, dict):
             new_module_free = available_module_data.get('free')
             new_module_paid = available_module_data.get('paid')
+
             if not module.custom:
                 if module.track == 'free':
                     if new_module_free:
@@ -534,29 +535,38 @@ class UploadModule(LoginRequiredMixin, View):
 
         self.plugins_api = PluginsApi(request)
 
-        # load key from request.FILES
-        self.process_key_from_file()
+        # load license key
+        self.request_key_from_api()
 
-        self._handle_upload(module_name, track)
+        if self.license_key:
+            self._handle_upload(module_name, track)
 
-        return HttpResponseRedirect(reverse('config:modules'))
+        error_messages = get_error_messages(request)
 
-    def process_key_from_file(self):
-        # Check if the file is provided in the request
-        if 'key' not in self.request.FILES:
+        return JsonResponse({'errors': error_messages})
+
+    def request_key_from_api(self):
+        "Load license key from xabber services API "
+
+        xservices_api = XabberServicesApi(self.request)
+        token = self.request.session.get('xservies_token')
+        
+        if not token:
+            messages.error(self.request, "Xabber Services Account is not authenticated.") 
             return
+        
+        xservices_api.fetch_token(token)
 
-        file = self.request.FILES['key']
-
-        # Check if the file is not empty
-        if file.size == 0:
+        response = xservices_api.license_key()
+        if xservices_api.errors:
+            messages.error(self.request, "Request license key error.") 
             return
-
-        # Read the key from the file
-        key = file.read().decode('utf-8').strip()
+        
+        key = response.get('license_key')
 
         # Check if the key is not empty after stripping
         if not key:
+            messages.error(self.request, "Request license key error.") 
             return
 
         self.license_key = key
@@ -569,7 +579,10 @@ class UploadModule(LoginRequiredMixin, View):
 
         if release_id:
             if track == 'paid':
-                self._get_access_token(release_id, module_name)
+                refresh_token = self._get_access_token(release_id, module_name)
+                # check get token success
+                if not refresh_token:
+                    return
 
             self._upload_module(
                 track,
@@ -594,12 +607,20 @@ class UploadModule(LoginRequiredMixin, View):
             }
             token_response = self.plugins_api.refresh_token(release_id, data=data)
 
-        if not self.plugins_api.errors:
+        if self.plugins_api.errors:
+            if token_response.status_code == 403:
+                messages.error(self.request, "You have no permissions to this plugin.")
+            elif token_response.status_code == 404:
+                messages.error(self.request, "Plugin does not exists.")
+            else:
+                messages.error(self.request, "Service error.")
+        else:
             access_token = token_response.get('access_token')
             self.plugins_api.fetch_token(access_token)
 
             # set refresh token
             self.refresh_token = token_response.get('refresh_token')
+            return self.refresh_token
 
     def _upload_module(self, track, release_id, created, description):
         try:
@@ -623,7 +644,7 @@ class UploadModule(LoginRequiredMixin, View):
             else:
                 raise Exception('Service is not available.')
         except Exception as e:
-            messages.error(self.request, e)
+            messages.error(self.request, str(e))
 
 
 class DeleteModule(LoginRequiredMixin, TemplateView):
@@ -1015,31 +1036,3 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
                 "message": "Code confirmed successfully.",
             }
         )
-    
-
-class LicenseKeyXabberServices(LoginRequiredMixin, View):
-
-    @permission_admin
-    def post(self, request, *args, **kwargs):
-        xservices_api = XabberServicesApi(request)
-        token = request.session.get('xservies_token')
-        
-        if not token:
-            return JsonResponse(
-                {"message": "User is not authenticated."},
-                status=401
-            )
-        
-        xservices_api.fetch_token(token)
-
-        response = xservices_api.license_key()
-
-        if xservices_api.errors:
-            return JsonResponse(
-                {"message": "License key request error.", "errors": xservices_api.errors},
-                status=400
-            )
-
-        return JsonResponse({
-            "license_key": response.get('license_key')
-        })

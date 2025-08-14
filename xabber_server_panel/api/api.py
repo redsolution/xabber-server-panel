@@ -457,6 +457,23 @@ class PluginsApi(BaseAPI):
     def __init__(self, request=None):
         super().__init__(base_url=settings.PLUGINS_API_URL, request=request, token_prefix='Token')
 
+    def _wrapped_call(self, method, url, data, http_method, stream=False):
+        try:
+            if http_method in ("post", "delete", "put"):
+                self.raw_response = method(url, data=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
+            elif http_method == "get":
+                self.raw_response = method(url, params=data, timeout=settings.HTTP_REQUEST_TIMEOUT, stream=stream)
+        except requests.exceptions.ConnectionError:
+            self._add_error('Connection error.')
+        except requests.exceptions.RequestException as e:
+            self._add_error(f'Request error: {e}')
+        except Exception as e:
+            self._add_error(str(e))
+
+    # disable error messages
+    def _create_error_messages(self):
+        pass
+
     def get_plugins(self):
 
         url = '/plugins/'
@@ -516,7 +533,11 @@ class PluginsApi(BaseAPI):
 class XabberServicesApi(BaseAPI):
 
     def __init__(self, request=None):
-        super().__init__(base_url=settings.XABBER_SERVICES_API_URL, request=request, token_prefix='Token')
+        super().__init__(base_url=settings.XABBER_SERVICES_API_URL, request=request)
+
+    # disable error messages
+    def _create_error_messages(self):
+        pass
 
     def code_request(self, jid, type='message'):
         url = '/xmpp_auth/code_request/'
@@ -540,7 +561,7 @@ class XabberServicesApi(BaseAPI):
         self._call_method('post', url, data)
         return self.response
     
-    def license_key(self, token):
+    def license_key(self):
         url = '/api/v1/accounts/license-key/'
 
         self._call_method('post', url, {})

@@ -96,7 +96,7 @@
                                                         {% endif %}
                                                         {% if module.update_links.buy %}
                                                             <li>
-                                                                <a class="dropdown-item text-wrap enter-token-js" href="{{ module.update_links.buy }}">
+                                                                <a class="dropdown-item text-wrap {% if request.session.xservies_token %}upload-module-js{% else %}enter-token-js{% endif %}" href="{{ module.update_links.buy }}">
                                                                     Buy Premium
                                                                 </a>
                                                             </li>
@@ -114,7 +114,7 @@
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {% for track in module.tracks %}
                                                             <li>
-                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}enter-token-js{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'config:upload_module' module_name=module.name track=track %}">
+                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}{% if request.session.xservies_token %}upload-module-js{% else %}enter-token-js{% endif %}{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'config:upload_module' module_name=module.name track=track %}">
                                                                     {% if track == 'free' %}
                                                                         Install
                                                                     {% elif track == 'paid' %}
@@ -140,10 +140,6 @@
     <div>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#upload_module" role="button">
             Upload module
-        </button>
-
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#login_xservices" role="button">
-            Login Xabber Services
         </button>
     </div>
 
@@ -174,10 +170,10 @@
     {% endif %}
 
     {% if settings_write_permissions %}
-        <div class="modal fade" id="login_xservices" tabindex="-1" aria-labelledby="login_xservices_label" aria-hidden="true">
+        <div class="modal fade" id="enter_token" tabindex="-1" aria-labelledby="enter_token_label" aria-hidden="true" data-action>
             <div class="modal-dialog modal-dialog-scrollable">
-                <div class="step-1">
-                    <form class="check-change-js xservices-form-js modal-content" action="{% url 'config:xservices_login' %}" method="POST" enctype="multipart/form-data">
+                <div class="modal-content">
+                    <form class="check-change-js xservices-login-js" action="{% url 'config:xservices_login' %}" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
 
                         <div class="modal-header">
@@ -195,9 +191,7 @@
                             </button>
                         </div>
                     </form>
-                </div>
-                <div class="step-2">
-                    <form class="check-change-js xservices-form-js modal-content" action="{% url 'config:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
+                    <form class="check-change-js xservices-confirm-js" action="{% url 'config:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
 
                         <div class="modal-header">
@@ -216,31 +210,7 @@
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
-    {% endif %}
-
-    {% if settings_write_permissions %}
-        <div class="modal fade" id="enter_token" tabindex="-1" aria-labelledby="enter_token_label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-scrollable">
-                <form class="check-change-js modal-content" action="" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="enter_token_label">Upload license key to download premium module</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <input class="form-control" id="formToken" type="file" name="key" accept=".key">
-                    </div>
-
-                    <div class="modal-footer">
-                        <button class="btn btn-primary btn-secondary installing-module-js" type="submit" name="save" disabled>
-                            Save
-                        </button>
-                    </div>
-                </form>
+                
             </div>
         </div>
     {% endif %}
