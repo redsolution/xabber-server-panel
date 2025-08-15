@@ -52,7 +52,8 @@ class BaseAPI:
 
     def _parse_response(self):
         self.response = self.raw_response
-        if self.raw_response:
+        
+        if self.raw_response is not None:
             if self.raw_response.ok:
                 content_type = self.raw_response.headers.get('content-type', '')
                 if 'application/json' in content_type:
@@ -86,7 +87,11 @@ class EjabberdAPI(BaseAPI):
             super()._call_method(http_method, relative_url, data)
         else:
             self._add_error('Ejabberd is not started')
-        self.response['errors'] = self.errors
+        
+        try:
+            self.response['errors'] = self.errors
+        except:
+            pass
 
     def login(self, credentials):
         """

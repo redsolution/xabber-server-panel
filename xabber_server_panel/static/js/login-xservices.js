@@ -38,11 +38,9 @@ $(function () {
                     try {
                         const json = JSON.parse(xhr.responseText);
                         const message = json.message;
-                        console.log(message);
                         reject(message);
                     } catch (e) {
                         const message = 'An error occurred: ' + xhr.responseText;
-                        console.log(message);
                         reject(message);
                     }
                 }
@@ -57,23 +55,28 @@ $(function () {
             csrfmiddlewaretoken: csrfToken
         };
 
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: data,
-            success: function (response) {
-                if (response.errors.length){
-                    //Add error messages
-                    createMessage(response.errors, $('.message-js'), 'text-bg-danger');
-                }
-                else {
-                    //Add success messages
-                    createMessage('Module installed successfully', $('.message-js'), 'text-bg-success');
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    if (response.errors.length){
+                        //Add error messages
+                        createMessage(response.errors, $('.message-js'), 'text-bg-danger');
+                    }
+                    else {
+                        //Add success messages
+                        createMessage('Module installed successfully', $('.message-js'), 'text-bg-success');
 
-                    window.location.reload();
-                } 
-            }
+                        window.location.reload();
+                    }
+
+                    resolve(response);
+                }
+            });
         });
+        
     }
 
     $('.xservices-login-js').on('submit', function (e) {
@@ -138,9 +141,14 @@ $(function () {
     $('.upload-module-js').click(function(e){
         e.preventDefault();
         //Add loader
-        addLoader($(this).parents('.table-adaptive'));
+        const loader_target = $(this).parents('.table-adaptive')
+        addLoader(loader_target);
 
         const url = $(this).attr('href');
-        upload_module(url);
+        upload_module(url).finally(function () {
+            //Remove Loader
+            deleteLoader(loader_target);
+        });;
+        
     });
 });
