@@ -1013,10 +1013,10 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
         jid = result.get('full_jid')
         response = xservices_api.xmpp_auth(jid, code)
 
-        if xservices_api.errors:
+        if xservices_api.errors or not response.ok:
             return JsonResponse(
                 {
-                    "message": 'Confirm code service error.'
+                    "message": 'Confirm code error.'
                 },
                 status=500
             )
