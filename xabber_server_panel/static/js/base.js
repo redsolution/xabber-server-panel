@@ -17,16 +17,13 @@ $(function () {
         $(this).parents('.form-host-js').trigger('submit');
     });
 
-    //Loader block
-    let loader = '<div class="d-flex align-items-center justify-content-center position-absolute top-0 start-0 w-100 h-100 bg-body bg-opacity-75 z-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
     $('.list-js').on('click', '.pagination a', function(e) {
         e.preventDefault();
 
         let url = $(this).parents('.list-js').data('url');
 
         //Add Loader
-        $(this).parents('.list-js').find('.table-adaptive').append(loader);
+        addLoader($(this).parents('.list-js').find('.table-adaptive'));
 
         //Set sort data
         let data = {}
@@ -42,7 +39,7 @@ $(function () {
             let url = $(this).parents('.list-js').data('url');
 
             //Add Loader
-            $(this).parents('.list-js').find('.table-adaptive').append(loader);
+            addLoader($(this).parents('.list-js').find('.table-adaptive'));
 
             //Set sort data
             let data = {}
@@ -66,7 +63,7 @@ $(function () {
             }
 
             if ($this.hasClass('check-cert-js')) {
-                $this.parents('.host-list-js').find('.table-adaptive').append(loader);
+                addLoader($this.parents('.host-list-js').find('.table-adaptive'));
             }
 
             $.get(url, {}, function(data) {
@@ -121,7 +118,7 @@ $(function () {
             e.preventDefault();
 
             //Add Loader
-            $(this).parents('.search-pagination-js').find('.table-adaptive').append(loader);
+            addLoader($(this).parents('.search-pagination-js').find('.table-adaptive'));
 
             search_ajax(
                 $('.search-list-js').data('url'),
@@ -552,20 +549,6 @@ $(function () {
 			}
 		});
     };
-
-	//Function for modal (#enter_token)
-	let enterTokenModal = $('#enter_token');
-	$(document).on('click', '.enter-token-js', function(event) {
-		event.preventDefault();
-
-		//Add action
-		let url = $(this).attr('href');
-		$(enterTokenModal).data('action', url);
-
-		//Open modal
-		let enterTokenModalBs = new bootstrap.Modal(enterTokenModal);
-		enterTokenModalBs.show();
-	});
 
 	//Function for modal (#installing_module)
 	let installingModuleModal = $('#installing_module');

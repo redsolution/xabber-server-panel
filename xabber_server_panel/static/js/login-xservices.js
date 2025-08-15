@@ -1,4 +1,18 @@
 $(function () {
+	//Function for modal (#xservices_auth)
+	let xservicesAuthModal = $('#xservices_auth');
+	let xservicesAuthModalBs = new bootstrap.Modal(xservicesAuthModal);
+	$(document).on('click', '.xservices-auth-js', function(event) {
+		event.preventDefault();
+
+		//Add action
+		let url = $(this).attr('href');
+		$(xservicesAuthModal).data('action', url);
+
+		//Open modal
+		xservicesAuthModalBs.show();
+	});
+
     function getCookie(name) {
         const matches = document.cookie.match(new RegExp(
             "(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + "=([^;]*)"
@@ -49,13 +63,14 @@ $(function () {
             data: data,
             success: function (response) {
                 if (response.errors.length){
-                    // Add error messages
-                    console.log(response.errors);
+                    //Add error messages
+                    createMessage(response.errors, $('.message-js'), 'text-bg-danger');
                 }
                 else {
+                    //Add success messages
+                    createMessage('Module installed successfully', $('.message-js'), 'text-bg-success');
+
                     window.location.reload();
-                    // Add error messages
-                    console.log('Module installed successfully.');
                 } 
             }
         });
@@ -63,43 +78,67 @@ $(function () {
 
     $('.xservices-login-js').on('submit', function (e) {
         e.preventDefault();
-        // add loader 
+
+        let currentStep = $(this).parents('.stepper__step');
+
+        //Add loader
+        addLoader(currentStep.find('.stepper__content'));
 
         form_ajax_send($(this))
             .then(function (response) {
-                // Go to next step
+                //Remove error messages
+                currentStep.find('.stepper__error').addClass('d-none').text('');
 
+				//Step 2
+				stepperGoToStep(xservicesAuthModal, 2);
             })
             .catch(function (error) {
-                // Add error messages
-                console.log("Login step failed:", error);
+                //Add error messages
+                currentStep.find('.stepper__error').removeClass('d-none').text(error);
+            })
+            .finally(function () {
+				//Remove Loader
+				deleteLoader(currentStep.find('.stepper__content'));
             });
-
-        // remove loader
-        
     });
 
     $('.xservices-confirm-js').on('submit', function (e) {
         e.preventDefault();
-        // add loader 
+
+        let currentStep = $(this).parents('.stepper__step');
+
+        //Add loader
+        addLoader(currentStep.find('.stepper__content'));
+
+		//Disabled close stepper modal
+		disabledCloseModal = true;
 
         form_ajax_send($(this))
             .then(function (response) {
-                const url = $('#enter_token').data('action');
+                //Remove error messages
+                currentStep.find('.stepper__error').addClass('d-none').text('');
+
+				//Close modal
+				disabledCloseModal = false;
+				xservicesAuthModalBs.hide();
+
+                const url = $('#xservices_auth').data('action');
                 upload_module(url);
             })
             .catch(function (error) {
-                // Add error messages
-                console.log("Confirmation step failed:", error);
+                //Add error messages
+                currentStep.find('.stepper__error').removeClass('d-none').text(error);
+            })
+            .finally(function () {
+				//Remove Loader
+				deleteLoader(currentStep.find('.stepper__content'));
             });
-
-        // remove loader
-
     });
 
     $('.upload-module-js').click(function(e){
         e.preventDefault();
-        // add loader
+        //Add loader
+        addLoader($(this).parents('.table-adaptive'));
 
         const url = $(this).attr('href');
         upload_module(url);
