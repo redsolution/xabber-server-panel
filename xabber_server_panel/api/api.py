@@ -52,16 +52,17 @@ class BaseAPI:
 
     def _parse_response(self):
         self.response = self.raw_response
-        if self.raw_response.ok:
-            content_type = self.raw_response.headers.get('content-type', '')
-            if 'application/json' in content_type:
-                try:
-                    self.response = self.raw_response.json()
-                except Exception:
-                    self._add_error('invalid_json_response')
-        else:
-            if self.raw_response.reason not in self.errors:
-                self.errors.append(self.raw_response.reason)
+        if self.raw_response:
+            if self.raw_response.ok:
+                content_type = self.raw_response.headers.get('content-type', '')
+                if 'application/json' in content_type:
+                    try:
+                        self.response = self.raw_response.json()
+                    except Exception:
+                        self._add_error('invalid_json_response')
+            else:
+                if self.raw_response.reason not in self.errors:
+                    self.errors.append(self.raw_response.reason)
 
     def _create_error_messages(self):
         if self.errors and self.request:
