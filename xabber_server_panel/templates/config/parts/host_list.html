@@ -46,7 +46,7 @@
                         </td>
 
                         <td class="align-middle" data-title="Issue certificates">
-                            <input name="issue_cert" id="id_issue_cert_{{ host.id }}" type="checkbox" value="{{ host.id }}" {% if host.issue_cert and host.srv_records %}checked{% endif %} {% if not host.srv_records %}disabled{% endif %}>
+                            <input name="issue_cert" id="id_issue_cert_{{ host.id }}" type="checkbox" value="{{ host.id }}" {% if host.issue_cert %}checked{% endif %}>
                         </td>
 
                         <td class="align-middle" data-title="Certificates">

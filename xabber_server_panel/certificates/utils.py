@@ -357,7 +357,7 @@ def update_or_create_certs(domain='', api=None):
 
 def update_cert_config():
 
-    hosts = VirtualHost.objects.filter(srv_records=True, cert_records=True, issue_cert=True)
+    hosts = VirtualHost.objects.filter(cert_records=True, issue_cert=True)
 
     if not os.path.exists(settings.CERT_CONF_DIR):
         os.mkdir(settings.CERT_CONF_DIR)
