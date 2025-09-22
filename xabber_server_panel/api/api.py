@@ -93,6 +93,25 @@ class EjabberdAPI(BaseAPI):
         except:
             pass
 
+    def _parse_response(self):
+
+        """ Jsonify response or add errors if response is not ok """
+
+        if self.raw_response.ok:
+            try:
+                json_raw_response = self.raw_response.json()
+                if isinstance(json_raw_response, dict):
+                    self.response = json_raw_response
+            except Exception:
+                self.errors += ['invalid_json_response']
+        else:
+            # logout if user unauthorized
+            if self.raw_response.status_code in [401, 403] and self.request:
+                raise UnauthorizedException
+
+            if self.raw_response.reason not in self.errors:
+                self.errors += [self.raw_response.reason]
+
     def login(self, credentials):
         """
             Args: username, password
