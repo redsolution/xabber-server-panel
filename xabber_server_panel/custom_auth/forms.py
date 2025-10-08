@@ -38,6 +38,21 @@ class CustomAuthenticationForm(forms.Form):
 
     def clean(self):
         super(CustomAuthenticationForm, self).clean()
+
+        username = self.cleaned_data.get('username')
+        if not username:
+            self.add_error(
+                'username', 'Username is required.'
+            )
+            return
+
+        password = self.cleaned_data.get('password')
+        if not password:
+            self.add_error(
+                'password', 'Password is required.'
+            )
+            return
+
         self.user = authenticate(
             username=self.cleaned_data['username'],
             password=self.cleaned_data['password']
@@ -98,6 +113,21 @@ class ApiAuthenticationForm(forms.Form):
 
     def clean(self):
         super(ApiAuthenticationForm, self).clean()
+
+        username = self.cleaned_data.get('username')
+        if not username:
+            self.add_error(
+                'username', 'Username is required.'
+            )
+            return
+
+        password = self.cleaned_data.get('password')
+        if not password:
+            self.add_error(
+                'password', 'Password is required.'
+            )
+            return
+        
         if not self.errors:
             try:
                 self.api.login(self.cleaned_data)
