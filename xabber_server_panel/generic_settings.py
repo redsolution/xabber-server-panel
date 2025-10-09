@@ -253,6 +253,7 @@ INSTALLED_APPS += ['xabber_server_panel.webhooks']
 WEBHOOKS_SIGNATURE_HEADER = 'x-xmpp-server-signature'
 
 # ============ MODULES ===============#
+INSTALLED_APPS += ['xabber_server_panel.base_modules.modules']
 
 PLUGINS_API_URL = ''
 # external modules

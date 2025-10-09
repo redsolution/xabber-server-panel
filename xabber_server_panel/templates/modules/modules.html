@@ -2,14 +2,10 @@
 {% load config_tags base_tags static %}
 
 {% block content_title %}
-    Server settings
+    Modules
 {% endblock %}
 
 {% block content %}
-    {% url 'config:tabs' as url %}
-    <div class="mb-4 col-12">
-        {% include 'config/parts/links.html' %}
-    </div>
 
     {% if modules_data %}
         <div class="mb-4">
@@ -83,7 +79,7 @@
 
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         <li>
-                                                            <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'config:delete_module' module=module.name %}" data-delete-name="Module" data-delete-target="{{ module.verbose_name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                            <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'modules:delete_module' module=module.name %}" data-delete-name="Module" data-delete-target="{{ module.verbose_name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
                                                                  Delete
                                                             </a>
                                                         </li>
@@ -96,7 +92,7 @@
                                                         {% endif %}
                                                         {% if module.update_links.buy %}
                                                             <li>
-                                                                <a class="dropdown-item text-wrap {% if request.session.xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}" href="{{ module.update_links.buy }}">
+                                                                <a class="dropdown-item text-wrap {% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}" href="{{ module.update_links.buy }}">
                                                                     Buy Premium
                                                                 </a>
                                                             </li>
@@ -114,7 +110,7 @@
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         {% for track in module.tracks %}
                                                             <li>
-                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}{% if request.session.xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'config:upload_module' module_name=module.name track=track %}">
+                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}{% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=track %}">
                                                                     {% if track == 'free' %}
                                                                         Install
                                                                     {% elif track == 'paid' %}
@@ -146,7 +142,7 @@
     {% if settings_write_permissions %}
         <div class="modal fade" id="upload_module" tabindex="-1" aria-labelledby="upload_module_label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable">
-                <form class="check-change-js modal-content" action="{% url 'config:modules' %}" method="post" enctype="multipart/form-data">
+                <form class="check-change-js modal-content" action="{% url 'modules:root' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <div class="modal-header">
@@ -191,7 +187,7 @@
                                     </div>
                                 </div>
                                 <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-login-js" action="{% url 'config:xservices_login' %}" method="POST" enctype="multipart/form-data">
+                                    <form class="check-change-js xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data">
                                         {% csrf_token %}
 
                                         <input class="form-control" type="text" name="jid" placeholder="username@example.com">
@@ -218,7 +214,7 @@
                                     </div>
                                 </div>
                                 <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-confirm-js" action="{% url 'config:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
+                                    <form class="check-change-js xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
                                         {% csrf_token %}
 
                                         <input class="form-control" type="text" name="code">

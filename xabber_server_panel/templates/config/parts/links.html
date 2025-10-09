@@ -19,14 +19,6 @@
             LDAP
         </a>
     </li>
-    {% if request.user.is_admin %}
-        <li class="nav-item">
-            {% url 'config:modules' as modules %}
-            <a class="nav-link {% if modules == request.path_info %}active{% endif %}" href="{{ modules }}">
-                Modules
-            </a>
-        </li>
-    {% endif %}
     {% if modules %}
         <li class="nav-item">
             {% url 'config:root_page' as root_page %}

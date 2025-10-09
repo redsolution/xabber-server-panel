@@ -77,16 +77,23 @@
             </a>
         </li>
     {% endif %}
+
+    {% if request.user.is_admin %}
+        <li class="nav-item">
+            {% url 'modules:root' as modules_url %}
+            <a href="{{ modules_url }}" class="nav-link text-white {% if modules_url in request.path_info %}active{% endif %}">
+                <i class="bi bi-card-text me-1 pe-none"></i>
+                Modules
+            </a>
+        </li>
+    {% endif %}
+    
 </ul>
 
 {% if modules and user.is_authenticated %}
     <hr>
     <ul class="nav nav-pills flex-column">
-        <li class="nav-item">
-            <a class="nav-link text-secondary">
-                Modules
-            </a>
-        </li>
+        
         {% for module in modules %}
             {% with namespace=module.name|add:':info' module_base_url='/modules/'|add:module.name %}
                 {% if module.global_module %}

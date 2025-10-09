@@ -19,11 +19,6 @@ urlpatterns = [
     # ldap
     path('ldap/', views.Ldap.as_view(), name='ldap'),
 
-    # modules
-    path('modules/', views.Modules.as_view(), name='modules'),
-    path('modules/delete/<str:module>/', views.DeleteModule.as_view(), name='delete_module'),
-    path('modules/upload/<str:module_name>/<str:track>/', views.UploadModule.as_view(), name='upload_module'),
-
     # root
     path('root_page/', views.RootPageView.as_view(), name='root_page'),
 
@@ -38,8 +33,4 @@ urlpatterns = [
     path('update_cert/<str:domain>/', views.UpdateCert.as_view(), name='update_cert'),
     path('upload_cert/', views.UploadCert.as_view(), name='upload_cert'),
     path('delete_cert/<str:name>/', views.DeleteCert.as_view(), name='delete_cert'),
-
-    # Xabber Services
-    path('xservices/login/', views.LoginXabberServices.as_view(), name='xservices_login'),
-    path('xservices/confirm/', views.ConfirmXabberServices.as_view(), name='xservices_confirm')
 ]

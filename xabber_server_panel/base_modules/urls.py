@@ -9,4 +9,5 @@ urlpatterns = [
     path('registration/', include(('xabber_server_panel.base_modules.registration.urls', 'registration'), namespace='registration')),
     path('config/', include(('xabber_server_panel.base_modules.config.urls', 'config'), namespace='config')),
     path('log/', include(('xabber_server_panel.base_modules.log.urls', 'log'), namespace='log')),
+    path('modules/', include(('xabber_server_panel.base_modules.modules.urls', 'modules'), namespace='modules')),
 ]

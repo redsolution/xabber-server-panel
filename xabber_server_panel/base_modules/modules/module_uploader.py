@@ -1,5 +1,4 @@
 from django.core import management
-from django.contrib import messages
 from django.conf import settings
 from django.apps import apps
 from django.template.utils import get_app_template_dirs

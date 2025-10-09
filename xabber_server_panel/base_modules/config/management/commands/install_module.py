@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from xabber_server_panel.base_modules.config.module_uploader import ModuleUploader
+from xabber_server_panel.base_modules.modules.module_uploader import ModuleUploader
 
 
 class Command(BaseCommand):
