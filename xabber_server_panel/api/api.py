@@ -575,8 +575,8 @@ class XabberServicesApi(BaseAPI):
         self._call_method('post', url, data)
         return self.response
     
-    def xmpp_auth(self, jid, code):
-        url = '/xmpp_auth/confirm/'
+    def license_token(self, jid, code):
+        url = '/api/v1/accounts/license-token/'
 
         data = {
             "jid": jid,
@@ -586,8 +586,8 @@ class XabberServicesApi(BaseAPI):
         self._call_method('post', url, data)
         return self.response
     
-    def license_key(self):
+    def license_key(self, data={}):
         url = '/api/v1/accounts/license-key/'
 
-        self._call_method('post', url, {})
+        self._call_method('post', url, data)
         return self.response

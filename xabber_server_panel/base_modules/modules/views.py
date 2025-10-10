@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.core import management
 from django.apps import apps
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from jid_validation.utils import validate_jid
 
@@ -86,7 +87,7 @@ class Modules(LoginRequiredMixin, TemplateView):
         
         context = {
             'modules_data': modules_data,
-            'xservies_token': XServicesToken.objects.first()
+            'xservies_token': XServicesToken.objects.filter(expires__gt=timezone.now()).first()
         }
         return self.render_to_response(context)
 
@@ -172,15 +173,13 @@ class UploadModule(LoginRequiredMixin, View):
         "Load license key from xabber services API "
 
         xservices_api = XabberServicesApi(self.request)
-        token = XServicesToken.objects.first()
+        token = XServicesToken.objects.filter(expires__gt=timezone.now()).first()
         
         if not token:
             messages.error(self.request, "Xabber Services Account is not authenticated.") 
             return
         
-        xservices_api.fetch_token(token.token)
-
-        response = xservices_api.license_key()
+        response = xservices_api.license_key(data={"token": token.token})
         if xservices_api.errors:
             messages.error(self.request, "Request license key error.") 
             return
@@ -409,7 +408,7 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
 
 
         jid = result.get('full_jid')
-        response = xservices_api.xmpp_auth(jid, code)
+        response = xservices_api.license_token(jid, code)
 
         if xservices_api.errors or not xservices_api.raw_response.ok:
             return JsonResponse(
@@ -420,8 +419,11 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
             )
         
         token = response.get('token')
+        expires = response.get('expires')
+        expires_dt = parse_datetime(expires)
+
         XServicesToken.objects.all().delete()
-        XServicesToken.objects.create(token=token)
+        XServicesToken.objects.create(token=token, expires=expires_dt)
 
         try:
             del request.session['xservises_jid']
