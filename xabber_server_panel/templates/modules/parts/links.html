@@ -1,0 +1,20 @@
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        {% url 'modules:root' as modules_url %}
+        <a class="nav-link {% if modules_url == request.path_info %}active{% endif %}" aria-current="page" href="{{ modules_url }}">
+            Installed
+        </a>
+    </li>
+    <li class="nav-item">
+        {% url 'modules:catalogue' as catalogue %}
+        <a class="nav-link {% if catalogue == request.path_info %}active{% endif %}" href="{{ catalogue }}">
+            Catalogue
+        </a>
+    </li>
+    <li class="nav-item">
+        {% url 'modules:upload' as upload %}
+        <a class="nav-link {% if upload == request.path_info %}active{% endif %}" href="{{ upload }}">
+            Upload
+        </a>
+    </li>
+</ul>

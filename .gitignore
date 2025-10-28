@@ -143,3 +143,4 @@ GitHub.sublime-settings
 /settings.py
 
 /static/*
+/xabber-server/*

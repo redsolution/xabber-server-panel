@@ -16,10 +16,11 @@ from xabber_server_panel.base_modules.config.utils import make_xmpp_config
 from xabber_server_panel.utils import update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_admin
 from xabber_server_panel.api.api import PluginsApi, XabberServicesApi
-from xabber_server_panel.utils import get_error_messages, check_versions
+from xabber_server_panel.utils import get_error_messages
 
 from .module_uploader import ModuleUploader
 from .models import XServicesToken
+from .utils import get_modules_data, get_available_modules
 
 import shutil
 import os
@@ -33,57 +34,10 @@ class Modules(LoginRequiredMixin, TemplateView):
         plugins_api = PluginsApi(request)
 
         available_modules = plugins_api.get_plugins()
-        installed_modules = {module.name: module for module in Module.objects.all()}
-
-        modules_data = []
-        processed_modules = set()
-        grouped_available_modules = {}
-
-        # Handle installed modules
-        for module_name, installed_module in installed_modules.items():
-            available_module_data = available_modules.get(module_name, {})
-            module_info = {
-                'name': module_name,
-                'display_name': installed_module.verbose_name or module_name,
-                'track': installed_module.track,
-                'version': installed_module.version,
-                'root_page': installed_module.root_page,
-                'global_module': installed_module.global_module,
-                'custom': installed_module.custom,
-                'created_installed': installed_module.created,
-                'installed': True,
-                'description': installed_module.description,
-                'update_links': self.check_module_versions(installed_module, available_module_data),
-            }
-            modules_data.append(module_info)
-            processed_modules.add(module_name)
-
-        # Group available modules by name and version
-        for module_name, tracks in available_modules.items():
-            for track, module in tracks.items():
-                key = (module_name, module.get('release'))
-
-                if key not in grouped_available_modules:
-                    grouped_available_modules[key] = {
-                        'name': module_name,
-                        'display_name': module.get('display_name', module_name),
-                        'version': module.get('release'),
-                        'created': module.get('created'),
-                        'description': module.get('description'),
-                        'tracks': [],
-                        'installed': False,
-                        'update_links': {},
-                    }
-
-                grouped_available_modules[key]['tracks'].append(track)
-
-        # Add available modules excluding installed modules
-        for module_info in grouped_available_modules.values():
-            if module_info['name'] not in processed_modules:
-                modules_data.append(module_info)
-
-        # Sort by installed status
-        modules_data.sort(key=lambda x: not x['installed'])
+        if not plugins_api.errors:
+            modules_data = get_modules_data(available_modules)
+        else:
+            modules_data = []
         
         context = {
             'modules_data': modules_data,
@@ -91,32 +45,34 @@ class Modules(LoginRequiredMixin, TemplateView):
         }
         return self.render_to_response(context)
 
-    def check_module_versions(self, module: Module, available_module_data: dict):
-        """ Check available updates and return links list """
-        result = {}
 
-        if isinstance(module, Module) and isinstance(available_module_data, dict):
-            new_module_free = available_module_data.get('free')
-            new_module_paid = available_module_data.get('paid')
+class Catalogue(LoginRequiredMixin, TemplateView):
+    template_name = 'modules/catalogue.html'
 
-            if not module.custom:
-                if module.track == 'free':
-                    if new_module_free:
-                        if check_versions(module.version, new_module_free.get('release')).get('success'):
-                            result['upgrade'] = reverse('modules:upload_module',
-                                                        kwargs={'module_name': module.name, 'track': 'free'})
-                    if new_module_paid:
-                        if check_versions(module.version, new_module_paid.get('release'), equals_ok=True).get(
-                                'success'):
-                            result['buy'] = reverse('modules:upload_module',
-                                                    kwargs={'module_name': module.name, 'track': 'paid'})
-                elif module.track == 'paid':
-                    if new_module_paid:
-                        if check_versions(module.version, new_module_paid.get('release')).get('success'):
-                            result['upgrade'] = reverse('modules:upload_module',
-                                                        kwargs={'module_name': module.name, 'track': 'paid'})
+    @permission_admin
+    def get(self, request, *args, **kwargs):
+        plugins_api = PluginsApi(request)
 
-        return result
+        available_modules = plugins_api.get_plugins()
+        if not plugins_api.errors:
+            modules_data = get_available_modules(available_modules)
+        else:
+            modules_data = []
+        
+        context = {
+            'modules_data': modules_data,
+            'xservies_token': XServicesToken.objects.filter(expires__gt=timezone.now()).first()
+        }
+        return self.render_to_response(context)
+    
+
+class Upload(LoginRequiredMixin, TemplateView):
+    template_name = 'modules/upload.html'
+
+    @permission_admin
+    def get(self, request, *args, **kwargs):
+        context = {}
+        return self.render_to_response(context)
 
     @permission_admin
     def post(self, request, *args, **kwargs):
@@ -130,10 +86,11 @@ class Modules(LoginRequiredMixin, TemplateView):
                 )
                 module_uploader.handle_upload()
                 messages.success(self.request, 'Module installed successfully.')
+                return HttpResponseRedirect(reverse('modules:root'))
             except Exception as e:
                 messages.error(self.request, e)
 
-        return HttpResponseRedirect(reverse('modules:root'))
+        return HttpResponseRedirect(reverse('modules:upload'))
 
 
 class UploadModule(LoginRequiredMixin, View):

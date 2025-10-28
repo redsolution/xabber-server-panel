@@ -7,6 +7,10 @@
 
 {% block content %}
 
+    <div class="mb-4 col-12">
+        {% include 'modules/parts/links.html' %}
+    </div>
+
     {% if modules_data %}
         <div class="mb-4">
             <div class="table-adaptive position-relative">
@@ -129,38 +133,6 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
-        </div>
-    {% endif %}
-
-    <div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#upload_module" role="button">
-            Upload module
-        </button>
-    </div>
-
-    {% if settings_write_permissions %}
-        <div class="modal fade" id="upload_module" tabindex="-1" aria-labelledby="upload_module_label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-scrollable">
-                <form class="check-change-js modal-content" action="{% url 'modules:root' %}" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="upload_module_label">Upload module</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body mt-3 pt-0">
-                        <label class="form-label">You can only upload a module in TAR.GZ or TGZ format.</label>
-                        <input class="form-control" id="formFile" type="file" name="file" accept=".tar.gz, .tgz">
-                    </div>
-
-                    <div class="modal-footer">
-                        <button class="btn btn-primary btn-secondary" type="submit" name="save" disabled>
-                            Save
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     {% endif %}
