@@ -19,7 +19,6 @@
                         <tr>
                             <th>#</th>
                             <th>Name</th>
-                            <th>Status</th>
                             <th>Version</th>
                             <th>Creation Date</th>
                             <th>Actions</th>
@@ -27,26 +26,19 @@
                     </thead>
                     <tbody>
                         {% for module in modules_data %}
-                            <tr>
-                                <td data-title="#">{{ forloop.counter }}</td>
-                                <td data-title="Name">
-                                    {{ module.display_name }}
-                                    {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
-                                        Premium
-                                    {% endif %}
-                                    {% if module.description %}
-                                        <div>{{ module.description }}</div>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if module.installed %}
-                                        Installed
-                                    {% else %}
-                                        Available
-                                    {% endif %}
-                                </td>
-                                <td data-title="Version">
-                                    {% if module.installed %}
+                            {% if module.installed %}
+                                <tr>
+                                    <td data-title="#">{{ forloop.counter }}</td>
+                                    <td data-title="Name">
+                                        {{ module.display_name }}
+                                        {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
+                                            Premium
+                                        {% endif %}
+                                        {% if module.description %}
+                                            <div>{{ module.description }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td data-title="Version">
                                         {{ module.version }}
                                         {% if module.custom %}
                                             <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is a handle uploaded module. Can't update this module from modules market.">
@@ -61,20 +53,12 @@
                                                 <i class="bi bi-exclamation-triangle-fill d-flex"></i>
                                             </div>
                                         {% endif %}
-                                    {% else %}
-                                        {{ module.version }}
-                                    {% endif %}
-                                </td>
-                                <td data-title="Creation Date">
-                                    {% if module.installed %}
+                                    </td>
+                                    <td data-title="Creation Date">
                                         {{ module.created_installed|date:'Y.m.d' }}
-                                    {% else %}
-                                        {{ module.created|strp_date }}
-                                    {% endif %}
-                                </td>
-                                {% if settings_write_permissions %}
-                                    <td data-title="Actions">
-                                        {% if module.installed %}
+                                    </td>
+                                    {% if settings_write_permissions %}
+                                        <td data-title="Actions">
                                             <div class="d-flex">
                                                 <div class="dropdown">
                                                     <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -84,7 +68,7 @@
                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                         <li>
                                                             <a class="dropdown-item text-wrap text-danger" data-delete-href="{% url 'modules:delete_module' module=module.name %}" data-delete-name="Module" data-delete-target="{{ module.verbose_name }}" data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
-                                                                 Delete
+                                                                Delete
                                                             </a>
                                                         </li>
                                                         {% if module.update_links.upgrade %}
@@ -104,32 +88,10 @@
                                                     </ul>
                                                 </div>
                                             </div>
-                                        {% else %}
-                                            <div class="d-flex">
-                                                <div class="dropdown">
-                                                    <div class="fs-5" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-three-dots-vertical d-flex"></i>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        {% for track in module.tracks %}
-                                                            <li>
-                                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}{% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=track %}">
-                                                                    {% if track == 'free' %}
-                                                                        Install
-                                                                    {% elif track == 'paid' %}
-                                                                        Install Premium
-                                                                    {% endif %}
-                                                                </a>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                {% endif %}
-                            </tr>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
@@ -138,113 +100,13 @@
     {% endif %}
 
     {% if settings_write_permissions %}
-        <div class="modal fade stepper-modal" id="xservices_auth" tabindex="-1" aria-labelledby="xservices_auth_label" aria-hidden="true" data-action>
-            <div class="modal-dialog modal-xl modal-dialog-scrollable modal-fullscreen-xl-down">
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-3" id="xservices_auth_label">Общий заголовок</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <div class="stepper stepper-default">
-                            <div class="stepper__step active" data-step="1">
-                                <div class="stepper__head">
-                                    <div class="stepper__head-icon">
-                                        1
-                                    </div>
-                                    <div class="stepper__head-text">
-                                        Login to Xabber Services
-                                    </div>
-                                </div>
-                                <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-
-                                        <input class="form-control" type="text" name="jid" placeholder="username@example.com">
-
-                                        <div class="stepper__error d-none text-danger mt-1"></div>
-
-                                        <div class="overflow-hidden">
-                                            <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
-                                                    Next
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="stepper__step" data-step="2">
-                                <div class="stepper__head">
-                                    <div class="stepper__head-icon">
-                                        2
-                                    </div>
-                                    <div class="stepper__head-text">
-                                        Confirm code
-                                    </div>
-                                </div>
-                                <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-
-                                        <input class="form-control" type="text" name="code">
-
-                                        <div class="stepper__error d-none text-danger mt-1"></div>
-
-                                        <div class="overflow-hidden">
-                                            <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
-                                                    Confirm
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include 'modules/parts/xservices_auth_modal.html' %}
     {% endif %}
 
-    <div class="modal fade" id="installing_module" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="installing_module_label" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="installing_module_label">Installing module, please wait...</h1>
-                </div>
+    {% include 'modules/parts/installing_module.html' %}
 
-                <div class="modal-body">
-                    <div class="d-flex justify-content-center align-items-center">
-                        <div class="spinner-border text-success m-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="removing_module" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="removing_module_label" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="removing_module_label">Removing module, please wait...</h1>
-                </div>
-
-                <div class="modal-body">
-                    <div class="d-flex justify-content-center align-items-center">
-                        <div class="spinner-border text-danger m-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'modules/parts/removing_module.html' %}
+    
 {% endblock %}
 
 {% block js %}

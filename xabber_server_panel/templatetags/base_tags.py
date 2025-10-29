@@ -127,3 +127,26 @@ def to_list(obj):
     except:
         pass
     return result
+
+
+@register.filter
+def price_format(val):
+
+    """ Разделение разрядов числа пробелами """
+    
+    try:
+        val = int(val)
+    except:
+        return val
+    
+    s = str(val)
+    buf = ''
+    result = ''
+    for i in range(len(s)-1, -1, -1):
+        buf = s[i] + buf
+        if len(buf) == 3:
+            result = buf + ' ' + result
+            buf = ''
+    if len(buf):
+        result = buf + ' ' + result
+    return result

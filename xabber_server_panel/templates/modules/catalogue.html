@@ -14,142 +14,60 @@
     {% if modules_data %}
         <div class="mb-4">
             <div class="table-adaptive position-relative">
-                <table class="table table-striped mb-0">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Version</th>
-                            <th>Creation Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for module in modules_data %}
-                            {% for track in module.tracks %}
-                                <tr>
-                                    <td data-title="Name">
-                                        {{ module.display_name }}
-                                        {% if track == 'paid' %}
-                                            Premium
-                                        {% endif %}
-                                        {% if module.description %}
-                                            <div>{{ module.description }}</div>
-                                        {% endif %}
-                                    </td>
-                                    <td data-title="Version">
-                                        {{ module.version }}
-                                    </td>
-                                    <td data-title="Creation Date">
-                                        {{ module.created|strp_date }}
-                                    </td>
-                                    {% if settings_write_permissions %}
-                                        <td data-title="Actions">
-                                            <div class="d-flex">
-                                                <a class="dropdown-item text-wrap {% if track == 'paid' %}{% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}{% elif track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=track %}">
-                                                    Install
-                                                </a>
-                                            </div>
-                                        </td>
+                <div class="table table-striped mb-0">
+                    {% for module in modules_data %}
+                        <div>
+                            {% if module.icon %}
+                                <div>
+                                    <img src="{{ module.icon }}" alt="Release Icon">
+                                </div>
+                            {% endif %}
+                            <div>
+                                {{ module.display_name }}
+                                {% if module.track == 'paid' %}
+                                    Premium
+                                {% endif %}
+                                {% if module.description %}
+                                    <div>{{ module.description }}</div>
+                                {% endif %}
+                            </div>
+                            <!-- <div>{# module.release #}</div>
+                            <div >{# module.created|strp_date #}</div> -->
+
+                            <div data-title="Actions">
+                                <div class="d-flex">
+                                    {% if module.track == 'paid' %}
+                                        <a class="dropdown-item text-wrap {% if module.track == 'paid' %}{% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=module.track %}">
+                                            {% get_dict_value plugin_prices module.name as prices %}
+                                            {% if prices %}
+                                                ${{ prices.0.price|price_format }}
+
+                                                <div>{{ prices.0.period }}</div>
+                                            {% else %}
+                                                Install
+
+                                                <div>for Pro subscribers</div>
+                                            {% endif %}
+                                        </a>
+                                    {% else %}
+                                        <a class="dropdown-item text-wrap {% if module.track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=module.track %}">
+                                            Install
+                                        </a>
                                     {% endif %}
-                                </tr>
-                            {% endfor %}
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     {% endif %}
 
     {% if settings_write_permissions %}
-        <div class="modal fade stepper-modal" id="xservices_auth" tabindex="-1" aria-labelledby="xservices_auth_label" aria-hidden="true" data-action>
-            <div class="modal-dialog modal-xl modal-dialog-scrollable modal-fullscreen-xl-down">
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-3" id="xservices_auth_label">Общий заголовок</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <div class="stepper stepper-default">
-                            <div class="stepper__step active" data-step="1">
-                                <div class="stepper__head">
-                                    <div class="stepper__head-icon">
-                                        1
-                                    </div>
-                                    <div class="stepper__head-text">
-                                        Login to Xabber Services
-                                    </div>
-                                </div>
-                                <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-
-                                        <input class="form-control" type="text" name="jid" placeholder="username@example.com">
-
-                                        <div class="stepper__error d-none text-danger mt-1"></div>
-
-                                        <div class="overflow-hidden">
-                                            <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
-                                                    Next
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="stepper__step" data-step="2">
-                                <div class="stepper__head">
-                                    <div class="stepper__head-icon">
-                                        2
-                                    </div>
-                                    <div class="stepper__head-text">
-                                        Confirm code
-                                    </div>
-                                </div>
-                                <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-
-                                        <input class="form-control" type="text" name="code">
-
-                                        <div class="stepper__error d-none text-danger mt-1"></div>
-
-                                        <div class="overflow-hidden">
-                                            <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
-                                                    Confirm
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include 'modules/parts/xservices_auth_modal.html' %}
     {% endif %}
 
-    <div class="modal fade" id="installing_module" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="installing_module_label" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="installing_module_label">Installing module, please wait...</h1>
-                </div>
-
-                <div class="modal-body">
-                    <div class="d-flex justify-content-center align-items-center">
-                        <div class="spinner-border text-success m-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'modules/parts/installing_module.html' %}
 {% endblock %}
 
 {% block js %}

@@ -20,7 +20,7 @@ from xabber_server_panel.utils import get_error_messages
 
 from .module_uploader import ModuleUploader
 from .models import XServicesToken
-from .utils import get_modules_data, get_available_modules
+from .utils import get_modules_data, get_available_modules, get_installed_modules, get_plugins_prices
 
 import shutil
 import os
@@ -35,7 +35,7 @@ class Modules(LoginRequiredMixin, TemplateView):
 
         available_modules = plugins_api.get_plugins()
         if not plugins_api.errors:
-            modules_data = get_modules_data(available_modules)
+            modules_data = get_installed_modules(available_modules)
         else:
             modules_data = []
         
@@ -52,15 +52,19 @@ class Catalogue(LoginRequiredMixin, TemplateView):
     @permission_admin
     def get(self, request, *args, **kwargs):
         plugins_api = PluginsApi(request)
+        xservices_api = XabberServicesApi(request)
 
         available_modules = plugins_api.get_plugins()
         if not plugins_api.errors:
             modules_data = get_available_modules(available_modules)
         else:
             modules_data = []
+
+        plugin_prices = get_plugins_prices(xservices_api)
         
         context = {
             'modules_data': modules_data,
+            'plugin_prices': plugin_prices,
             'xservies_token': XServicesToken.objects.filter(expires__gt=timezone.now()).first()
         }
         return self.render_to_response(context)

@@ -591,3 +591,9 @@ class XabberServicesApi(BaseAPI):
 
         self._call_method('post', url, data)
         return self.response
+    
+    def product_list(self, data={}):
+        url = '/api/v1/accounts/products/'
+
+        self._call_method('get', url, data)
+        return self.response
