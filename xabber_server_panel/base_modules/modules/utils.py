@@ -126,6 +126,9 @@ def get_plugins_prices(xservices_api):
             'page': page,
         })
 
+        if xservices_api.errors:
+            break
+
         # collect price data from page
         for plugin in response.get('results', []):
             plugin_name = plugin.get('product_id')
