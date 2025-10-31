@@ -149,6 +149,5 @@ $(function () {
             //Remove Loader
             deleteLoader(loader_target);
         });;
-        
     });
 });

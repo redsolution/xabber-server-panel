@@ -77,9 +77,6 @@
             </a>
         </li>
     {% endif %}
-
-    
-    
 </ul>
 
 {% if modules and user.is_authenticated %}
@@ -89,7 +86,7 @@
             <li class="nav-item">
                 {% url 'modules:root' as modules_url %}
                 <a href="{{ modules_url }}" class="nav-link text-white {% if modules_url in request.path_info %}active{% endif %}">
-                    <i class="bi bi-card-text me-1 pe-none"></i>
+                    <i class="bi bi-boxes me-1 pe-none"></i>
                     Modules
                 </a>
             </li>
