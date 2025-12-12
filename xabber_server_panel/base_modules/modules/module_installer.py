@@ -17,7 +17,7 @@ import re
 from datetime import date
 
 
-class ModuleUploader:
+class ModuleInstaller:
 
     def __init__(
         self,
@@ -36,7 +36,7 @@ class ModuleUploader:
         self.created = created
         self.temp_extract_dir = os.path.join(settings.BASE_DIR, 'temp_extract')
 
-    def handle_upload(self):
+    def handle_install(self):
         try:
             if not self.uploaded_file:
                 raise Exception('Uploaded file is None.')

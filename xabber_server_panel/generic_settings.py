@@ -34,9 +34,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'xabber_server_panel.installation.middleware.InstallationMiddleware',
-    'xabber_server_panel.custom_auth.middleware.UnauthorizedMiddleware',
-    'xabber_server_panel.base_modules.config.middleware.VirtualHostMiddleware'
 ]
 
 ROOT_URLCONF = 'xabber_server_panel.urls'
@@ -138,6 +135,7 @@ LOGIN_URL = '/auth/login/'
 AUTHENTICATION_BACKENDS = [
     'xabber_server_panel.custom_auth.backends.CustomAuthBackend',
 ]
+MIDDLEWARE += ['xabber_server_panel.custom_auth.middleware.UnauthorizedMiddleware',]
 
 # =========== USERS =============== #
 INSTALLED_APPS += ['xabber_server_panel.base_modules.users']
@@ -224,10 +222,12 @@ os.makedirs(DJANGO_LOG_DIR, exist_ok=True)
 
 # ============ CONFIG ===============#
 INSTALLED_APPS += ['xabber_server_panel.base_modules.config']
+MIDDLEWARE += ['xabber_server_panel.base_modules.config.middleware.VirtualHostMiddleware']
 DNS_SERVICE = 'https://dns.google/resolve'
 
 # ============ INSTALLATION ===============#
 INSTALLED_APPS += ['xabber_server_panel.installation']
+MIDDLEWARE += ['xabber_server_panel.installation.middleware.InstallationMiddleware']
 
 # ============ DJANGO - CRONTAB ===============#
 INSTALLED_APPS += ['xabber_server_panel.crontab']
@@ -254,6 +254,7 @@ WEBHOOKS_SIGNATURE_HEADER = 'x-xmpp-server-signature'
 
 # ============ MODULES ===============#
 INSTALLED_APPS += ['xabber_server_panel.base_modules.modules']
+MIDDLEWARE += ['xabber_server_panel.base_modules.modules.middleware.ModulesMiddleware']
 
 PLUGINS_API_URL = ''
 # external modules

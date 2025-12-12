@@ -161,17 +161,17 @@ def check_module_versions(module: Module, available_module_data: dict):
             if module.track == 'free':
                 if new_module_free:
                     if check_versions(module.version, new_module_free.get('release')).get('success'):
-                        result['upgrade'] = reverse('modules:upload_module',
+                        result['upgrade'] = reverse('modules:download_module',
                                                     kwargs={'module_name': module.name, 'track': 'free'})
                 if new_module_paid:
                     if check_versions(module.version, new_module_paid.get('release'), equals_ok=True).get(
                             'success'):
-                        result['buy'] = reverse('modules:upload_module',
+                        result['buy'] = reverse('modules:download_module',
                                                 kwargs={'module_name': module.name, 'track': 'paid'})
             elif module.track == 'paid':
                 if new_module_paid:
                     if check_versions(module.version, new_module_paid.get('release')).get('success'):
-                        result['upgrade'] = reverse('modules:upload_module',
+                        result['upgrade'] = reverse('modules:download_module',
                                                     kwargs={'module_name': module.name, 'track': 'paid'})
 
     return result

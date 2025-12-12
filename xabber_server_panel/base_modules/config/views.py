@@ -4,36 +4,29 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.core import management
-from django.apps import apps
-
-from jid_validation.utils import validate_jid
 
 from ldap3 import Server, Connection, ALL
 
-from xabber_server_panel.base_modules.config.models import VirtualHost, Module
+from xabber_server_panel.base_modules.config.models import VirtualHost
 from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.users.models import User
 from xabber_server_panel.base_modules.users.utils import check_users
-from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, make_xmpp_config, check_hosts,\
+from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, check_hosts,\
     get_dns_records, check_hosts_dns
-from xabber_server_panel.utils import get_system_group_suffix, update_app_list, reload_server
+from xabber_server_panel.utils import get_system_group_suffix
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
-from xabber_server_panel.api.api import PluginsApi, XabberServicesApi
-from xabber_server_panel.utils import get_error_messages, restart_ejabberd, is_ejabberd_started, check_versions
+from xabber_server_panel.utils import get_error_messages, restart_ejabberd, is_ejabberd_started
 from xabber_server_panel.crontab.models import CronJob
 from xabber_server_panel.crontab.forms import CronJobForm
 from xabber_server_panel.certificates.utils import update_or_create_certs, check_certificates, validate_certificate
 from xabber_server_panel.certificates.models import Certificate
 
 
-from .models import LDAPSettings, LDAPServer, RootPage, DiscoUrls
+from .models import LDAPSettings, LDAPServer, RootPage
 from .forms import LDAPSettingsForm, VirtualHostForm
-from ..modules.module_uploader import ModuleUploader
 
 import threading
-import shutil
 import os
 import re
 

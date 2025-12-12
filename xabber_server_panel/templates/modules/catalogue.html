@@ -1,9 +1,5 @@
-{% extends 'base.html' %}
+{% extends 'modules/base.html' %}
 {% load config_tags base_tags static %}
-
-{% block content_title %}
-    Modules
-{% endblock %}
 
 {% block content %}
     <div class="mb-4 col-12">
@@ -37,7 +33,7 @@
 
                         <div class="d-flex flex-column align-items-end align-items-sm-center ms-auto text-end text-sm-center col col-sm-3">
                             {% if module.track == 'paid' %}
-                                <a class="btn btn-success w-90-px {% if module.track == 'paid' %}{% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=module.track %}">
+                                <a class="btn btn-success w-90-px {% if module.track == 'paid' %}{% if request.session.xs_token %}download-module-js{% else %}xservices-auth-js{% endif %}{% endif %}" href="{% url 'modules:download_module' module_name=module.name track=module.track %}">
                                     {% get_dict_value plugin_prices module.name as prices %}
                                     {% if prices %}
                                         ${{ prices.0.price|price_format }}
@@ -51,7 +47,7 @@
                                     <small class="text-secondary mb-0 mt-1">for Pro subscribers</small>
                                 {% endif %}
                             {% else %}
-                                <a class="btn btn-primary w-90-px {% if module.track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:upload_module' module_name=module.name track=module.track %}">
+                                <a class="btn btn-primary w-90-px {% if module.track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:download_module' module_name=module.name track=module.track %}">
                                     Install
                                 </a>
                             {% endif %}

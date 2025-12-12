@@ -138,7 +138,7 @@ $(function () {
             });
     });
 
-    $('.upload-module-js').click(function(e){
+    $('.download-module-js').click(function(e){
         e.preventDefault();
         //Add loader
         const loader_target = $(this).parents('.table-adaptive')

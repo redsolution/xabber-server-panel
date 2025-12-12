@@ -18,7 +18,7 @@ from xabber_server_panel.base_modules.users.decorators import permission_admin
 from xabber_server_panel.api.api import PluginsApi, XabberServicesApi
 from xabber_server_panel.utils import get_error_messages
 
-from .module_uploader import ModuleUploader
+from .module_installer import ModuleInstaller
 from .models import XServicesToken
 from .utils import get_modules_data, get_available_modules, get_installed_modules, get_plugins_prices
 
@@ -26,8 +26,8 @@ import shutil
 import os
 
 
-class Modules(LoginRequiredMixin, TemplateView):
-    template_name = 'modules/modules.html'
+class Installed(LoginRequiredMixin, TemplateView):
+    template_name = 'modules/installed.html'
 
     @permission_admin
     def get(self, request, *args, **kwargs):
@@ -41,7 +41,6 @@ class Modules(LoginRequiredMixin, TemplateView):
         
         context = {
             'modules_data': modules_data,
-            'xservies_token': XServicesToken.objects.filter(expires__gt=timezone.now()).first()
         }
         return self.render_to_response(context)
 
@@ -65,7 +64,6 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         context = {
             'modules_data': modules_data,
             'plugin_prices': plugin_prices,
-            'xservies_token': XServicesToken.objects.filter(expires__gt=timezone.now()).first()
         }
         return self.render_to_response(context)
     
@@ -84,11 +82,11 @@ class Upload(LoginRequiredMixin, TemplateView):
 
         if uploaded_file:
             try:
-                module_uploader = ModuleUploader(
+                module_installer = ModuleInstaller(
                     uploaded_file=uploaded_file,
                     custom=True
                 )
-                module_uploader.handle_upload()
+                module_installer.handle_install()
                 messages.success(self.request, 'Module installed successfully.')
                 return HttpResponseRedirect(reverse('modules:root'))
             except Exception as e:
@@ -97,7 +95,7 @@ class Upload(LoginRequiredMixin, TemplateView):
         return HttpResponseRedirect(reverse('modules:upload'))
 
 
-class UploadModule(LoginRequiredMixin, View):
+class DownloadModule(LoginRequiredMixin, View):
 
     refresh_token = ''
     license_key = ''
@@ -111,7 +109,7 @@ class UploadModule(LoginRequiredMixin, View):
         if module and module.refresh_token:
             self.refresh_token = module.refresh_token
 
-        self._handle_upload(module_name, track)
+        self._handle_download(module_name, track)
 
         return HttpResponseRedirect(reverse('modules:root'))
 
@@ -124,7 +122,7 @@ class UploadModule(LoginRequiredMixin, View):
         self.request_key_from_api()
 
         if self.license_key:
-            self._handle_upload(module_name, track)
+            self._handle_download(module_name, track)
 
         error_messages = get_error_messages(request)
 
@@ -154,7 +152,7 @@ class UploadModule(LoginRequiredMixin, View):
 
         self.license_key = key
 
-    def _handle_upload(self, module_name, track):
+    def _handle_download(self, module_name, track):
         available_modules = self.plugins_api.get_plugins()
 
         module_data = available_modules.get(module_name, {}).get(track, {})
@@ -167,7 +165,7 @@ class UploadModule(LoginRequiredMixin, View):
                 if not refresh_token:
                     return
 
-            self._upload_module(
+            self._download_module(
                 track,
                 release_id,
                 module_data.get('created'),
@@ -205,18 +203,18 @@ class UploadModule(LoginRequiredMixin, View):
             self.refresh_token = token_response.get('refresh_token')
             return self.refresh_token
 
-    def _upload_module(self, track, release_id, created, description):
+    def _download_module(self, track, release_id, created, description):
         try:
             self.plugins_api.download_release(release_id)
             if self.plugins_api.raw_response.ok:
-                module_uploader = ModuleUploader(
+                module_installer = ModuleInstaller(
                     uploaded_file=self.plugins_api.raw_response.raw,
                     track=track,
                     created=created,
                     description=description,
                     refresh_token=self.refresh_token
                 )
-                module_uploader.handle_upload()
+                module_installer.handle_install()
                 messages.success(self.request, 'Module installed successfully.')
             elif self.plugins_api.raw_response.status_code == 403:
                 raise Exception('You have no access to this plugin.')
@@ -268,7 +266,6 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
         management.call_command('update_permissions')
         make_xmpp_config()
-
 
         reload_server()
 
@@ -367,7 +364,6 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
                 status=400
             )
 
-
         jid = result.get('full_jid')
         response = xservices_api.license_token(jid, code)
 
@@ -384,7 +380,7 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
         expires_dt = parse_datetime(expires)
 
         XServicesToken.objects.all().delete()
-        XServicesToken.objects.create(token=token, expires=expires_dt)
+        XServicesToken.objects.create(token=token, expires=expires_dt, jid=jid)
 
         try:
             del request.session['xservises_jid']
@@ -398,3 +394,17 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
                 "message": "Code confirmed successfully.",
             }
         )
+    
+
+class LogoutXabberServices(LoginRequiredMixin, View):
+
+    @permission_admin
+    def get(self, request, *args, **kwargs):
+        XServicesToken.objects.all().delete()
+
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            # If there is a referer, redirect to it
+            return HttpResponseRedirect(referer)
+        
+        return HttpResponseRedirect(reverse('modules:root'))

@@ -1,9 +1,5 @@
-{% extends 'base.html' %}
+{% extends 'modules/base.html' %}
 {% load config_tags base_tags static %}
-
-{% block content_title %}
-    Modules
-{% endblock %}
 
 {% block content %}
     <div class="mb-4 col-12">
@@ -79,7 +75,7 @@
                                                         {% endif %}
                                                         {% if module.update_links.buy %}
                                                             <li>
-                                                                <a class="dropdown-item text-wrap {% if xservies_token %}upload-module-js{% else %}xservices-auth-js{% endif %}" href="{{ module.update_links.buy }}">
+                                                                <a class="dropdown-item text-wrap {% if xs_token %}download-module-js{% else %}xservices-auth-js{% endif %}" href="{{ module.update_links.buy }}">
                                                                     Buy Premium
                                                                 </a>
                                                             </li>
