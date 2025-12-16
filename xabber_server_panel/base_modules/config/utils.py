@@ -407,3 +407,16 @@ def parse_available_modules(available_modules_xml):
         plugins[plugin_dict.get('name')][plugin_dict.get('track')] = plugin_dict
 
     return plugins
+
+
+def process_purchased_modules(purchased_modules: dict):
+
+    result = []
+    data = purchased_modules.get('data')
+    if not data:
+        return result
+
+    for module in data:
+        result += [module.get('serviceId')]
+
+    return result

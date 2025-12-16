@@ -17,10 +17,13 @@ from xabber_server_panel.utils import update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_admin
 from xabber_server_panel.api.api import PluginsApi, XabberServicesApi
 from xabber_server_panel.utils import get_error_messages
+from xabber_server_panel.base_modules.modules.utils import request_license_key
 
 from .module_installer import ModuleInstaller
 from .models import XServicesToken
 from .utils import get_modules_data, get_available_modules, get_installed_modules, get_plugins_prices
+
+from abc import ABC, abstractmethod
 
 import shutil
 import os
@@ -53,6 +56,12 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         plugins_api = PluginsApi(request)
         xservices_api = XabberServicesApi(request)
 
+        purchased_modules = []
+        result = request_license_key(request)
+        if result.get('success'):
+            license_key = result.get('key') 
+            purchased_modules = plugins_api.get_purchased_plugins(license_key)
+
         available_modules = plugins_api.get_plugins()
         if not plugins_api.errors:
             modules_data = get_available_modules(available_modules)
@@ -64,6 +73,7 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         context = {
             'modules_data': modules_data,
             'plugin_prices': plugin_prices,
+            'purchased_modules': purchased_modules
         }
         return self.render_to_response(context)
     
@@ -95,13 +105,54 @@ class Upload(LoginRequiredMixin, TemplateView):
         return HttpResponseRedirect(reverse('modules:upload'))
 
 
-class DownloadModule(LoginRequiredMixin, View):
+class DownloadModuleBase(LoginRequiredMixin, View, ABC):
 
-    refresh_token = ''
-    license_key = ''
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plugins_api = None
+        self.refresh_token = ''
+    
+    def _download_module(self, release_id, created, description):
+        if self.plugins_api:
+            try:
+                self.plugins_api.download_release(release_id)
+                if self.plugins_api.raw_response.ok:
+                    module_installer = ModuleInstaller(
+                        uploaded_file=self.plugins_api.raw_response.raw,
+                        track=self.track,
+                        created=created,
+                        description=description,
+                        refresh_token=self.refresh_token
+                    )
+                    module_installer.handle_install()
+                    messages.success(self.request, 'Module installed successfully.')
+                elif self.plugins_api.raw_response.status_code == 403:
+                    raise Exception('You have no access to this plugin.')
+                elif self.plugins_api.raw_response.status_code == 401:
+                    raise Exception('Not authenticated.')
+                elif self.plugins_api.raw_response.status_code == 400:
+                    raise Exception('Malformed data.')
+                else:
+                    raise Exception('Service is not available.')
+            except Exception as e:
+                messages.error(self.request, str(e))
+        else:
+            messages.error(self.request, 'Installation error.')
+
+    @abstractmethod
+    def _handle_download(self, *args, **kwargs):
+        pass
+
+    @property
+    @abstractmethod
+    def track(self):
+        pass
+
+
+class DownloadModuleFree(DownloadModuleBase):
 
     @permission_admin
-    def get(self, request, module_name, track, **kwargs):
+    def get(self, request, module_name, **kwargs):
 
         self.plugins_api = PluginsApi(request)
 
@@ -109,64 +160,19 @@ class DownloadModule(LoginRequiredMixin, View):
         if module and module.refresh_token:
             self.refresh_token = module.refresh_token
 
-        self._handle_download(module_name, track)
+        self._handle_download(module_name)
 
         return HttpResponseRedirect(reverse('modules:root'))
-
-    @permission_admin
-    def post(self, request, module_name, track, **kwargs):
-
-        self.plugins_api = PluginsApi(request)
-
-        # load license key
-        self.request_key_from_api()
-
-        if self.license_key:
-            self._handle_download(module_name, track)
-
-        error_messages = get_error_messages(request)
-
-        return JsonResponse({'errors': error_messages})
-
-    def request_key_from_api(self):
-        "Load license key from xabber services API "
-
-        xservices_api = XabberServicesApi(self.request)
-        token = XServicesToken.objects.filter(expires__gt=timezone.now()).first()
-        
-        if not token:
-            messages.error(self.request, "Xabber Services Account is not authenticated.") 
-            return
-        
-        response = xservices_api.license_key(data={"token": token.token})
-        if xservices_api.errors:
-            messages.error(self.request, "Request license key error.") 
-            return
-        
-        key = response.get('license_key')
-
-        # Check if the key is not empty after stripping
-        if not key:
-            messages.error(self.request, "Request license key error.") 
-            return
-
-        self.license_key = key
-
-    def _handle_download(self, module_name, track):
+    
+    def _handle_download(self, module_name):
         available_modules = self.plugins_api.get_plugins()
 
-        module_data = available_modules.get(module_name, {}).get(track, {})
+        module_data = available_modules.get(module_name, {}).get(self.track, {})
         release_id = module_data.get('release_id')
 
         if release_id:
-            if track == 'paid':
-                refresh_token = self._get_access_token(release_id, module_name)
-                # check get token success
-                if not refresh_token:
-                    return
 
             self._download_module(
-                track,
                 release_id,
                 module_data.get('created'),
                 module_data.get('description')
@@ -175,7 +181,60 @@ class DownloadModule(LoginRequiredMixin, View):
             # If no URL is provided, return an error message or a 400 Bad Request.
             messages.error(self.request, "There is no available modules to update.")
 
-    def _get_access_token(self, release_id, module_name):
+    @property
+    def track(self):
+        return 'free'
+    
+
+class DownloadModulePaid(DownloadModuleBase):
+    license_key = ''
+
+    @permission_admin
+    def get(self, request, module_name, **kwargs):
+
+        self.plugins_api = PluginsApi(request)
+
+        # load license key
+        result = request_license_key(request)
+
+        if result.get('success'):
+            self.license_key = result.get('key') 
+        else:
+            messages.error(request, result.get('error', 'Request license key error.'))
+
+        if self.license_key:
+            self._handle_download(module_name)
+
+        error_messages = get_error_messages(request)
+
+        return JsonResponse({'errors': error_messages})
+    
+    @property
+    def track(self):
+        return 'paid'
+
+    def _handle_download(self, module_name):
+        available_modules = self.plugins_api.get_plugins()
+
+        module_data = available_modules.get(module_name, {}).get(self.track, {})
+        release_id = module_data.get('release_id')
+
+        if release_id:
+            refresh_token = self._get_access_token(release_id)
+            # check get token success
+            if not refresh_token:
+                return
+
+            self._download_module(
+                release_id,
+                module_data.get('created'),
+                module_data.get('description')
+            )
+        else:
+            # If no URL is provided, return an error message or a 400 Bad Request.
+            messages.error(self.request, "There is no available modules to update.")
+
+    def _get_access_token(self, release_id):
         if self.license_key:
             # request access token by license_key
             data = {
@@ -202,30 +261,6 @@ class DownloadModule(LoginRequiredMixin, View):
             # set refresh token
             self.refresh_token = token_response.get('refresh_token')
             return self.refresh_token
-
-    def _download_module(self, track, release_id, created, description):
-        try:
-            self.plugins_api.download_release(release_id)
-            if self.plugins_api.raw_response.ok:
-                module_installer = ModuleInstaller(
-                    uploaded_file=self.plugins_api.raw_response.raw,
-                    track=track,
-                    created=created,
-                    description=description,
-                    refresh_token=self.refresh_token
-                )
-                module_installer.handle_install()
-                messages.success(self.request, 'Module installed successfully.')
-            elif self.plugins_api.raw_response.status_code == 403:
-                raise Exception('You have no access to this plugin.')
-            elif self.plugins_api.raw_response.status_code == 401:
-                raise Exception('Not authenticated.')
-            elif self.plugins_api.raw_response.status_code == 400:
-                raise Exception('Malformed data.')
-            else:
-                raise Exception('Service is not available.')
-        except Exception as e:
-            messages.error(self.request, str(e))
 
 
 class DeleteModule(LoginRequiredMixin, TemplateView):

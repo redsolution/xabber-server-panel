@@ -6,7 +6,7 @@ from django.contrib import messages
 from xabber_server_panel.custom_auth.exceptions import UnauthorizedException
 from xabber_server_panel.utils import get_error_messages, is_ejabberd_started, get_xmpp_version
 from xabber_server_panel import version as xabber_server_panel_version
-from xabber_server_panel.base_modules.config.utils import parse_available_modules
+from xabber_server_panel.base_modules.config.utils import parse_available_modules, process_purchased_modules
 
 
 class BaseAPI:
@@ -516,6 +516,19 @@ class PluginsApi(BaseAPI):
             plugins = {}
 
         return plugins
+    
+    def get_purchased_plugins(self, key):
+        url = '/plugins/purchased/'
+
+        data = {
+            "key": key
+        }
+
+        self._call_method('post', url, data)
+
+        purchased_modules = process_purchased_modules(self.response)
+
+        return purchased_modules
 
     def get_access_token(self, release_id, data):
         """

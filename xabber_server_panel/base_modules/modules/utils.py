@@ -1,7 +1,11 @@
 from django.shortcuts import reverse
+from django.http import HttpRequest
+from django.utils import timezone
 
 from xabber_server_panel.base_modules.config.models import Module
+from xabber_server_panel.base_modules.modules.models import XServicesToken
 from xabber_server_panel.utils import check_versions
+from xabber_server_panel.api.api import XabberServicesApi
 
 
 # TODO: to remove
@@ -161,17 +165,39 @@ def check_module_versions(module: Module, available_module_data: dict):
             if module.track == 'free':
                 if new_module_free:
                     if check_versions(module.version, new_module_free.get('release')).get('success'):
-                        result['upgrade'] = reverse('modules:download_module',
-                                                    kwargs={'module_name': module.name, 'track': 'free'})
+                        result['upgrade'] = reverse('modules:download_module_free',
+                                                    kwargs={'module_name': module.name})
                 if new_module_paid:
                     if check_versions(module.version, new_module_paid.get('release'), equals_ok=True).get(
                             'success'):
-                        result['buy'] = reverse('modules:download_module',
-                                                kwargs={'module_name': module.name, 'track': 'paid'})
+                        result['buy'] = reverse('modules:download_module_paid',
+                                                kwargs={'module_name': module.name})
             elif module.track == 'paid':
                 if new_module_paid:
                     if check_versions(module.version, new_module_paid.get('release')).get('success'):
-                        result['upgrade'] = reverse('modules:download_module',
-                                                    kwargs={'module_name': module.name, 'track': 'paid'})
+                        result['upgrade'] = reverse('modules:download_module_paid',
+                                                    kwargs={'module_name': module.name})
 
     return result
+
+
+def request_license_key(request: HttpRequest):
+    "Load license key from xabber services API "
+
+    xservices_api = XabberServicesApi(request)
+    token = XServicesToken.objects.filter(expires__gt=timezone.now()).first()
+    
+    if not token:
+        return {'success': False, 'error': "Xabber Services Account is not authenticated."}
+    
+    response = xservices_api.license_key(data={"token": token.token})
+    if xservices_api.errors:
+        return {'success': False, 'error': "Request license key error."}
+    
+    key = response.get('license_key')
+
+    # Check if the key is not empty after stripping
+    if not key:
+        return {'success': False, 'error': "Request license key error."}
+
+    return {'success': True, 'key': key}

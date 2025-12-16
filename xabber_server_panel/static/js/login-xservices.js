@@ -48,20 +48,20 @@ $(function () {
         });
     }
 
-    function upload_module(url) {
-        const csrfToken = getCookie('csrftoken');
+    function download_module(url) {
+        // const csrfToken = getCookie('csrftoken');
 
         const data = {
-            csrfmiddlewaretoken: csrfToken
+            // csrfmiddlewaretoken: csrfToken
         };
 
         return new Promise((resolve, reject) => {
             $.ajax({
                 url: url,
-                type: 'POST',
+                type: 'GET',
                 data: data,
                 success: function (response) {
-                    if (response.errors.length){
+                    if (response.errors && response.errors.length){
                         //Add error messages
                         createMessage(response.errors, $('.message-js'), 'text-bg-danger');
                     }
@@ -126,7 +126,7 @@ $(function () {
 				xservicesAuthModalBs.hide();
 
                 const url = $('#xservices_auth').data('action');
-                upload_module(url);
+                download_module(url);
             })
             .catch(function (error) {
                 //Add error messages
@@ -145,7 +145,7 @@ $(function () {
         addLoader(loader_target);
 
         const url = $(this).attr('href');
-        upload_module(url).finally(function () {
+        download_module(url).finally(function () {
             //Remove Loader
             deleteLoader(loader_target);
         });;
