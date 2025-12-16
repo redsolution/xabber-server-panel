@@ -79,7 +79,7 @@
     {% endif %}
 </ul>
 
-{% if modules and user.is_authenticated %}
+{% if user.is_authenticated %}
     <hr>
     <ul class="nav nav-pills flex-column">
         {% if request.user.is_admin %}

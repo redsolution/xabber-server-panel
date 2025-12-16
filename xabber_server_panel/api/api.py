@@ -526,7 +526,10 @@ class PluginsApi(BaseAPI):
 
         self._call_method('post', url, data)
 
-        purchased_modules = process_purchased_modules(self.response)
+        if not self.errors:
+            purchased_modules = process_purchased_modules(self.response)
+        else:
+            purchased_modules = []
 
         return purchased_modules
 

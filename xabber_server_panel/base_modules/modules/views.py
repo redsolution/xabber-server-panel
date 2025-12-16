@@ -205,9 +205,7 @@ class DownloadModulePaid(DownloadModuleBase):
         if self.license_key:
             self._handle_download(module_name)
 
-        error_messages = get_error_messages(request)
-
-        return JsonResponse({'errors': error_messages})
+        return HttpResponseRedirect(reverse('modules:root'))
     
     @property
     def track(self):

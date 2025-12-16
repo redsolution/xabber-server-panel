@@ -30,18 +30,35 @@
 
                         <div class="d-flex flex-column align-items-end align-items-sm-center ms-auto text-end text-sm-center col col-sm-3">
                             {% if module.track == 'paid' %}
-                                <a class="btn btn-success w-90-px {% if module.track == 'paid' %}{% if request.session.xs_token %}download-module-js{% else %}xservices-auth-js{% endif %}{% endif %}" href="{% url 'modules:download_module_paid' module_name=module.name %}">
+                                <a class="btn w-90-px
+                                    {% if request.session.xs_token %}
+                                        {% if module.name in purchased_modules %}
+                                            installing-module-js
+                                            btn-primary
+                                        {% else %}
+                                            download-module-js
+                                            btn-success
+                                        {% endif %}
+                                    {% else %}
+                                        xservices-auth-js
+                                        btn-success
+                                    {% endif %}"
+                                href="{% url 'modules:download_module_paid' module_name=module.name %}">
+
                                     {% get_dict_value plugin_prices module.name as prices %}
-                                    {% if prices %}
+                                    {% if prices and module.name not in purchased_modules %}
                                         ${{ prices.0.price|price_format }}
                                     {% else %}
                                         Install
                                     {% endif %}
                                 </a>
-                                {% if prices %}
-                                    <small class="text-secondary mb-0 mt-1">{{ prices.0.period }}</small>
-                                {% else %}
-                                    <small class="text-secondary mb-0 mt-1">for Pro subscribers</small>
+
+                                {% if module.name not in purchased_modules %}
+                                    {% if prices %}
+                                        <small class="text-secondary mb-0 mt-1">{{ prices.0.period }}</small>
+                                    {% else %}
+                                        <small class="text-secondary mb-0 mt-1">for Pro subscribers</small>
+                                    {% endif %}
                                 {% endif %}
                             {% else %}
                                 <a class="btn btn-primary w-90-px {% if module.track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:download_module_free' module_name=module.name %}">
