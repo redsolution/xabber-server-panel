@@ -38,10 +38,10 @@
         </div>
     {% endif %}
 
+    {% if settings_write_permissions %}
+        {% include 'modules/parts/xservices_auth_modal.html' %}
+    {% endif %}
+
     {% include 'modules/parts/installing_module.html' %}
 {% endblock %}
 
-{% block js %}
-    {{ block.super }}
-    <script src="{% static 'js/login-xservices.js' %}"></script>
-{% endblock %}

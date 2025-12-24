@@ -18,8 +18,9 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link">
-            Purchases
+        {% url 'modules:license' as license %}
+        <a class="nav-link {% if license == request.path_info %}active{% endif %}" href="{{ license }}">
+            License
         </a>
     </li>
 </ul>

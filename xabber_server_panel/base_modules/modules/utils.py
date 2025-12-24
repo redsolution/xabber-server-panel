@@ -7,63 +7,7 @@ from xabber_server_panel.base_modules.modules.models import XServicesToken
 from xabber_server_panel.utils import check_versions
 from xabber_server_panel.api.api import XabberServicesApi
 
-
-# TODO: to remove
-def get_modules_data(available_modules):
-    
-    installed_modules = {module.name: module for module in Module.objects.all()}
-
-    modules_data = []
-    processed_modules = set()
-    grouped_available_modules = {}
-
-    # Handle installed modules
-    for module_name, installed_module in installed_modules.items():
-        available_module_data = available_modules.get(module_name, {})
-        module_info = {
-            'name': module_name,
-            'display_name': installed_module.verbose_name or module_name,
-            'track': installed_module.track,
-            'version': installed_module.version,
-            'root_page': installed_module.root_page,
-            'global_module': installed_module.global_module,
-            'custom': installed_module.custom,
-            'created_installed': installed_module.created,
-            'installed': True,
-            'description': installed_module.description,
-            'update_links': check_module_versions(installed_module, available_module_data),
-        }
-        modules_data.append(module_info)
-        processed_modules.add(module_name)
-
-    # Group available modules by name and version
-    for module_name, tracks in available_modules.items():
-        for track, module in tracks.items():
-            key = (module_name, module.get('release'))
-
-            if key not in grouped_available_modules:
-                grouped_available_modules[key] = {
-                    'name': module_name,
-                    'display_name': module.get('display_name', module_name),
-                    'version': module.get('release'),
-                    'created': module.get('created'),
-                    'description': module.get('description'),
-                    'tracks': [],
-                    'installed': False,
-                    'update_links': {},
-                }
-
-            grouped_available_modules[key]['tracks'].append(track)
-
-    # Add available modules excluding installed modules
-    for module_info in grouped_available_modules.values():
-        if module_info['name'] not in processed_modules:
-            modules_data.append(module_info)
-
-    # Sort by installed status
-    modules_data.sort(key=lambda x: not x['installed'])
-
-    return modules_data
+from typing import Iterable
 
 
 def get_installed_modules(modules):
@@ -153,6 +97,94 @@ def get_plugins_prices(xservices_api):
     return all_prices
 
 
+class PluginsPriceCollector:
+    def __init__(self, api: XabberServicesApi, groups: Iterable = ('plugin', 'pocket')):
+        self.api = api
+        self.groups = groups
+
+    def _collect_products(self, group):
+        products = []
+        page = 1
+
+        while True:
+            response = self.api.product_list({
+                'group': group,
+                'page': page,
+            })
+
+            if self.api.errors:
+                break
+
+            for product in response.get('results', []):
+                products += [product]
+
+            if not response.get('next'):
+                break
+
+            page += 1
+
+        return products
+    
+    def _process_products(self, products):
+        processed_products = {}
+        pockets = list(
+            filter(
+                lambda x: x.get('group') == 'pocket', products
+            )
+        )
+        for pocket in pockets:
+            plugins = pocket.get('plugins')
+            pocket_id = pocket.get('product_id')
+            if not plugins:
+                continue
+
+            for plugin in plugins:
+                plugin_id = plugin.get('product_id')
+                processed_products[plugin_id] = {
+                    'price_data': None,
+                    'subscribe_id': pocket_id
+                }
+
+        plugins = list(
+            filter(
+                lambda x: x.get('group') == 'plugin', products
+            )
+        )
+
+        for plugin in plugins:
+            plugin_id = plugin.get('product_id')
+            
+            if plugin_id in processed_products:
+                continue
+
+            prices = plugin.get('prices')
+            if not prices:
+                continue
+
+            price_data = prices[0]
+            processed_products[plugin_id] = {
+                'price_data': price_data,
+                'subscribe_id': plugin_id
+            }
+
+        return processed_products
+
+
+    def get_prices(self):
+        """
+        Collect prices for multiple product groups.
+        """
+
+        products = []
+
+        for group in self.groups:
+            products += self._collect_products(group)
+
+        processed_products = self._process_products(products)
+
+        return processed_products
+
+
 def check_module_versions(module: Module, available_module_data: dict):
     """ Check available updates and return links list """
     result = {}
@@ -195,9 +227,10 @@ def request_license_key(request: HttpRequest):
         return {'success': False, 'error': "Request license key error."}
     
     key = response.get('license_key')
+    services_hash = response.get("services_hash")
 
     # Check if the key is not empty after stripping
     if not key:
         return {'success': False, 'error': "Request license key error."}
 
-    return {'success': True, 'key': key}
+    return {'success': True, 'key': key, "services_hash": services_hash}

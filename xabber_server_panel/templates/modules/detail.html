@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load config_tags base_tags static %}
+
+{% block content %}
+    <div class="mb-4 col-12 d-flex overflow-hidden overflow-x-auto text-nowrap">
+        <div class="d-flex align-items-center me-4">
+            <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '';">
+                <ol class="breadcrumb flex-nowrap mb-0">
+                    <li class="breadcrumb-item">
+                        {% if module in available_modules %}
+                            <a class="fs-4" href="{% url 'modules:catalogue' %}">
+                                Catalogue
+                            </a>
+                        {% else %}
+                            <a class="fs-4" href="{% url 'modules:root' %}">
+                                Installed
+                            </a>
+                        {% endif %}
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </li>
+
+                    <li class="breadcrumb-item text-body-emphasis active fs-4" aria-current="page">
+                        {{ module.display_name }} {% if module.track == 'paid' %} Premium {% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div>
+        {% if module.icon %}
+            <div class="d-flex me-3 avatar avatar-64 avatar-lg-96">
+                <img class="img-fluid img-thumbnail" src="{{ module.icon }}" alt="Release Icon">
+            </div>
+        {% endif %}
+        <div>
+            {{ module.display_name }} {% if module.track == 'paid' %} Premium {% endif %}
+        </div>
+        {% if module.description %}
+            <div>
+                {{ module.description }}
+            </div>
+        {% endif %}
+
+        {% if module in available_modules %}
+            <div>
+                {% if module.track == 'paid' %}
+                    {% if module.name in purchased_modules and request.session.xs_token %}
+                        <a class="btn w-90-px installing-module-js btn-success" href="{% url 'modules:download_module_paid' module_name=module.name %}">
+                            Install
+                        </a>
+                    {% else %}
+                        {% get_dict_value xservices_plugins module.name as xservices_plugin %}
+                        <a class="btn w-90-px btn-success
+                            {% if request.session.xs_token %}
+                                purchase-module-js
+                            {% else %}
+                                xservices-auth-js
+                            {% endif %}"
+                            href="{{ xservices_plugins_subscribe_url }}{{ xservices_plugin.subscribe_id }}/">
+
+                            {% if xservices_plugin.price_data %}
+                                ${{ xservices_plugin.price_data.price|price_format }}
+                            {% else %}
+                                Install
+                            {% endif %}
+                        </a>
+
+                        {% if xservices_plugin.price_data %}
+                            <small class="text-secondary mb-0 mt-1">{{ xservices_plugin.price_data.period }}</small>
+                        {% else %}
+                            <small class="text-secondary mb-0 mt-1">for Pro subscribers</small>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <a class="btn btn-primary w-90-px {% if module.track == 'free' %}installing-module-js{% endif %}" href="{% url 'modules:download_module_free' module_name=module.name %}">
+                        Install
+                    </a>
+                {% endif %}
+            </div>
+        {% elif module in installed_modules %}
+            {% if module.update_links.upgrade %}
+                <a class="btn w-90-px btn-primary" href="{{ module.update_links.upgrade }}">
+                    Upgrade
+                </a>
+            {% endif %}
+            <a class="btn w-90-px btn-danger" 
+                data-delete-href="{% url 'modules:delete_module' module=module.name %}"
+                data-delete-name="Module" data-delete-target="{{ module.verbose_name }}"
+                data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                Delete
+            </a>
+        {% endif %}
+    </div>
+
+    {% if module.images %}
+        <div>
+            {% for image in module.images %}
+                <img src="{{ image }}" alt="">
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if settings_write_permissions %}
+        {% include 'modules/parts/xservices_auth_modal.html' %}
+    {% endif %}
+
+    {% include 'modules/parts/installing_module.html' %}
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script src="{% static 'js/login-xservices.js' %}"></script>
+{% endblock %}

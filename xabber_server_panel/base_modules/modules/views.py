@@ -1,4 +1,4 @@
-from django.shortcuts import reverse, Http404
+from django.shortcuts import reverse, Http404, loader
 from django.views.generic import TemplateView, View
 from django.http import HttpResponseRedirect, JsonResponse
 from django.conf import settings
@@ -6,7 +6,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core import management
 from django.apps import apps
-from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from jid_validation.utils import validate_jid
@@ -16,17 +15,19 @@ from xabber_server_panel.base_modules.config.utils import make_xmpp_config
 from xabber_server_panel.utils import update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_admin
 from xabber_server_panel.api.api import PluginsApi, XabberServicesApi
-from xabber_server_panel.utils import get_error_messages
 from xabber_server_panel.base_modules.modules.utils import request_license_key
 
 from .module_installer import ModuleInstaller
 from .models import XServicesToken
-from .utils import get_modules_data, get_available_modules, get_installed_modules, get_plugins_prices
+from .utils import get_available_modules, get_installed_modules, get_plugins_prices, PluginsPriceCollector
 
 from abc import ABC, abstractmethod
+from urllib.parse import urljoin
 
 import shutil
 import os
+
+XSERVICES_PLUGINS_SUBSCRIBE_URL = urljoin(settings.XABBER_SERVICES_UI_URL, '/#/plugins/subscribe/')
 
 
 class Installed(LoginRequiredMixin, TemplateView):
@@ -44,6 +45,7 @@ class Installed(LoginRequiredMixin, TemplateView):
         
         context = {
             'modules_data': modules_data,
+            'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL
         }
         return self.render_to_response(context)
 
@@ -59,7 +61,8 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         purchased_modules = []
         result = request_license_key(request)
         if result.get('success'):
-            license_key = result.get('key') 
+            license_key = result.get('key')
+            
             purchased_modules = plugins_api.get_purchased_plugins(license_key)
 
         available_modules = plugins_api.get_plugins()
@@ -68,13 +71,22 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         else:
             modules_data = []
 
-        plugin_prices = get_plugins_prices(xservices_api)
+        plugin_price_collector = PluginsPriceCollector(xservices_api)
+        xservices_plugins = plugin_price_collector.get_prices()
         
         context = {
             'modules_data': modules_data,
-            'plugin_prices': plugin_prices,
-            'purchased_modules': purchased_modules
+            'xservices_plugins': xservices_plugins,
+            'purchased_modules': purchased_modules,
+            'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL
         }
+
+        if request.is_ajax():
+            html = loader.render_to_string('modules/parts/modules_data_catalogue.html', context, request)
+            response_data = {
+                'html': html
+            }
+            return JsonResponse(response_data)
         return self.render_to_response(context)
     
 
@@ -103,6 +115,57 @@ class Upload(LoginRequiredMixin, TemplateView):
                 messages.error(self.request, e)
 
         return HttpResponseRedirect(reverse('modules:upload'))
+    
+
+class License(LoginRequiredMixin, TemplateView):
+    template_name = 'modules/license.html'
+
+    @permission_admin
+    def get(self, request, *args, **kwargs):
+        context = {}
+        return self.render_to_response(context)
+    
+
+class Detail(LoginRequiredMixin, TemplateView):
+    template_name = 'modules/detail.html'
+
+    @permission_admin
+    def get(self, request, module_name, track, *args, **kwargs):
+        plugins_api = PluginsApi(request)
+        xservices_api = XabberServicesApi(request)
+
+        purchased_modules = []
+        result = request_license_key(request)
+        if result.get('success'):
+            license_key = result.get('key')
+            
+            purchased_modules = plugins_api.get_purchased_plugins(license_key)
+
+        modules_data = plugins_api.get_plugins()
+        if not plugins_api.errors:
+            available_modules = get_available_modules(modules_data)
+            installed_modules = get_installed_modules(modules_data)
+        else:
+            available_modules = installed_modules = []
+
+        modules_filtered = list(filter(lambda x: x.get('name') == module_name and x.get('track') == track, [*available_modules, *installed_modules]))
+        if not modules_filtered:
+            raise Http404
+        
+        module = modules_filtered[0]
+
+        plugin_price_collector = PluginsPriceCollector(xservices_api)
+        xservices_plugins = plugin_price_collector.get_prices()
+        
+        context = {
+            'available_modules': available_modules,
+            'installed_modules': installed_modules,
+            'xservices_plugins': xservices_plugins,
+            'purchased_modules': purchased_modules,
+            'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL,
+            'module': module
+        }
+        return self.render_to_response(context)
 
 
 class DownloadModuleBase(LoginRequiredMixin, View, ABC):

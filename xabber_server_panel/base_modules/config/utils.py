@@ -396,15 +396,27 @@ def parse_available_modules(available_modules_xml):
 
     xml_data = ET.fromstring(available_modules_xml)
 
-    # Convert XML to list of dicts
     for plugin in xml_data.findall('plugin'):
-        plugin_dict = {
-            child.tag: child.text.strip() if child.text else None
-            for child in plugin
-        }
-        if not plugin_dict.get('name') in plugins:
-            plugins[plugin_dict.get('name')] = {}
-        plugins[plugin_dict.get('name')][plugin_dict.get('track')] = plugin_dict
+        plugin_dict = {}
+
+        for child in plugin:
+            value = child.text.strip() if child.text else None
+
+            if child.tag in plugin_dict:
+                # если тег уже был — превращаем в список
+                if not isinstance(plugin_dict[child.tag], list):
+                    plugin_dict[child.tag] = [plugin_dict[child.tag]]
+                plugin_dict[child.tag].append(value)
+            else:
+                plugin_dict[child.tag] = value
+
+        name = plugin_dict.get('name')
+        track = plugin_dict.get('track')
+
+        if name not in plugins:
+            plugins[name] = {}
+
+        plugins[name][track] = plugin_dict
 
     return plugins
 

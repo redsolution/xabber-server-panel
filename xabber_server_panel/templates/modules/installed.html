@@ -25,12 +25,21 @@
                                 <tr>
                                     <td data-title="#">{{ forloop.counter }}</td>
                                     <td data-title="Name">
-                                        {{ module.display_name }}
+
+                                        <a href="{% url 'modules:detail' module_name=module.name track=module.track %}">
+                                            {{ module.display_name }}
+                                        </a>
+                                        
                                         {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
                                             Premium
                                         {% endif %}
                                         {% if module.description %}
                                             <div>{{ module.description }}</div>
+                                        {% endif %}
+                                        {% if module.update_links.buy %}
+                                            <div>
+                                                <a href="{% url 'modules:detail' module_name=module.name track='paid' %}">Premium version available.</a>
+                                            </div>
                                         {% endif %}
                                     </td>
                                     <td data-title="Version">
@@ -49,9 +58,11 @@
                                             </div>
                                         {% endif %}
                                     </td>
+
                                     <td data-title="Creation Date">
                                         {{ module.created_installed|date:'Y.m.d' }}
                                     </td>
+
                                     {% if settings_write_permissions %}
                                         <td data-title="Actions">
                                             <div class="d-flex">
@@ -70,13 +81,6 @@
                                                             <li>
                                                                 <a class="dropdown-item text-wrap" href="{{ module.update_links.upgrade }}">
                                                                     Upgrade
-                                                                </a>
-                                                            </li>
-                                                        {% endif %}
-                                                        {% if module.update_links.buy %}
-                                                            <li>
-                                                                <a class="dropdown-item text-wrap {% if request.session.xs_token %}download-module-js{% else %}xservices-auth-js{% endif %}" href="{{ module.update_links.buy }}">
-                                                                    Buy Premium
                                                                 </a>
                                                             </li>
                                                         {% endif %}
@@ -101,9 +105,4 @@
     {% include 'modules/parts/installing_module.html' %}
 
     {% include 'modules/parts/removing_module.html' %}
-{% endblock %}
-
-{% block js %}
-    {{ block.super }}
-    <script src="{% static 'js/login-xservices.js' %}"></script>
 {% endblock %}

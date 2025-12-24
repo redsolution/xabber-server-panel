@@ -14,6 +14,7 @@ urlpatterns = [
     path('auth/', include(('xabber_server_panel.custom_auth.urls', 'custom_auth'), namespace='custom_auth')),
     path('webhooks/', include(('xabber_server_panel.webhooks.urls', 'webhooks'), namespace='webhooks')),
     path('installation/', include(('xabber_server_panel.installation.urls', 'installation'), namespace='installation')),
+    path('api/', include(('xabber_server_panel.api.urls', 'api'), namespace='api')),
 ]
 
 for module in get_modules():

@@ -1,19 +1,8 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block section_title %}
     <h2 class="mb-4 col-12">
         {% block content_title %}Modules{% endblock %}
     </h2>
-    <div>
-        {% if request.session.xs_token %}
-            {{ request.session.xs_token.jid }}
-            <a href="{% url 'modules:xservices_logout' %}">
-                Logout
-            </a>
-        {% else %}
-            <a href="" class="xservices-auth-js">
-                Login Xabber Services
-            </a>
-        {% endif %}
-    </div>
 {% endblock %}
