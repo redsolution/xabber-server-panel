@@ -58,18 +58,18 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         plugins_api = PluginsApi(request)
         xservices_api = XabberServicesApi(request)
 
-        purchased_modules = []
-        result = request_license_key(request)
-        if result.get('success'):
-            license_key = result.get('key')
-            
-            purchased_modules = plugins_api.get_purchased_plugins(license_key)
-
         available_modules = plugins_api.get_plugins()
         if not plugins_api.errors:
             modules_data = get_available_modules(available_modules)
         else:
             modules_data = []
+
+        purchased_modules = []
+        result = request_license_key(request)
+        if result.get('success'):
+            license_key = result.get('key')
+            if license_key:
+                purchased_modules = plugins_api.get_purchased_plugins(license_key)
 
         plugin_price_collector = PluginsPriceCollector(xservices_api)
         xservices_plugins = plugin_price_collector.get_prices()
