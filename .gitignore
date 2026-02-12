@@ -104,8 +104,6 @@ env/
 venv/
 /modules/
 xmppserver/
-.static
-static/
 ENV/
 env.bak/
 venv.bak/
