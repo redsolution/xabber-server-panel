@@ -13,7 +13,7 @@ from typing import Iterable
 def get_installed_modules(modules):
     installed_modules = {module.name: module for module in Module.objects.all()}
 
-    modules_data = []
+    modules_data = {}
     processed_modules = set()
 
     # Handle installed modules
@@ -28,36 +28,33 @@ def get_installed_modules(modules):
             'global_module': installed_module.global_module,
             'custom': installed_module.custom,
             'created_installed': installed_module.created,
-            'installed': True,
             'description': installed_module.description,
             'update_links': check_module_versions(installed_module, available_module_data),
         }
-        modules_data.append(module_info)
+        modules_data[module_name] = module_info
         processed_modules.add(module_name)
 
     return modules_data
 
 
-def get_available_modules(available_modules):
-
-    installed_modules = {}
+def get_installed_tracks():
+    installed_tracks = {}
     installed_modules_query = Module.objects.all()
     for module in installed_modules_query:
-        if module.name not in installed_modules:
-            installed_modules[module.name] = []
+        if module.name not in installed_tracks:
+            installed_tracks[module.name] = []
 
-        installed_modules[module.name] += [module.track]
+        installed_tracks[module.name] += [module.track]
 
+    return installed_tracks
+
+
+def get_available_modules(available_modules):
     modules_data = []
 
     # Group available modules by name and version
     for module_name, tracks in available_modules.items():
-        if module_name not in installed_modules:
-            modules_data += list(tracks.values())
-        else:
-            for track_name, module in tracks.items():
-                if track_name not in installed_modules[module_name]:
-                    modules_data += [module]
+        modules_data += list(tracks.values())
 
     return modules_data
 
@@ -168,7 +165,6 @@ class PluginsPriceCollector:
             }
 
         return processed_products
-
 
     def get_prices(self):
         """

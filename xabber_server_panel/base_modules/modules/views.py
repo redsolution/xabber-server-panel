@@ -19,7 +19,7 @@ from xabber_server_panel.base_modules.modules.utils import request_license_key
 
 from .module_installer import ModuleInstaller
 from .models import XServicesToken
-from .utils import get_available_modules, get_installed_modules, get_plugins_prices, PluginsPriceCollector
+from .utils import get_available_modules, get_installed_modules, get_plugins_prices, PluginsPriceCollector, get_installed_tracks
 
 from abc import ABC, abstractmethod
 from urllib.parse import urljoin
@@ -39,12 +39,12 @@ class Installed(LoginRequiredMixin, TemplateView):
 
         available_modules = plugins_api.get_plugins()
         if not plugins_api.errors:
-            modules_data = get_installed_modules(available_modules)
+            installed_modules = get_installed_modules(available_modules)
         else:
-            modules_data = []
+            installed_modules = []
         
         context = {
-            'modules_data': modules_data,
+            'installed_modules': installed_modules,
             'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL
         }
         return self.render_to_response(context)
@@ -60,9 +60,11 @@ class Catalogue(LoginRequiredMixin, TemplateView):
 
         available_modules = plugins_api.get_plugins()
         if not plugins_api.errors:
-            modules_data = get_available_modules(available_modules)
+            available_modules = get_available_modules(available_modules)
+            installed_tracks = get_installed_tracks()
         else:
-            modules_data = []
+            available_modules= []
+            installed_tracks = {}
 
         purchased_modules = []
         result = request_license_key(request)
@@ -75,7 +77,8 @@ class Catalogue(LoginRequiredMixin, TemplateView):
         xservices_plugins = plugin_price_collector.get_prices()
         
         context = {
-            'modules_data': modules_data,
+            'available_modules': available_modules,
+            "installed_tracks": installed_tracks,
             'xservices_plugins': xservices_plugins,
             'purchased_modules': purchased_modules,
             'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL
@@ -131,42 +134,57 @@ class Detail(LoginRequiredMixin, TemplateView):
 
     @permission_admin
     def get(self, request, module_name, track, *args, **kwargs):
-        plugins_api = PluginsApi(request)
-        xservices_api = XabberServicesApi(request)
-
-        purchased_modules = []
-        result = request_license_key(request)
-        if result.get('success'):
-            license_key = result.get('key')
-            
-            purchased_modules = plugins_api.get_purchased_plugins(license_key)
-
-        modules_data = plugins_api.get_plugins()
-        if not plugins_api.errors:
-            available_modules = get_available_modules(modules_data)
-            installed_modules = get_installed_modules(modules_data)
-        else:
-            available_modules = installed_modules = []
-
-        modules_filtered = list(filter(lambda x: x.get('name') == module_name and x.get('track') == track, [*available_modules, *installed_modules]))
-        if not modules_filtered:
-            raise Http404
         
-        module = modules_filtered[0]
+        purchased_modules = self._get_purchased_modules()
 
+        module = self._get_module_data(module_name, track)
+
+        installed_tracks = get_installed_tracks()
+
+        # Get modules prices list
+        xservices_api = XabberServicesApi(request)
         plugin_price_collector = PluginsPriceCollector(xservices_api)
         xservices_plugins = plugin_price_collector.get_prices()
         
         context = {
-            'available_modules': available_modules,
-            'installed_modules': installed_modules,
+            "installed_tracks": installed_tracks,
             'xservices_plugins': xservices_plugins,
             'purchased_modules': purchased_modules,
             'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL,
             'module': module
         }
-        return self.render_to_response(context)
 
+        return self.render_to_response(context)
+    
+    def _get_purchased_modules(self):
+        # Request purchased modules
+        plugins_api = PluginsApi(self.request)
+        purchased_modules = []
+        result = request_license_key(self.request)
+        if result.get('success'):
+            license_key = result.get('key')
+            
+            purchased_modules = plugins_api.get_purchased_plugins(license_key)
+
+        return purchased_modules
+    
+    def _get_module_data(self, module_name, track):
+        plugins_api = PluginsApi(self.request)
+
+        # get module data from available modules
+        modules_data = plugins_api.get_plugins(data={'name': module_name})
+        if not plugins_api.errors:
+            available_modules = get_available_modules(modules_data)            
+        else:
+            available_modules = []
+
+        modules_filtered = list(filter(lambda x: x.get('name') == module_name and x.get('track') == track, available_modules))
+        if not modules_filtered:
+            raise Http404
+        
+        module = modules_filtered[0]
+        return module
+    
 
 class DownloadModuleBase(LoginRequiredMixin, View, ABC):
 
@@ -485,11 +503,26 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
 
         request.session.modified = True
 
+        purchased_modules = self._get_purchased_modules()
+
         return JsonResponse(
             {
                 "message": "Code confirmed successfully.",
+                "purchased_modules": purchased_modules
             }
         )
+    
+    def _get_purchased_modules(self):
+        # Request purchased modules
+        plugins_api = PluginsApi(self.request)
+        purchased_modules = []
+        result = request_license_key(self.request)
+        if result.get('success'):
+            license_key = result.get('key')
+            
+            purchased_modules = plugins_api.get_purchased_plugins(license_key)
+
+        return purchased_modules
     
 
 class LogoutXabberServices(LoginRequiredMixin, View):

@@ -499,14 +499,12 @@ class PluginsApi(BaseAPI):
     def _create_error_messages(self):
         pass
 
-    def get_plugins(self):
+    def get_plugins(self, data: dict = {}):
 
         url = '/plugins/'
 
-        data = {
-            'xabber_server_panel_version': xabber_server_panel_version,
-            'xmpp_server_version': get_xmpp_version()
-        }
+        data['xabber_server_panel_version'] = xabber_server_panel_version
+        data['xmpp_server_version'] = get_xmpp_version()
 
         self._call_method('get', url, data)
 

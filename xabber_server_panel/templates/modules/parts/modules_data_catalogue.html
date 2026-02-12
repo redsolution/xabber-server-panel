@@ -1,8 +1,9 @@
 {% load config_tags base_tags %}
 
-{% if modules_data %}
+{% if available_modules %}
     <div class="d-flex flex-column table-adaptive position-relative">
-        {% for module in modules_data %}
+        {% for module in available_modules %}
+            {% get_dict_value installed_tracks module.name as module_installed_tracks %}
             {% if module.track == 'free' or module.name in xservices_plugins %}
                 <div class="d-flex align-items-start align-items-sm-center flex-column flex-sm-row {% if not forloop.last %}mb-3{% endif %}">
                     <div class="d-flex align-items-center me-0 me-sm-4 mb-2 mb-sm-0 col">
@@ -25,7 +26,13 @@
                     </div>
 
                     <div class="d-flex flex-column align-items-end align-items-sm-center ms-auto text-end text-sm-center col col-sm-3">
-                        {% if module.track == 'paid' %}
+                        {% if module_installed_tracks and module.track in module_installed_tracks %}
+                            <a class="btn btn-success w-90-px" href="{% url module.name|add:':info' %}">
+                                Manage
+                            </a>
+                        {% elif module_installed_tracks and module.track == 'free' %}
+                            <div>Premium version installed</div>
+                        {% elif module.track == 'paid' %}
                             {% if module.name in purchased_modules and request.session.xs_token %}
                                 <a class="btn w-90-px installing-module-js btn-success" href="{% url 'modules:download_module_paid' module_name=module.name %}">
                                     Install
@@ -38,6 +45,8 @@
                                     {% else %}
                                         xservices-auth-js
                                     {% endif %}"
+                                    data-redirect="{% url 'modules:detail' module_name=module.name track=module.track %}?purchased=1"
+                                    data-module-name="{{ module.name }}"
                                     href="{{ xservices_plugins_subscribe_url }}{{ xservices_plugin.subscribe_id }}/">
 
                                     {% if xservices_plugin.price_data %}

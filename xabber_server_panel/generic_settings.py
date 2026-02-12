@@ -124,7 +124,7 @@ MOD_NICK_AVATAR_FILES = os.path.join(PROJECT_DIR, 'rand_avatars')
 PREDEFINED_CONFIG_FILE_PATH = "predefined_config.json"
 
 PAGINATION_PAGE_SIZE = 30
-HTTP_REQUEST_TIMEOUT = 5
+HTTP_REQUEST_TIMEOUT = 10
 
 # =========== AUTH ============ #
 INSTALLED_APPS += ['xabber_server_panel.custom_auth']

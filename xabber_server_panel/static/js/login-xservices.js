@@ -5,9 +5,9 @@ $(function () {
 	$(document).on('click', '.xservices-auth-js', function(event) {
 		event.preventDefault();
 
-		//Add action
-		let url = $(this).attr('href');
-		$(xservicesAuthModal).data('action', url);
+		$(xservicesAuthModal).data('action', $(this).attr('href'));
+        $(xservicesAuthModal).data('redirect', $(this).data('redirect'));
+        $(xservicesAuthModal).data('module-name', $(this).data('module-name'));
 
 		//Open modal
 		xservicesAuthModalBs.show();
@@ -87,6 +87,8 @@ $(function () {
 
         form_ajax_send($(this))
             .then(function (response) {
+                const loader_target = $('.table-adaptive');
+                
                 //Remove error messages
                 currentStep.find('.stepper__error').addClass('d-none').text('');
 
@@ -95,18 +97,37 @@ $(function () {
 				xservicesAuthModalBs.hide();
 
                 const url = xservicesAuthModal.data('action');
-                if (url){
+                const redirect = xservicesAuthModal.data('redirect');
+                const moduleName = xservicesAuthModal.data('module-name');
+
+                const purchased_modules = response.purchased_modules;
+                if (purchased_modules && purchased_modules.includes(moduleName)){
+                    if (redirect){
+                        addLoader(loader_target);
+                        this.location.assign(redirect);
+                    }
+                }
+                else if (url){
                     const popup = window.open(
                         url,
                         '_blank',
                         'width=800,height=600,resizable=yes,scrollbars=yes'
                     );
                     updateModulesData();
-                }
-                else {
-                    window.location.reload();
+
+                    window.addEventListener('message', function (event) {
+                        if (event.data === 'payment_success') {
+                            if (redirect){
+                                addLoader(loader_target);
+                                setTimeout(() => {
+                                    window.location.assign(redirect);
+                                }, 2000);
+                            }
+                        }
+                    });
                 }
                 
+                window.location.reload();
             })
             .catch(function (error) {
                 //Add error messages
@@ -122,12 +143,25 @@ $(function () {
     $(document).on('click','.purchase-module-js', function(e){
         e.preventDefault();
         const url = $(this).attr('href');
+        const redirect = $(this).data('redirect');
+        const loader_target = $('.table-adaptive');
 
         const popup = window.open(
             url,
             '_blank',
             'width=800,height=600,resizable=yes,scrollbars=yes'
         );
+
+        window.addEventListener('message', function (event) {
+            if (event.data === 'payment_success') {
+                if (redirect){
+                    addLoader(loader_target);
+                    setTimeout(() => {
+                        window.location.assign(redirect);
+                    }, 2000);
+                }
+            }
+        });
     });
 
     // SERVICES POLLING
@@ -180,4 +214,24 @@ $(function () {
     }
 
     setInterval(servicesPolling, 3000);
+
+    document.addEventListener('click', async function(e) {
+        const el = e.target.closest('.check-internet-connection');
+        if (!el) return;
+
+        // Check internet connection
+        const isOnline = navigator.onLine;
+
+        if (isOnline) {
+            // e.preventDefault();
+            // e.stopImmediatePropagation(); // block other handlers
+
+            alert('Internet connection is unavailable! Installed module data will not be updated. We recommend configuring your internet connection.');
+
+            // your custom offline logic here
+            return;
+        }
+
+        // Internet is ON → allow other handlers to run
+    }, true); // 👈 capture mode (runs BEFORE jQuery handlers)
 });
