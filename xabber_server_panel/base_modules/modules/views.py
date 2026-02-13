@@ -489,14 +489,16 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
                 status=500
             )
         
-        token = response.get('token')
+        license_token = response.get('license_token')
+        access_token = response.get('access_token')
         expires = response.get('expires')
         expires_dt = parse_datetime(expires)
 
         XServicesToken.objects.all().delete()
-        XServicesToken.objects.create(token=token, expires=expires_dt, jid=jid)
+        XServicesToken.objects.create(token=license_token, expires=expires_dt, jid=jid)
 
         try:
+            request.session['access_token'] = access_token
             del request.session['xservises_jid']
         except:
             pass

@@ -5,6 +5,21 @@
     <div class="mb-4 col-12">
         {% include 'modules/parts/links.html' %}
     </div>
+
+    <div>
+        {% if request.session.xs_token %}
+            Licensed as
+            {{ request.session.xs_token.jid }}
+            <a href="{% url 'modules:xservices_logout' %}">
+                Disconnect
+            </a>
+        {% else %}
+            <a href="" class="xservices-auth-js">
+                Connect to license server
+            </a>
+        {% endif %}
+    </div>
+
     <div class="mb-4 modules-data-js">
         {% include 'modules/parts/modules_data_catalogue.html' %}
     </div>
