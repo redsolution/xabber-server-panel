@@ -104,30 +104,32 @@ $(function () {
                 if (purchased_modules && purchased_modules.includes(moduleName)){
                     if (redirect){
                         addLoader(loader_target);
-                        this.location.assign(redirect);
+                        window.location.assign(redirect);
+                        return
                     }
+                    else window.location.reload();
                 }
-                else if (url){
+                if (url){
                     const popup = window.open(
                         url,
                         '_blank',
                         'width=800,height=600,resizable=yes,scrollbars=yes'
                     );
-                    updateModulesData();
-
                     window.addEventListener('message', function (event) {
+                        console.log(event);
                         if (event.data === 'payment_success') {
                             if (redirect){
                                 addLoader(loader_target);
                                 setTimeout(() => {
                                     window.location.assign(redirect);
                                 }, 2000);
+                                return
                             }
+                            else window.location.reload();
                         }
                     });
                 }
                 
-                window.location.reload();
             })
             .catch(function (error) {
                 //Add error messages
