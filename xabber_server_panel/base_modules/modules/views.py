@@ -510,7 +510,8 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
         return JsonResponse(
             {
                 "message": "Code confirmed successfully.",
-                "purchased_modules": purchased_modules
+                "purchased_modules": purchased_modules,
+                "access_token": access_token,
             }
         )
     

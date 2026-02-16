@@ -31,7 +31,6 @@ $(function () {
                 type: method,
                 data: data,
                 success: function (response) {
-                    console.log(response);
                     resolve(response);
                 },
                 error: function (xhr, status, error) {
@@ -45,6 +44,45 @@ $(function () {
                     }
                 }
             });
+        });
+    }
+
+    function openPaymentPopup(url, redirect, access_token){
+        const loader_target = $('.table-adaptive');
+        console.log(url, redirect, access_token);
+        const popup = window.open(
+            url,
+            '_blank',
+            'width=800,height=600,resizable=yes,scrollbars=yes'
+        );
+        if (access_token){
+            window.addEventListener('message', (event) => {
+                // 🔐 Always validate origin!
+                // if (event.origin !== url) return;
+
+                if (event.data.type === 'REQUEST_TOKEN') {
+                    event.source.postMessage(
+                    {
+                        type: 'TOKEN_RESPONSE',
+                        token: access_token
+                    },
+                        event.origin
+                    );
+                }
+            });
+        }
+
+        window.addEventListener('message', function (event) {
+            if (event.data === 'payment_success') {
+                if (redirect){
+                    addLoader(loader_target);
+                    setTimeout(() => {
+                        window.location.assign(redirect);
+                    }, 2000);
+                    return
+                }
+                else window.location.reload();
+            }
         });
     }
 
@@ -110,26 +148,11 @@ $(function () {
                     else window.location.reload();
                 }
                 if (url){
-                    const popup = window.open(
-                        url,
-                        '_blank',
-                        'width=800,height=600,resizable=yes,scrollbars=yes'
-                    );
-                    window.addEventListener('message', function (event) {
-                        console.log(event);
-                        if (event.data === 'payment_success') {
-                            if (redirect){
-                                addLoader(loader_target);
-                                setTimeout(() => {
-                                    window.location.assign(redirect);
-                                }, 2000);
-                                return
-                            }
-                            else window.location.reload();
-                        }
-                    });
+                    const access_token = response.access_token;
+                    openPaymentPopup(url, redirect, access_token);   
                 }
-                
+
+                // window.location.reload();
             })
             .catch(function (error) {
                 //Add error messages
@@ -148,22 +171,7 @@ $(function () {
         const redirect = $(this).data('redirect');
         const loader_target = $('.table-adaptive');
 
-        const popup = window.open(
-            url,
-            '_blank',
-            'width=800,height=600,resizable=yes,scrollbars=yes'
-        );
-
-        window.addEventListener('message', function (event) {
-            if (event.data === 'payment_success') {
-                if (redirect){
-                    addLoader(loader_target);
-                    setTimeout(() => {
-                        window.location.assign(redirect);
-                    }, 2000);
-                }
-            }
-        });
+        openPaymentPopup(url, redirect, null);  
     });
 
     document.addEventListener('click', async function(e) {
