@@ -1,3 +1,5 @@
+import { updateModulesData } from './polling-xservices.js';
+
 $(function () {
 	//Function for modal (#xservices_auth)
 	let xservicesAuthModal = $('#xservices_auth');
@@ -47,14 +49,16 @@ $(function () {
         });
     }
 
-    function openPaymentPopup(url, redirect, access_token){
+    function openPaymentPopup(url, redirect){
         const loader_target = $('.table-adaptive');
-        console.log(url, redirect, access_token);
+
         const popup = window.open(
             url,
             '_blank',
             'width=800,height=600,resizable=yes,scrollbars=yes'
         );
+
+        let access_token = localStorage.getItem('access_token');
         if (access_token){
             window.addEventListener('message', (event) => {
                 // 🔐 Always validate origin!
@@ -138,6 +142,10 @@ $(function () {
                 const redirect = xservicesAuthModal.data('redirect');
                 const moduleName = xservicesAuthModal.data('module-name');
 
+                // Save access token
+                const access_token = response.access_token;
+                localStorage.setItem('access_token', access_token);
+
                 const purchased_modules = response.purchased_modules;
                 if (purchased_modules && purchased_modules.includes(moduleName)){
                     if (redirect){
@@ -148,11 +156,10 @@ $(function () {
                     else window.location.reload();
                 }
                 if (url){
-                    const access_token = response.access_token;
-                    openPaymentPopup(url, redirect, access_token);   
+                    openPaymentPopup(url, redirect);   
                 }
 
-                // window.location.reload();
+                updateModulesData();
             })
             .catch(function (error) {
                 //Add error messages
@@ -171,7 +178,7 @@ $(function () {
         const redirect = $(this).data('redirect');
         const loader_target = $('.table-adaptive');
 
-        openPaymentPopup(url, redirect, null);  
+        openPaymentPopup(url, redirect);  
     });
 
     document.addEventListener('click', async function(e) {

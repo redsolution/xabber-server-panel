@@ -1,5 +1,19 @@
 {% load config_tags base_tags %}
 
+<div>
+    {% if request.session.xs_token %}
+        Licensed as
+        {{ request.session.xs_token.jid }}
+        <a href="{% url 'modules:xservices_logout' %}">
+            Disconnect
+        </a>
+    {% else %}
+        <a href="" class="xservices-auth-js">
+            Connect to license server
+        </a>
+    {% endif %}
+</div>
+
 {% if available_modules %}
     <div class="d-flex flex-column table-adaptive position-relative">
         {% for module in available_modules %}
