@@ -188,7 +188,7 @@ $(function () {
         // Check internet connection
         const isOnline = navigator.onLine;
 
-        if (isOnline) {
+        if (!isOnline) {
             // e.preventDefault();
             // e.stopImmediatePropagation(); // block other handlers
 
