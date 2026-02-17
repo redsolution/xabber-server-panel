@@ -8,6 +8,10 @@ $(function () {
             type: 'GET',
             success: function(response) {
                 let services_hash = response.services_hash;
+
+                // console.log('previous data:', previousData);
+                // console.log('hash:', services_hash);
+
                 // Compare with previous data
                 if (previousData && services_hash && previousData != services_hash){
                     updateModulesData();

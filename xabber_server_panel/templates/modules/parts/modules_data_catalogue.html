@@ -1,24 +1,9 @@
 {% load config_tags base_tags %}
-
-<div>
-    {% if request.session.xs_token %}
-        Licensed as
-        {{ request.session.xs_token.jid }}
-        <a href="{% url 'modules:xservices_logout' %}">
-            Disconnect
-        </a>
-    {% else %}
-        <a href="" class="xservices-auth-js">
-            Connect to license server
-        </a>
-    {% endif %}
-</div>
-
 {% if available_modules %}
     <div class="d-flex flex-column table-adaptive position-relative">
         {% for module in available_modules %}
             {% get_dict_value installed_tracks module.name as module_installed_tracks %}
-            {% if module.track == 'free' or module.name in xservices_plugins %}
+            {% if not module_installed_tracks or module.track in module_installed_tracks %}
                 <div class="d-flex align-items-start align-items-sm-center flex-column flex-sm-row {% if not forloop.last %}mb-3{% endif %}">
                     <div class="d-flex align-items-center me-0 me-sm-4 mb-2 mb-sm-0 col">
                         {% if module.icon %}
@@ -45,7 +30,7 @@
                                 Manage
                             </a>
                         {% elif module_installed_tracks and module.track == 'free' %}
-                            <div>Premium version installed</div>
+                            <a class="btn w-90-px btn-secondary">Unavailable</a>
                         {% elif module.track == 'paid' %}
                             {% if module.name in purchased_modules and request.session.xs_token %}
                                 <a class="btn w-90-px installing-module-js btn-success" href="{% url 'modules:download_module_paid' module_name=module.name %}">

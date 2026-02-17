@@ -54,7 +54,7 @@
                     Manage
                 </a>
             {% elif module_installed_tracks and module.track == 'free' %}
-                <div>Premium version installed</div>
+                <a class="btn w-90-px btn-secondary">Unavailable</a>
             {% elif module.track == 'paid' %}
                 {% if module.name in purchased_modules and request.session.xs_token %}
                     <a class="btn w-90-px installing-module-js btn-success" href="{% url 'modules:download_module_paid' module_name=module.name %}">
