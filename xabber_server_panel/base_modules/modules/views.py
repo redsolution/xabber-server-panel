@@ -512,6 +512,7 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
                 "message": "Code confirmed successfully.",
                 "purchased_modules": purchased_modules,
                 "access_token": access_token,
+                "account": jid
             }
         )
     

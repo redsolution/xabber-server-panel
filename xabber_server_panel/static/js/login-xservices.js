@@ -90,6 +90,22 @@ $(function () {
         });
     }
 
+    function updateLicenseData(account){
+        const licenseAccount = $('.license-account-js');
+        const licenseConnect = $('.license-connect-js');
+
+        if (account){
+            licenseConnect.addClass('d-none');
+            licenseAccount.removeClass('d-none');
+            licenseAccount.find('span').html(account);
+        }
+        else {
+            licenseConnect.removeClass('d-none');
+            licenseAccount.addClass('d-none');
+            licenseAccount.find('span').html('');
+        }
+    }
+
     $('.xservices-login-js').on('submit', function (e) {
         e.preventDefault();
 
@@ -159,7 +175,10 @@ $(function () {
                     openPaymentPopup(url, redirect);   
                 }
 
+                const account = response.account;
+
                 updateModulesData();
+                updateLicenseData(account);
             })
             .catch(function (error) {
                 //Add error messages

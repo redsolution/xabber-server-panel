@@ -3,17 +3,19 @@
 
 {% block content %}
     <div>
-        {% if request.session.xs_token %}
-            Licensed as
-            {{ request.session.xs_token.jid }}
+        <div class="license-account-js {% if not request.session.xs_token %}d-none{% endif %}">
+            Licensed as <span>{{ request.session.xs_token.jid }}</span>
+            
             <a href="{% url 'modules:xservices_logout' %}">
                 Disconnect
             </a>
-        {% else %}
+        </div>
+            
+        <div class="license-connect-js {% if request.session.xs_token %}d-none{% endif %}">
             <a href="" class="xservices-auth-js">
                 Connect to license server
             </a>
-        {% endif %}
+        </div>
     </div>
 
     <div class="mb-4 col-12">
