@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load config_tags base_tags static %}
 
+{% block section_title %}{% endblock %}
+
 {% block content %}
     {% get_dict_value installed_tracks module.name as module_installed_tracks %}
 

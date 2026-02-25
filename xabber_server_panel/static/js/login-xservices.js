@@ -192,7 +192,7 @@ $(function () {
     });
 
     
-    $(document).on('click','.modules-data-js', function(e){
+    $(document).on('click','.purchase-module-js', function(e) {
         e.preventDefault();
         const url = $(this).attr('href');
         const redirect = $(this).data('redirect');
