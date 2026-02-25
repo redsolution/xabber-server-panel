@@ -8,74 +8,87 @@
             </div>
 
             <div class="modal-body">
-                <div class="stepper stepper-default">
-                    <div class="stepper__step active" data-step="1">
-                        <div class="stepper__head">
-                            <div class="stepper__head-icon">
-                                1
-                            </div>
-                            <div class="stepper__head-text">
-                                Login to Xabber Services
-                            </div>
-                        </div>
-                        <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                            <form class="check-change-js xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data">
-                                {% csrf_token %}
-
-                                <input class="form-control" type="text" name="jid" placeholder="username@example.com">
-
-                                <div class="stepper__error d-none text-danger mt-1"></div>
-
-                                <div class="overflow-hidden">
-                                    <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                        <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
-                                            Next
-                                        </button>
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="stepper stepper-default">
+                            <div class="stepper__step active" data-step="1">
+                                <div class="stepper__head">
+                                    <div class="stepper__head-icon">
+                                        1
+                                    </div>
+                                    <div class="stepper__head-text">
+                                        Login to Xabber Services
                                     </div>
                                 </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="stepper__step" data-step="2">
-                        <div class="stepper__head">
-                            <div class="stepper__head-icon">
-                                2
+                                <div class="stepper__content pt-0 pt-lg-3 pb-3">
+                                    <form class="check-change-js xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+
+                                        <input class="form-control" type="text" name="jid" placeholder="username@example.com">
+
+                                        <div class="stepper__error d-none text-danger mt-1"></div>
+
+                                        <div class="overflow-hidden">
+                                            <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
+                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="stepper__head-text">
-                                Confirm code
-                            </div>
-                        </div>
-                        <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                            <form class="check-change-js xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
-                                {% csrf_token %}
-
-                                <input class="form-control" type="text" name="code">
-
-                                <div class="stepper__error d-none text-danger mt-1"></div>
-
-                                <div class="overflow-hidden">
-                                    <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                        <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
-                                            Confirm
-                                        </button>
+                            <div class="stepper__step" data-step="2">
+                                <div class="stepper__head">
+                                    <div class="stepper__head-icon">
+                                        2
+                                    </div>
+                                    <div class="stepper__head-text">
+                                        Confirm code
                                     </div>
                                 </div>
-                            </form>
+                                <div class="stepper__content pt-0 pt-lg-3 pb-3">
+                                    <form class="check-change-js xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+
+                                        <input class="form-control" type="text" name="code">
+
+                                        <div class="stepper__error d-none text-danger mt-1"></div>
+
+                                        <div class="overflow-hidden">
+                                            <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
+                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
+                                                    Confirm
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    To install paid or premium modules from the Catalog, connect your Xabber Account.
-                    This authorizes your server to access modules you've purchased or subscribed to via Xabber Services — even if your server admin login is different (perfect for teams or multiple deployments).
 
-                    Once connected:
-                    <ul>
-                        <li>Licensed modules appear and install with one click in the Catalog.</li>
-                        <li>Switch accounts anytime to use different sets of licenses.</li>
-                        <li>Uninstall a module → the license slot frees up automatically for use elsewhere.</li>
-                    </ul>
-
-                    It's quick and secure — your Xabber Account powers the best decentralized XMPP experience without compromising control.
+                    <div class="col-12 col-md-6 mt-2 mt-md-0">
+                        <div class="text-secondary">
+                            <p>
+                                To install paid or premium modules from the Catalog, connect your Xabber Account.
+                            </p>
+                            <p>
+                                This authorizes your server to access modules you've purchased or subscribed to via Xabber Services — even if your server admin login is different (perfect for teams or multiple deployments).
+                            </p>
+                            <p>
+                                Once connected:
+                            </p>
+                            <ul>
+                                <li>Licensed modules appear and install with one click in the Catalog.</li>
+                                <li>Switch accounts anytime to use different sets of licenses.</li>
+                                <li>Uninstall a module → the license slot frees up automatically for use elsewhere.</li>
+                            </ul>
+                            <p>
+                                It's quick and secure — your Xabber Account powers the best decentralized XMPP experience without compromising control.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

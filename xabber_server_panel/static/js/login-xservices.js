@@ -1,19 +1,19 @@
 import { updateModulesData } from './polling-xservices.js';
 
 $(function () {
-	//Function for modal (#xservices_auth)
-	let xservicesAuthModal = $('#xservices_auth');
-	let xservicesAuthModalBs = new bootstrap.Modal(xservicesAuthModal);
-	$(document).on('click', '.xservices-auth-js', function(event) {
-		event.preventDefault();
+    //Function for modal (#xservices_auth)
+    let xservicesAuthModal = $('#xservices_auth');
+    let xservicesAuthModalBs = new bootstrap.Modal(xservicesAuthModal);
+    $(document).on('click', '.xservices-auth-js', function(event) {
+        event.preventDefault();
 
-		$(xservicesAuthModal).data('action', $(this).attr('href'));
+        $(xservicesAuthModal).data('action', $(this).attr('href'));
         $(xservicesAuthModal).data('redirect', $(this).data('redirect'));
         $(xservicesAuthModal).data('module-name', $(this).data('module-name'));
 
-		//Open modal
-		xservicesAuthModalBs.show();
-	});
+        //Open modal
+        xservicesAuthModalBs.show();
+    });
 
     function getCookie(name) {
         const matches = document.cookie.match(new RegExp(
@@ -49,8 +49,8 @@ $(function () {
         });
     }
 
-    function openPaymentPopup(url, redirect){
-        const loader_target = $('.table-adaptive');
+    function openPaymentPopup(url, redirect) {
+        const loader_target = $('.modules-data-js');
 
         const popup = window.open(
             url,
@@ -59,11 +59,8 @@ $(function () {
         );
 
         let access_token = localStorage.getItem('access_token');
-        if (access_token){
+        if (access_token) {
             window.addEventListener('message', (event) => {
-                // 🔐 Always validate origin!
-                // if (event.origin !== url) return;
-
                 if (event.data.type === 'REQUEST_TOKEN') {
                     event.source.postMessage(
                     {
@@ -78,8 +75,10 @@ $(function () {
 
         window.addEventListener('message', function (event) {
             if (event.data === 'payment_success') {
-                if (redirect){
-                    addLoader(loader_target);
+                if (redirect) {
+                    if (loader_target) {
+                        addLoader(loader_target);
+                    }
                     setTimeout(() => {
                         window.location.assign(redirect);
                     }, 2000);
@@ -119,16 +118,16 @@ $(function () {
                 //Remove error messages
                 currentStep.find('.stepper__error').addClass('d-none').text('');
 
-				//Step 2
-				stepperGoToStep(xservicesAuthModal, 2);
+                //Step 2
+                stepperGoToStep(xservicesAuthModal, 2);
             })
             .catch(function (error) {
                 //Add error messages
                 currentStep.find('.stepper__error').removeClass('d-none').text(error);
             })
             .finally(function () {
-				//Remove Loader
-				deleteLoader(currentStep.find('.stepper__content'));
+                //Remove Loader
+                deleteLoader(currentStep.find('.stepper__content'));
             });
     });
 
@@ -140,38 +139,40 @@ $(function () {
         //Add loader
         addLoader(currentStep.find('.stepper__content'));
 
-		//Disabled close stepper modal
-		disabledCloseModal = true;
+        //Disabled close stepper modal
+        disabledCloseModal = true;
 
         form_ajax_send($(this))
             .then(function (response) {
-                const loader_target = $('.table-adaptive');
+                const loader_target = $('.modules-data-js');
                 
                 //Remove error messages
                 currentStep.find('.stepper__error').addClass('d-none').text('');
 
-				//Close modal
-				disabledCloseModal = false;
-				xservicesAuthModalBs.hide();
+                //Close modal
+                disabledCloseModal = false;
+                xservicesAuthModalBs.hide();
 
                 const url = xservicesAuthModal.data('action');
                 const redirect = xservicesAuthModal.data('redirect');
                 const moduleName = xservicesAuthModal.data('module-name');
 
-                // Save access token
+                //Save access token
                 const access_token = response.access_token;
                 localStorage.setItem('access_token', access_token);
 
                 const purchased_modules = response.purchased_modules;
-                if (purchased_modules && purchased_modules.includes(moduleName)){
-                    if (redirect){
-                        addLoader(loader_target);
+                if (purchased_modules && purchased_modules.includes(moduleName)) {
+                    if (redirect) {
+                        if (loader_target) {
+                            addLoader(loader_target);
+                        }
                         window.location.assign(redirect);
                         return
                     }
                     else window.location.reload();
                 }
-                if (url){
+                if (url) {
                     openPaymentPopup(url, redirect);   
                 }
 
@@ -185,38 +186,51 @@ $(function () {
                 currentStep.find('.stepper__error').removeClass('d-none').text(error);
             })
             .finally(function () {
-				//Remove Loader
-				deleteLoader(currentStep.find('.stepper__content'));
+                //Remove Loader
+                deleteLoader(currentStep.find('.stepper__content'));
             });
     });
 
     
-    $(document).on('click','.purchase-module-js', function(e){
+    $(document).on('click','.modules-data-js', function(e){
         e.preventDefault();
         const url = $(this).attr('href');
         const redirect = $(this).data('redirect');
-        const loader_target = $('.table-adaptive');
 
         openPaymentPopup(url, redirect);  
     });
 
+    //Check internet connection
     document.addEventListener('click', async function(e) {
         const el = e.target.closest('.check-internet-connection');
         if (!el) return;
 
-        // Check internet connection
         const isOnline = navigator.onLine;
 
+        let warningModal = $('#warning_modal');
+        let warningModalBs = bootstrap.Modal.getInstance(warningModal[0]) || new bootstrap.Modal(warningModal[0]);
+        let deleteModal = $('#delete_modal');
+        let deleteModalBs = bootstrap.Modal.getInstance(deleteModal[0]) || new bootstrap.Modal(deleteModal[0]);
+
         if (!isOnline) {
-            // e.preventDefault();
-            // e.stopImmediatePropagation(); // block other handlers
+            if (warningModal.length > 0) {
+                //Open #warning_modal
+                warningModal.find('.modal-body .alert').html('Internet connection is unavailable! Installed module data will not be updated. We recommend configuring your internet connection.')
+                warningModalBs.show();
 
-            alert('Internet connection is unavailable! Installed module data will not be updated. We recommend configuring your internet connection.');
-
-            // your custom offline logic here
+                //Check close and open #delete_modal
+                warningModal[0].addEventListener('hidden.bs.modal', function() {
+                    if (deleteModal.length > 0) {
+                        deleteModalBs.show();
+                    }
+                }, { once: true });
+            }
             return;
+        } else {
+            if (deleteModal.length > 0) {
+                //Open #delete_modal
+                deleteModalBs.show();
+            }
         }
-
-        // Internet is ON → allow other handlers to run
-    }, true); // 👈 capture mode (runs BEFORE jQuery handlers)
+    }, true);
 });

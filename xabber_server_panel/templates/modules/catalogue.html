@@ -1,28 +1,44 @@
 {% extends 'modules/base.html' %}
 {% load config_tags base_tags static %}
 
-{% block content %}
-    <div>
-        <div class="license-account-js {% if not request.session.xs_token %}d-none{% endif %}">
-            Licensed as <span>{{ request.session.xs_token.jid }}</span>
-            
-            <a href="{% url 'modules:xservices_logout' %}">
-                Disconnect
-            </a>
-        </div>
-            
-        <div class="license-connect-js {% if request.session.xs_token %}d-none{% endif %}">
-            <a href="" class="xservices-auth-js">
-                Connect to license server
-            </a>
+{% block section_title %}
+    <div class="mb-4 col-12 d-flex flex-column flex-lg-row">
+        <h2 class="me-0 me-lg-auto mb-2 mb-lg-0">
+            Modules
+        </h2>
+
+        <div class="d-flex align-items-center ms-0 ms-lg-2 mt-2 mt-sm-0">
+            <div class="license-account-js {% if not request.session.xs_token %}d-none{% endif %}">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Licensed as <span>{{ request.session.xs_token.jid }}</span>
+                    </button>
+
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'modules:xservices_logout' %}">
+                                Disconnect
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="license-connect-js {% if request.session.xs_token %}d-none{% endif %}">
+                <a class="btn btn-primary xservices-auth-js" role="button">
+                    Connect to license server
+                </a>
+            </div>
         </div>
     </div>
+{% endblock %}
 
+{% block content %}
     <div class="mb-4 col-12">
         {% include 'modules/parts/links.html' %}
     </div>
 
-    <div class="mb-4 modules-data-js">
+    <div class="mb-4 position-relative modules-data-js">
         {% include 'modules/parts/modules_data_catalogue.html' %}
     </div>
 

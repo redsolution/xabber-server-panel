@@ -34,21 +34,27 @@
         </div>
     </div>
 
-    <div>
-        {% if module.icon %}
-            <div class="d-flex me-3 avatar avatar-64 avatar-lg-96">
-                <img class="img-fluid img-thumbnail" src="{{ module.icon }}" alt="Release Icon">
+    <div class="d-flex align-items-start align-items-sm-center flex-column flex-sm-row">
+        <div class="d-flex align-items-center me-0 me-sm-4 mb-2 mb-sm-0 col">
+            <div class="d-flex me-3 avatar avatar-64 avatar-lg-96 img-thumbnail {% if not module.icon %}bg-body-tertiary{% endif %}">
+                {% if module.icon %}
+                    <img class="img-fluid" src="{{ module.icon }}" alt="Release Icon">
+                {% endif %}
             </div>
-        {% endif %}
-        <div>
-            {{ module.display_name }} {% if module.track == 'paid' %} Premium {% endif %} {% if request.GET.purchased %}<span>Module successfully purchased</span>{% endif %}
+            <div class="d-flex flex-column col">
+                <div class="">
+                    <b>{{ module.display_name }}</b> {% if module.track == 'paid' %}<span class="text-secondary"> Premium</span> {% endif %}
+                    {% if request.GET.purchased %}<div class="text-secondary">Module successfully purchased</div>{% endif %}
+                </div>
+                {% if module.description %}
+                    <small class="mt-1">
+                        {{ module.description }}
+                    </small>
+                {% endif %}
+            </div>
         </div>
-        {% if module.description %}
-            <div>
-                {{ module.description }}
-            </div>
-        {% endif %}
-        <div>
+
+        <div class="d-flex flex-column align-items-end align-items-sm-center ms-auto text-end text-sm-center col col-sm-3">
             {% if module_installed_tracks and module.track in module_installed_tracks %}
                 <a class="btn btn-success w-90-px" href="{% url module.name|add:':info' %}">
                     Manage
@@ -93,9 +99,13 @@
     </div>
 
     {% if module.images %}
-        <div>
+        <div class="row gy-4 mt-4">
             {% for image in module.images %}
-                <img src="{{ image }}" alt="">
+                <div class="col-lg-4 col-sm-6">
+                    <div class="d-flex justify-content-center align-items-center preview">
+                        <img class="img-fluid" src="{{ image }}" alt="">
+                    </div>
+                </div>
             {% endfor %}
         </div>
     {% endif %}

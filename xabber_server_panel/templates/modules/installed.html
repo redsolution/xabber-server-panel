@@ -15,7 +15,7 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Version</th>
-                            <th>Creation Date</th>
+                            <th class="text-sm-nowrap">Creation Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -24,38 +24,44 @@
                             <tr>
                                 <td data-title="#">{{ forloop.counter }}</td>
                                 <td data-title="Name">
-
-                                    <a href="{% url 'modules:detail' module_name=module.name track=module.track %}">
-                                        {{ module.display_name }}
-                                    </a>
-                                    
-                                    {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
-                                        Premium
-                                    {% endif %}
-                                    {% if module.description %}
-                                        <div>{{ module.description }}</div>
-                                    {% endif %}
-                                    {% if module.update_links.buy %}
+                                    <div class="d-flex flex-column mw-600">
                                         <div>
-                                            <a href="{% url 'modules:detail' module_name=module.name track='paid' %}">Premium version available.</a>
+                                            <a href="{% url 'modules:detail' module_name=module.name track=module.track %}">{{ module.display_name }}</a>
+                                            {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
+                                                <span class="text-secondary">
+                                                    Premium
+                                                </span>
+                                            {% endif %}
                                         </div>
-                                    {% endif %}
+                                        {% if module.description %}
+                                            <small class="mt-1">
+                                                {{ module.description }}
+                                            </small>
+                                        {% endif %}
+                                        {% if module.update_links.buy %}
+                                            <div class="mt-1">
+                                                <a href="{% url 'modules:detail' module_name=module.name track='paid' %}">Premium version available.</a>
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td data-title="Version">
-                                    {{ module.version }}
-                                    {% if module.custom %}
-                                        <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is a handle uploaded module. Can't update this module from modules market.">
-                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
-                                        </div>
-                                    {% elif module.update_links.upgrade %}
-                                        <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="New version available.">
-                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
-                                        </div>
-                                    {% elif module.update_links.buy %}
-                                        <div class="icon-link text-warning fs-5 me-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Premium version available.">
-                                            <i class="bi bi-exclamation-triangle-fill d-flex"></i>
-                                        </div>
-                                    {% endif %}
+                                    <div class="d-flex align-items-center">
+                                        {{ module.version }}
+                                        {% if module.custom %}
+                                            <div class="icon-link text-warning fs-5 ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="This is a handle uploaded module. Can't update this module from modules market.">
+                                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                            </div>
+                                        {% elif module.update_links.upgrade %}
+                                            <div class="icon-link text-warning fs-5 ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="New version available.">
+                                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                            </div>
+                                        {% elif module.update_links.buy %}
+                                            <div class="icon-link text-warning fs-5 ms-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Premium version available.">
+                                                <i class="bi bi-exclamation-triangle-fill d-flex"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </td>
 
                                 <td data-title="Creation Date">
@@ -75,7 +81,7 @@
                                                         <a class="dropdown-item text-wrap text-danger {% if module.track == 'paid' %}check-internet-connection{% endif %}"
                                                          data-delete-href="{% url 'modules:delete_module' module=module.name %}"
                                                          data-delete-name="Module" data-delete-target="{{ module.verbose_name }}"
-                                                         data-bs-toggle="modal" data-bs-target="#delete_modal" type="button">
+                                                         {% if not module.track == 'paid' %}data-bs-toggle="modal" data-bs-target="#delete_modal"{% endif %} type="button">
                                                             Delete
                                                         </a>
                                                     </li>
@@ -106,6 +112,25 @@
     {% include 'modules/parts/installing_module.html' %}
 
     {% include 'modules/parts/removing_module.html' %}
+
+    <div class="modal fade" id="warning_modal" tabindex="-1" aria-labelledby="warning_modal_label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="delete_modal_label"></h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="alert alert-warning m-0"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn btn-primary" data-bs-dismiss="modal" href="">Ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block js %}

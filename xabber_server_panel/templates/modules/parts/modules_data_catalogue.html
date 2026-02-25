@@ -1,22 +1,25 @@
 {% load config_tags base_tags %}
 {% if available_modules %}
-    <div class="d-flex flex-column table-adaptive position-relative">
+    <div class="d-flex flex-column">
         {% for module in available_modules %}
             {% get_dict_value installed_tracks module.name as module_installed_tracks %}
             {% if not module_installed_tracks or module.track in module_installed_tracks %}
                 <div class="d-flex align-items-start align-items-sm-center flex-column flex-sm-row {% if not forloop.last %}mb-3{% endif %}">
                     <div class="d-flex align-items-center me-0 me-sm-4 mb-2 mb-sm-0 col">
-                        {% if module.icon %}
-                            <div class="d-flex me-3 avatar avatar-64 avatar-lg-96">
-                                <img class="img-fluid img-thumbnail" src="{{ module.icon }}" alt="Release Icon">
-                            </div>
-                        {% endif %}
+                        <div class="d-flex me-3 avatar avatar-64 avatar-lg-96 img-thumbnail {% if not module.icon %}bg-body-tertiary{% endif %}">
+                            {% if module.icon %}
+                                <img class="img-fluid" src="{{ module.icon }}" alt="Release Icon">
+                            {% endif %}
+                        </div>
 
                         <div class="d-flex flex-column col">
                             <div class="h5">
-                                <a href="{% url 'modules:detail' module_name=module.name track=module.track %}" >
-                                    {{ module.display_name }} {% if module.track == 'paid' %} Premium{% endif %}
-                                </a>
+                                <a href="{% url 'modules:detail' module_name=module.name track=module.track %}">{{ module.display_name }}</a>
+                                {% if module.track == 'paid' %}
+                                    <span class="text-secondary">
+                                        Premium
+                                    </span>
+                                {% endif %}
                             </div>
                             {% if module.description %}
                                 <small class="mb-0">{{ module.description }}</small>
