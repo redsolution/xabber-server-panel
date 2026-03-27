@@ -3,7 +3,7 @@
     <div class="d-flex flex-column">
         {% for module in available_modules %}
             {% get_dict_value installed_tracks module.name as module_installed_tracks %}
-            {% if not module_installed_tracks or module.track in module_installed_tracks %}
+            {% if not module_installed_tracks or module.track in module_installed_tracks or module.track == 'paid' %}
                 <div class="d-flex align-items-start align-items-sm-center flex-column flex-sm-row {% if not forloop.last %}mb-3{% endif %}">
                     <div class="d-flex align-items-center me-0 me-sm-4 mb-2 mb-sm-0 col">
                         <div class="d-flex me-3 avatar avatar-64 avatar-lg-96 img-thumbnail {% if not module.icon %}bg-body-tertiary{% endif %}">
