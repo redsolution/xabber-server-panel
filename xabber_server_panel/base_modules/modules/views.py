@@ -109,6 +109,7 @@ class Upload(LoginRequiredMixin, TemplateView):
             try:
                 module_installer = ModuleInstaller(
                     uploaded_file=uploaded_file,
+                    track='free',
                     custom=True
                 )
                 module_installer.handle_install()
