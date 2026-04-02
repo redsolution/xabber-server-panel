@@ -165,8 +165,8 @@ modules:
   mod_echo: {}
   mod_http_upload:
     docroot: "{{ settings.USER_FILES }}"
-    get_url: "https://xabber.@HOST@:5443/upload"
-    put_url: "https://xabber.@HOST@:5443/upload"
+    get_url: "https://xabber.@HOST@:{{ settings.XMPP_HTTPS_PORT }}/upload"
+    put_url: "https://xabber.@HOST@:{{ settings.XMPP_HTTPS_PORT }}/upload"
   mod_last: {}
   mod_mam:
     default: always
@@ -207,7 +207,9 @@ modules:
   mod_retract: {}
   mod_sync: {}
   mod_devices: {}
+  mod_permissions: { }
   mod_groups: {}
+  mod_groups_permissions: { }
   mod_panel: {}
   mod_favorites: {}
   mod_notify: {}
@@ -220,7 +222,7 @@ modules:
     db_type: sql
     use_cache: false
   mod_http_iq :
-    url: "https://xabber.@HOST@:5443/iq"
+    url: "https://xabber.@HOST@:{{ settings.XMPP_HTTPS_PORT }}/iq"
 
 
 allow_contrib_modules: true
