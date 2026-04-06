@@ -38,10 +38,10 @@ class Installed(LoginRequiredMixin, TemplateView):
         plugins_api = PluginsApi(request)
 
         available_modules = plugins_api.get_plugins()
-        if not plugins_api.errors:
-            installed_modules = get_installed_modules(available_modules)
-        else:
-            installed_modules = []
+        if plugins_api.errors:
+            available_modules = {}
+
+        installed_modules = get_installed_modules(available_modules)
         
         context = {
             'installed_modules': installed_modules,
