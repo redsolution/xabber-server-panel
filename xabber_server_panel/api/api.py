@@ -97,7 +97,7 @@ class EjabberdAPI(BaseAPI):
 
         """ Jsonify response or add errors if response is not ok """
 
-        if self.raw_response.ok:
+        if self.raw_response and self.raw_response.ok:
             try:
                 json_raw_response = self.raw_response.json()
                 if isinstance(json_raw_response, dict):
