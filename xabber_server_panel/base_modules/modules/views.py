@@ -67,7 +67,7 @@ class Catalogue(LoginRequiredMixin, TemplateView):
             installed_tracks = {}
 
         purchased_modules = []
-        result = request_license_key(request)
+        result = request_license_key(request, add_message=True)
         if result.get('success'):
             license_key = result.get('key')
             if license_key:
@@ -161,7 +161,7 @@ class Detail(LoginRequiredMixin, TemplateView):
         # Request purchased modules
         plugins_api = PluginsApi(self.request)
         purchased_modules = []
-        result = request_license_key(self.request)
+        result = request_license_key(self.request, add_message=True)
         if result.get('success'):
             license_key = result.get('key')
             

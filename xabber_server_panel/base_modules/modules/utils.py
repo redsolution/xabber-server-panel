@@ -1,6 +1,7 @@
 from django.shortcuts import reverse
 from django.http import HttpRequest
 from django.utils import timezone
+from django.contrib import messages
 
 from xabber_server_panel.base_modules.config.models import Module
 from xabber_server_panel.base_modules.modules.models import XServicesToken
@@ -209,7 +210,7 @@ def check_module_versions(module: Module, available_module_data: dict):
     return result
 
 
-def request_license_key(request: HttpRequest):
+def request_license_key(request: HttpRequest, add_message=False):
     "Load license key from xabber services API "
 
     xservices_api = XabberServicesApi(request)
@@ -220,13 +221,19 @@ def request_license_key(request: HttpRequest):
     
     response = xservices_api.license_key(data={"token": token.token})
     if xservices_api.errors:
-        return {'success': False, 'error': "Request license key error."}
+        message = "Request license key error. Try to relogin."
+        if add_message:
+            messages.error(request, message)
+        return {'success': False, 'error': message}
     
     key = response.get('license_key')
     services_hash = response.get("services_hash")
 
     # Check if the key is not empty after stripping
     if not key:
-        return {'success': False, 'error': "Request license key error."}
+        message = "Request license key error. Try to relogin."
+        if add_message:
+            messages.error(request, message)
+        return {'success': False, 'error': message}
 
     return {'success': True, 'key': key, "services_hash": services_hash}
