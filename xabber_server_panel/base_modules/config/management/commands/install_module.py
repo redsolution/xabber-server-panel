@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from xabber_server_panel.base_modules.modules.module_installer import ModuleUploader
+from xabber_server_panel.base_modules.modules.module_installer import ModuleInstaller
 
 
 class Command(BaseCommand):
@@ -20,14 +20,13 @@ class Command(BaseCommand):
 
         try:
             with open(path, 'rb') as file:
-                module_uploader = ModuleUploader(
+                module_installer = ModuleInstaller(
                     uploaded_file=file,
                     custom=non_custom,
                     track=track,
                     description=description,
                 )
-                module_uploader.handle_upload()
+                module_installer.handle_install()
             print('Module installed successfully.')
         except Exception as e:
             print(e)
-
