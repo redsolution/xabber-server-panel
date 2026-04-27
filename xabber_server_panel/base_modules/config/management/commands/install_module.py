@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--path', '-p', type=str, required=True)
         parser.add_argument('--non-custom', '-nc', action='store_false', help="Set this flag to mark the module as non-custom")
-        parser.add_argument('--track', '-t', type=str, required=False, default='')
+        parser.add_argument('--track', '-t', type=str, required=False, default='free')
         parser.add_argument('--description', '-d', type=str, required=False, default='')
 
     def handle(self, *args, **options):
