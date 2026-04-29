@@ -229,6 +229,7 @@ def create_admin(data):
     # create user in db
     form = UserForm(data)
     if form.is_valid():
+        form.save()
         # create user on server
         cmd_create_admin = [
             settings.XMPP_SERVER_CTL,
@@ -245,7 +246,6 @@ def create_admin(data):
         )
         cmd.communicate()
         if cmd.returncode == 0:
-            form.save()
             return True
     return False
 
