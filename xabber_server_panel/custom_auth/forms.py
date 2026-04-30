@@ -97,8 +97,15 @@ class ApiAuthenticationForm(forms.Form):
 
     def __init__(self, *args, request=None, **kwargs):
         self.api = EjabberdAPI(request=request)
+        self.api_token = None
         self.request = request
         super(ApiAuthenticationForm, self).__init__(*args, **kwargs)
+
+    def save_api_token(self):
+        token = self.api_token or self.api.token
+        if self.request and token:
+            self.request.session['api_token'] = token
+            self.request.session.modified = True
 
     def after_clean(self):
         self.user = authenticate(
@@ -127,10 +134,11 @@ class ApiAuthenticationForm(forms.Form):
                 'password', 'Password is required.'
             )
             return
-        
+
         if not self.errors:
             try:
-                self.api.login(self.cleaned_data)
+                response = self.api.login(self.cleaned_data)
+                self.api_token = response.get('token') if isinstance(response, dict) else None
             except UnauthorizedException:
                 self.add_error(
                     None, 'The username or password you have entered is invalid.'

@@ -31,6 +31,7 @@ class InstallationAbstractView(TemplateView):
 
         if auth_form.is_valid():
             login(self.request, auth_form.user)
+            auth_form.save_api_token()
 
 
 class Steps(InstallationAbstractView):
@@ -162,6 +163,7 @@ class Success(TemplateView):
     template_name = 'installation/success.html'
 
     def get(self, request, *args, **kwargs):
+        print(self.request.session.get('api_token'))
         return self.render_to_response(
             {
                 'host': VirtualHost.objects.first()

@@ -29,6 +29,8 @@ class CustomLoginView(TemplateView):
 
         if form.is_valid():
             login(request, form.user)
+            if isinstance(form, ApiAuthenticationForm):
+                form.save_api_token()
             if next:
                 return HttpResponseRedirect(next)
             else:
