@@ -26,7 +26,7 @@
                                 <td data-title="Name">
                                     <div class="d-flex flex-column mw-600">
                                         <div>
-                                            <a href="{% url 'modules:detail' module_name=module.name track=module.track %}">{{ module.display_name }}</a>
+                                            <a {% if module.name in available_modules %}href="{% url 'modules:detail' module_name=module.name track=module.track %}"{% endif %}>{{ module.display_name }}</a>
                                             {% if module.track == 'paid' or 'paid' in module.tracks and module.tracks|length == 1 %}
                                                 <span class="text-secondary">
                                                     Premium

@@ -42,9 +42,11 @@ class Installed(LoginRequiredMixin, TemplateView):
             available_modules = {}
 
         installed_modules = get_installed_modules(available_modules)
+        available_modules = list(map(lambda x: x.get('name'), get_available_modules(available_modules)))
         
         context = {
             'installed_modules': installed_modules,
+            "available_modules": available_modules,
             'xservices_plugins_subscribe_url': XSERVICES_PLUGINS_SUBSCRIBE_URL
         }
         return self.render_to_response(context)
