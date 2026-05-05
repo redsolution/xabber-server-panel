@@ -357,8 +357,13 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
             messages.success(request, 'Module "%s" deleted successfully.' % module)
             return HttpResponseRedirect(reverse('modules:root'))
-        else:
-            raise Http404
+        elif Module.objects.filter(name=module).exists():
+            self.delete_db_only_module(module)
+
+            messages.success(request, 'Module "%s" deleted successfully.' % module)
+            return HttpResponseRedirect(reverse('modules:root'))
+
+        raise Http404
 
     def hande_delete(self, module_path, module, app_name):
 
@@ -386,7 +391,19 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
         reload_server()
 
-    def delete_module_objects(self, module_name):
+    def delete_db_only_module(self, module):
+
+        self.delete_module_objects(module)
+
+        # delete module disco urls
+        DiscoUrls.objects.filter(module_name=module).delete()
+
+        management.call_command('update_permissions')
+        make_xmpp_config()
+
+        reload_server()
+
+    def delete_module_objects(self, module_name, delete_server_files=True):
 
         """ Deletion from db logic """
 
@@ -394,12 +411,19 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
         module_objects = Module.objects.filter(name=module_name)
         for module in module_objects:
-            if module.files:
-                file_list = module.files.split(',')
+            if delete_server_files and module.files:
+                file_list = self.get_server_file_list(module.files)
                 for filename in file_list:
-                    file_path = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
-                    if os.path.exists(file_path):
+                    file_path = self.get_server_file_path(filename)
+                    if not file_path or not os.path.exists(file_path):
+                        continue
+
+                    if os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+                        self.delete_empty_parent_dirs(file_path)
+                    else:
                         os.remove(file_path)
+                        self.delete_empty_parent_dirs(file_path)
 
             # delete module refresh token from plugins api
             if module.refresh_token:
@@ -407,6 +431,37 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
                 plugins_api.delete_refresh_token()
 
         module_objects.delete()
+
+    def get_server_file_list(self, files):
+
+        return [
+            filename.strip()
+            for filename in files.split(',')
+            if filename.strip()
+        ]
+
+    def get_server_file_path(self, filename):
+
+        root_path = os.path.abspath(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
+        file_path = os.path.abspath(os.path.join(root_path, filename))
+
+        if file_path == root_path or not file_path.startswith(root_path + os.sep):
+            return None
+
+        return file_path
+
+    def delete_empty_parent_dirs(self, file_path):
+
+        root_path = os.path.abspath(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
+        parent_path = os.path.abspath(os.path.dirname(file_path))
+
+        while parent_path.startswith(root_path + os.sep):
+            try:
+                os.rmdir(parent_path)
+            except OSError:
+                break
+
+            parent_path = os.path.dirname(parent_path)
 
 
 # Create your views here.

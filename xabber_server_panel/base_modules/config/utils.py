@@ -2,6 +2,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.apps import apps
 from django.urls import reverse, resolve, NoReverseMatch
+from django.db.models import Q
 import stat
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
@@ -300,7 +301,9 @@ def check_modules():
 
     modules = get_modules()
 
-    Module.objects.exclude(name__in=modules).delete()
+    Module.objects.exclude(name__in=modules).filter(
+        Q(files__isnull=True) | Q(files='')
+    ).delete()
 
 
 def get_modules():

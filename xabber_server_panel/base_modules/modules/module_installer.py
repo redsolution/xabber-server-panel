@@ -59,14 +59,16 @@ class ModuleInstaller:
 
                 # Copy module in modules dir
                 self._install_module(panel_path, module_name)
-
-                # Copy server files if it exists
-                self._install_server_files(server_path)
-
-                # after installation actions
-                self._after_install(module_name, version, server_path)
+            elif not os.path.isdir(panel_path) and os.path.isdir(server_path):
+                pass
             else:
                 raise Exception('Module folder is missed.')
+
+            # Copy server files if it exists
+            self._install_server_files(server_path)
+
+            # after installation actions
+            self._after_install(module_name, version, server_path)
         except Exception as e:
             # Delete temporary dir
             shutil.rmtree(self.temp_extract_dir, ignore_errors=True)
@@ -143,11 +145,17 @@ class ModuleInstaller:
                 path_from = os.path.join(server_path, filename)
                 path_to = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
 
-                # delete existing file
+                # delete existing file or directory
                 if os.path.exists(path_to):
-                    os.remove(path_to)
+                    if os.path.isdir(path_to):
+                        shutil.rmtree(path_to)
+                    else:
+                        os.remove(path_to)
 
-                shutil.copy(path_from, path_to)
+                if os.path.isdir(path_from):
+                    shutil.copytree(path_from, path_to)
+                else:
+                    shutil.copy(path_from, path_to)
 
     def _after_install(self, module_name, version, server_path):
 
@@ -168,11 +176,7 @@ class ModuleInstaller:
                 root_page = getattr(module_config, 'root_page', False)
                 global_module = getattr(module_config, 'global_module', False)
 
-        # prepare server files paths
-        if os.path.exists(server_path):
-            server_files = ','.join(os.listdir(server_path))
-        else:
-            server_files = ''
+        server_files = self._get_server_file_paths(server_path)
 
         # update module info
         Module.objects.update_or_create(
@@ -201,3 +205,21 @@ class ModuleInstaller:
         get_app_template_dirs.cache_clear()
 
         reload_server()
+
+    def _get_server_file_paths(self, server_path):
+
+        if not os.path.exists(server_path):
+            return ''
+
+        files = []
+        for root, dirs, filenames in os.walk(server_path):
+            dirs.sort()
+            filenames.sort()
+            for filename in filenames:
+                file_path = os.path.join(root, filename)
+                relative_path = os.path.relpath(file_path, server_path)
+                relative_path = relative_path.replace(os.sep, '/').strip()
+                if relative_path:
+                    files.append(relative_path)
+
+        return ','.join(files)
