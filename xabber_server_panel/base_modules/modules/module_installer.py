@@ -7,6 +7,7 @@ from importlib import import_module
 
 from xabber_server_panel.utils import update_app_list, reload_server
 from xabber_server_panel.base_modules.config.models import Module
+from xabber_server_panel.base_modules.modules.models import ModuleServerConfig
 from xabber_server_panel.utils import check_versions
 from xabber_server_panel.base_modules.config.utils import make_xmpp_config
 
@@ -14,6 +15,7 @@ import tarfile
 import shutil
 import os
 import re
+import yaml
 from datetime import date
 
 
@@ -179,7 +181,7 @@ class ModuleInstaller:
         server_files = self._get_server_file_paths(server_path)
 
         # update module info
-        Module.objects.update_or_create(
+        module, _ = Module.objects.update_or_create(
             name=module_name,
             defaults={
                 'version': version,
@@ -194,6 +196,7 @@ class ModuleInstaller:
                 'refresh_token': self.refresh_token,
             }
         )
+        self._update_server_configs(module, server_path)
 
         # create permissions for new modules
         management.call_command('update_permissions')
@@ -205,6 +208,31 @@ class ModuleInstaller:
         get_app_template_dirs.cache_clear()
 
         reload_server()
+
+    def _update_server_configs(self, module, server_path):
+        module.server_configs.all().delete()
+
+        conf_path = os.path.join(server_path, module.name, 'conf')
+        if not os.path.isdir(conf_path):
+            return
+
+        for filename in sorted(os.listdir(conf_path)):
+            file_path = os.path.join(conf_path, filename)
+            if not os.path.isfile(file_path) or not filename.endswith(('.yml', '.yaml')):
+                continue
+
+            with open(file_path, 'r') as file:
+                options = yaml.safe_load(file) or {}
+
+            if not isinstance(options, dict):
+                raise Exception('Server config "%s" must contain a YAML dictionary.' % filename)
+
+            config = ModuleServerConfig(
+                module=module,
+                name=os.path.splitext(filename)[0]
+            )
+            config.set_options(options)
+            config.save()
 
     def _get_server_file_paths(self, server_path):
 
