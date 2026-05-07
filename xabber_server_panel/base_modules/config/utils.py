@@ -80,7 +80,6 @@ def make_xmpp_config():
     hosts = VirtualHost.objects.all()
 
     # Initialize dictionaries to store global and per-host configurations
-    modules_config = get_default_xmpp_modules_config()
     global_options = {}
     host_config = {host.name: {} for host in hosts}
     append_host_config = copy.deepcopy(host_config)
@@ -125,12 +124,6 @@ def make_xmpp_config():
         target_path = config_path
 
     with open(target_path, "w") as f:
-        # Write default and installed server module configurations
-        f.write(modules_config)
-        if modules_config and not modules_config.endswith('\n'):
-            f.write('\n')
-        f.write('\n')
-
         # Write global options to the file
         for key, value in global_options.items():
             f.write(get_value(key, value, level=0))
@@ -148,24 +141,18 @@ def make_xmpp_config():
         # Write append_host_config to the file
         f.write("append_host_config:\n")
         for key, value in append_host_config.items():
-            if value:
-                f.write('  "{}":\n'.format(key) + "    modules:\n")
-                for key1, val1 in value.items():
-                    f.write(get_value(key1, val1, level=3))
-                f.write(get_server_modules_config(server_configs, level=3))
-            elif server_configs:
-                f.write('  "{}":\n'.format(key) + "    modules:\n")
-                f.write(get_server_modules_config(server_configs, level=3))
-            else:
-                f.write('  "{}":\n'.format(key) + "    modules: []\n")
+            active_server_configs = get_active_server_configs(server_configs, key)
+            f.write('  "{}":\n'.format(key) + "    modules:\n")
+            f.write(get_default_xmpp_modules_config(active_server_configs))
+            for key1, val1 in value.items():
+                f.write(get_value(key1, val1, level=3))
+            f.write(get_server_modules_config(active_server_configs, level=3))
 
     # Change the permissions
     os.chmod(target_path, desired_permissions)
 
 
-def get_default_xmpp_modules_config():
-
-    server_configs = ModuleServerConfig.objects.select_related('module').all().order_by('module__name', 'name')
+def get_default_xmpp_modules_config(server_configs):
 
     replace_modules = []
     for server_config in server_configs:
@@ -174,7 +161,16 @@ def get_default_xmpp_modules_config():
     modules_config = render_to_string(settings.MODULES_TEMPLATE, {'settings': settings})
     modules_config = remove_xmpp_modules_from_config(modules_config, replace_modules)
 
-    return modules_config
+    return indent_xmpp_modules_config(modules_config, level=3)
+
+
+def get_active_server_configs(server_configs, host):
+
+    return [
+        server_config
+        for server_config in server_configs
+        if host in server_config.get_hosts()
+    ]
 
 
 def get_server_modules_config(server_configs, level):
@@ -184,13 +180,30 @@ def get_server_modules_config(server_configs, level):
 
     for server_config in server_configs:
         options = server_config.get_options()
-        if options:
+        if not options or options == '{}':
+            result += '{}{}: {}\n'.format(shift, server_config.name, '{}')
+        else:
             result += '{}{}:\n'.format(shift, server_config.name)
             result += indent_raw_config(options, level + 1)
-        else:
-            result += '{}{}: {}\n'.format(shift, server_config.name, '{}')
 
     return result
+
+
+def indent_xmpp_modules_config(config, level):
+
+    result = []
+    shift = '  ' * level
+    lines = config.splitlines()
+    if lines and lines[0].strip() == 'modules:':
+        lines = lines[1:]
+
+    for line in lines:
+        if line:
+            result.append('{}{}'.format(shift, line[2:] if line.startswith('  ') else line))
+        else:
+            result.append('')
+
+    return '\n'.join(result) + '\n'
 
 
 def indent_raw_config(config, level):

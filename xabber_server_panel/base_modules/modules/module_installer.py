@@ -57,7 +57,7 @@ class ModuleInstaller:
             module_path = os.path.join(panel_path, module_name)
             replace_modules = self._get_replace_modules()
 
-            self._check_replace_conflicts(module_name, replace_modules)
+            self._check_replace_conflicts(module_name, replace_modules, [])
 
             if os.path.isdir(module_path):
 
@@ -234,24 +234,26 @@ class ModuleInstaller:
             )
             config.set_options(options)
             config.set_replace(replace_modules)
+            config.set_hosts([])
             config.save()
 
-    def _check_replace_conflicts(self, module_name, replace_modules):
+    def _check_replace_conflicts(self, module_name, replace_modules, host_names):
 
-        if not replace_modules:
+        if not replace_modules or not host_names:
             return
 
         conflicts = {}
         server_configs = ModuleServerConfig.objects.select_related('module').exclude(module__name=module_name)
         for server_config in server_configs:
             conflict_modules = sorted(set(replace_modules) & set(server_config.get_replace()))
-            if conflict_modules:
-                conflicts[server_config.module.name] = conflict_modules
+            conflict_hosts = sorted(set(host_names) & set(server_config.get_hosts()))
+            if conflict_modules and conflict_hosts:
+                conflicts[server_config.module.name] = (conflict_modules, conflict_hosts)
 
         if conflicts:
             messages = [
-                '%s replaces %s' % (installed_module, ', '.join(modules))
-                for installed_module, modules in sorted(conflicts.items())
+                '%s replaces %s for %s' % (installed_module, ', '.join(modules), ', '.join(hosts))
+                for installed_module, (modules, hosts) in sorted(conflicts.items())
             ]
             raise Exception('Replace conflict with installed module: %s.' % '; '.join(messages))
 

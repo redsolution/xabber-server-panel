@@ -17,6 +17,7 @@ class ModuleServerConfig(models.Model):
     name = models.CharField(max_length=255)
     options = models.TextField(blank=True, default='{}')
     replace = models.TextField(blank=True, default='')
+    hosts = models.TextField(blank=True, default='')
 
     def set_options(self, options):
         self.options = options.strip()
@@ -30,22 +31,32 @@ class ModuleServerConfig(models.Model):
     def get_replace(self):
         return self.normalize_replace(self.replace)
 
+    def set_hosts(self, hosts):
+        self.hosts = ','.join(self.normalize_list(hosts))
+
+    def get_hosts(self):
+        return self.normalize_list(self.hosts)
+
     @staticmethod
     def normalize_replace(modules):
-        if not modules:
+        return ModuleServerConfig.normalize_list(modules)
+
+    @staticmethod
+    def normalize_list(items):
+        if not items:
             return []
 
-        if isinstance(modules, str):
-            modules = modules.split(',')
+        if isinstance(items, str):
+            items = items.split(',')
 
         result = []
-        for module in modules:
-            if not module:
+        for item in items:
+            if not item:
                 continue
 
-            module = module.strip()
-            if module and module not in result:
-                result.append(module)
+            item = item.strip()
+            if item and item not in result:
+                result.append(item)
 
         return result
 
