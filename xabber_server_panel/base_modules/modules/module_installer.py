@@ -56,6 +56,9 @@ class ModuleInstaller:
             panel_path = os.path.join(self.temp_extract_dir, 'panel')
             server_path = os.path.join(self.temp_extract_dir, 'server')
             module_path = os.path.join(panel_path, module_name)
+            replace_modules = self._get_replace_modules()
+
+            self._check_replace_conflicts(module_name, replace_modules)
 
             if os.path.isdir(module_path):
 
@@ -216,6 +219,8 @@ class ModuleInstaller:
         if not os.path.isdir(conf_path):
             return
 
+        replace_modules = self._get_replace_modules()
+
         for filename in sorted(os.listdir(conf_path)):
             file_path = os.path.join(conf_path, filename)
             if not os.path.isfile(file_path) or not filename.endswith(('.yml', '.yaml')):
@@ -232,7 +237,42 @@ class ModuleInstaller:
                 name=os.path.splitext(filename)[0]
             )
             config.set_options(options)
+            config.set_replace(replace_modules)
             config.save()
+
+    def _check_replace_conflicts(self, module_name, replace_modules):
+
+        if not replace_modules:
+            return
+
+        conflicts = {}
+        server_configs = ModuleServerConfig.objects.select_related('module').exclude(module__name=module_name)
+        for server_config in server_configs:
+            conflict_modules = sorted(set(replace_modules) & set(server_config.get_replace()))
+            if conflict_modules:
+                conflicts[server_config.module.name] = conflict_modules
+
+        if conflicts:
+            messages = [
+                '%s replaces %s' % (installed_module, ', '.join(modules))
+                for installed_module, modules in sorted(conflicts.items())
+            ]
+            raise Exception('Replace conflict with installed module: %s.' % '; '.join(messages))
+
+    def _get_replace_modules(self):
+
+        spec_path = os.path.join(self.temp_extract_dir, 'module.spec')
+        if not os.path.exists(spec_path):
+            return []
+
+        with open(spec_path, 'r') as file:
+            content = file.read()
+
+        replace_match = re.search(r'REPLACE\s*=\s*([^\n]+)', content)
+        if not replace_match:
+            return []
+
+        return ModuleServerConfig.normalize_replace(replace_match.group(1))
 
     def _get_server_file_paths(self, server_path):
 

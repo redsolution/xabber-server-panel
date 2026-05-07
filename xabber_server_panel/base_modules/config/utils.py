@@ -8,6 +8,7 @@ import stat
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
 from xabber_server_panel.utils import is_ejabberd_started
 from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls
+from xabber_server_panel.base_modules.modules.models import ModuleServerConfig
 
 import copy
 import os
@@ -79,6 +80,7 @@ def make_xmpp_config():
     hosts = VirtualHost.objects.all()
 
     # Initialize dictionaries to store global and per-host configurations
+    modules_config = get_default_xmpp_modules_config()
     global_options = {}
     host_config = {host.name: {} for host in hosts}
     append_host_config = copy.deepcopy(host_config)
@@ -122,6 +124,12 @@ def make_xmpp_config():
         target_path = config_path
 
     with open(target_path, "w") as f:
+        # Write default and installed server module configurations
+        f.write(modules_config)
+        if modules_config and not modules_config.endswith('\n'):
+            f.write('\n')
+        f.write('\n')
+
         # Write global options to the file
         for key, value in global_options.items():
             f.write(get_value(key, value, level=0))
@@ -148,6 +156,43 @@ def make_xmpp_config():
 
     # Change the permissions
     os.chmod(target_path, desired_permissions)
+
+
+def get_default_xmpp_modules_config():
+
+    server_configs = ModuleServerConfig.objects.select_related('module').all().order_by('module__name', 'name')
+
+    replace_modules = []
+    for server_config in server_configs:
+        replace_modules += server_config.get_replace()
+
+    modules_config = render_to_string(settings.MODULES_TEMPLATE, {'settings': settings})
+    modules_config = remove_xmpp_modules_from_config(modules_config, replace_modules)
+
+    return modules_config
+
+
+def remove_xmpp_modules_from_config(config, module_names):
+
+    module_names = set(module_names)
+    if not module_names:
+        return config if config.endswith('\n') else config + '\n'
+
+    result = []
+    skip = False
+
+    for line in config.splitlines():
+        stripped_line = line.strip()
+        is_module_line = line.startswith('  ') and not line.startswith('    ') and ':' in stripped_line
+
+        if is_module_line:
+            module_name = stripped_line.split(':', 1)[0].strip()
+            skip = module_name in module_names
+
+        if not skip:
+            result.append(line)
+
+    return '\n'.join(result) + '\n'
 
 
 def update_vhosts_config(hosts=None):

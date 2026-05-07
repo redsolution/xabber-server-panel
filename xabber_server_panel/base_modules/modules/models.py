@@ -18,6 +18,7 @@ class ModuleServerConfig(models.Model):
     )
     name = models.CharField(max_length=255)
     options = models.TextField(blank=True, default='{}')
+    replace = models.TextField(blank=True, default='')
 
     def set_options(self, options_dict):
         try:
@@ -30,6 +31,31 @@ class ModuleServerConfig(models.Model):
             return json.loads(self.options)
         except Exception:
             return {}
+
+    def set_replace(self, modules):
+        self.replace = ','.join(self.normalize_replace(modules))
+
+    def get_replace(self):
+        return self.normalize_replace(self.replace)
+
+    @staticmethod
+    def normalize_replace(modules):
+        if not modules:
+            return []
+
+        if isinstance(modules, str):
+            modules = modules.split(',')
+
+        result = []
+        for module in modules:
+            if not module:
+                continue
+
+            module = module.strip()
+            if module and module not in result:
+                result.append(module)
+
+        return result
 
     class Meta:
         unique_together = ('module', 'name')
