@@ -1,5 +1,3 @@
-import json
-
 from django.db import models
 
 
@@ -20,17 +18,11 @@ class ModuleServerConfig(models.Model):
     options = models.TextField(blank=True, default='{}')
     replace = models.TextField(blank=True, default='')
 
-    def set_options(self, options_dict):
-        try:
-            self.options = json.dumps(options_dict)
-        except Exception:
-            self.options = '{}'
+    def set_options(self, options):
+        self.options = options.strip()
 
     def get_options(self):
-        try:
-            return json.loads(self.options)
-        except Exception:
-            return {}
+        return self.options.strip()
 
     def set_replace(self, modules):
         self.replace = ','.join(self.normalize_replace(modules))

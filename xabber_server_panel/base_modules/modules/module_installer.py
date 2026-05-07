@@ -15,7 +15,6 @@ import tarfile
 import shutil
 import os
 import re
-import yaml
 from datetime import date
 
 
@@ -227,10 +226,7 @@ class ModuleInstaller:
                 continue
 
             with open(file_path, 'r') as file:
-                options = yaml.safe_load(file) or {}
-
-            if not isinstance(options, dict):
-                raise Exception('Server config "%s" must contain a YAML dictionary.' % filename)
+                options = file.read()
 
             config = ModuleServerConfig(
                 module=module,
