@@ -215,22 +215,61 @@ def indent_raw_config(config, level):
     )
 
 
-def remove_xmpp_modules_from_config(config, module_names):
+def remove_xmpp_modules_from_config(config: str, module_names):
+    import yaml
 
     module_names = set(module_names)
+
     if not module_names:
         return config if config.endswith('\n') else config + '\n'
 
+    parsed = yaml.safe_load(config)
+
+    modules = parsed.get('modules', {})
+
+    if not isinstance(modules, dict):
+        return config if config.endswith('\n') else config + '\n'
+
+    lines = config.splitlines()
+
     result = []
+
+    in_modules = False
+    current_module = None
+    current_module_indent = None
     skip = False
 
-    for line in config.splitlines():
-        stripped_line = line.strip()
-        is_module_line = line.startswith('  ') and not line.startswith('    ') and ':' in stripped_line
+    for line in lines:
+        stripped = line.strip()
 
-        if is_module_line:
-            module_name = stripped_line.split(':', 1)[0].strip()
-            skip = module_name in module_names
+        # empty line
+        if not stripped:
+            if not skip:
+                result.append(line)
+            continue
+
+        indent = len(line) - len(line.lstrip())
+
+        # find modules section:
+        if stripped == 'modules:':
+            in_modules = True
+            modules_indent = indent
+            result.append(line)
+            continue
+
+        # Out of modules block
+        if in_modules and indent <= modules_indent:
+            in_modules = False
+            skip = False
+
+        # Define first level module in modules block
+        if in_modules and indent > modules_indent:
+            if current_module_indent is None:
+                current_module_indent = indent
+
+            if indent == current_module_indent and ':' in stripped:
+                current_module = stripped.split(':', 1)[0].strip()
+                skip = current_module in module_names
 
         if not skip:
             result.append(line)
