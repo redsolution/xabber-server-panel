@@ -140,7 +140,7 @@ class ModuleInstaller:
     def _install_server_files(self, server_path):
 
         if not os.path.exists(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR):
-            os.mkdir(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
+            os.makedirs(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
 
         if os.path.exists(server_path):
 
@@ -160,6 +160,35 @@ class ModuleInstaller:
                     shutil.copytree(path_from, path_to)
                 else:
                     shutil.copy(path_from, path_to)
+
+            self._install_server_ebin_files(server_path)
+
+    def _install_server_ebin_files(self, server_path):
+
+        if not os.path.exists(settings.XMPP_SERVER_EBIN_DIR):
+            os.makedirs(settings.XMPP_SERVER_EBIN_DIR)
+
+        for module_dir in os.listdir(server_path):
+            ebin_path = os.path.join(server_path, module_dir, 'ebin')
+            if not os.path.isdir(ebin_path):
+                continue
+
+            for filename in os.listdir(ebin_path):
+                if not filename.endswith('.beam'):
+                    continue
+
+                path_from = os.path.join(ebin_path, filename)
+                path_to = os.path.join(settings.XMPP_SERVER_EBIN_DIR, filename)
+                if not os.path.isfile(path_from):
+                    continue
+
+                if os.path.exists(path_to):
+                    if os.path.isdir(path_to):
+                        shutil.rmtree(path_to)
+                    else:
+                        os.remove(path_to)
+
+                shutil.copy(path_from, path_to)
 
     def _after_install(self, module_name, version, server_path):
 

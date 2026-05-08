@@ -97,6 +97,7 @@ INSTALLATION_LOCK = os.path.join(PROJECT_ROOT, '.installation_lock')
 XMPP_SERVER_DIR = os.path.join(BASE_DIR, "xmppserver")
 XMPP_SERVER_DB_DUMP = os.path.join(PROJECT_ROOT, 'pg.sql')
 XMPP_SERVER_CONFIG_PATH = os.path.join(XMPP_SERVER_DIR, 'etc/ejabberd/')
+XMPP_SERVER_EBIN_DIR = os.path.join(XMPP_SERVER_DIR, 'lib/ejabberd-0.0/ebin')
 XMPP_SERVER_VHOSTS_CONFIG_FILE = 'virtual_hosts.yml'
 XMPP_SERVER_MODULES_CONFIG_FILE = 'modules_config.yml'
 XMPP_SERVER_ADD_CONFIG_FILE = 'additional_config.yml'

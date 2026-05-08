@@ -414,6 +414,13 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
             if delete_server_files and module.files:
                 file_list = self.get_server_file_list(module.files)
                 for filename in file_list:
+                    ebin_file_path = self.get_ebin_file_path(filename)
+                    if ebin_file_path and os.path.exists(ebin_file_path):
+                        if os.path.isdir(ebin_file_path):
+                            shutil.rmtree(ebin_file_path)
+                        else:
+                            os.remove(ebin_file_path)
+
                     file_path = self.get_server_file_path(filename)
                     if not file_path or not os.path.exists(file_path):
                         continue
@@ -444,6 +451,20 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
         root_path = os.path.abspath(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
         file_path = os.path.abspath(os.path.join(root_path, filename))
+
+        if file_path == root_path or not file_path.startswith(root_path + os.sep):
+            return None
+
+        return file_path
+
+    def get_ebin_file_path(self, filename):
+
+        path_parts = filename.replace('\\', '/').split('/')
+        if len(path_parts) < 3 or path_parts[1] != 'ebin' or not path_parts[-1].endswith('.beam'):
+            return None
+
+        root_path = os.path.abspath(settings.XMPP_SERVER_EBIN_DIR)
+        file_path = os.path.abspath(os.path.join(root_path, path_parts[-1]))
 
         if file_path == root_path or not file_path.startswith(root_path + os.sep):
             return None
