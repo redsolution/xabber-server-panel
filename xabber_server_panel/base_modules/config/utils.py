@@ -160,7 +160,6 @@ def get_default_xmpp_modules_config(server_configs):
 
     modules_config = render_to_string(settings.MODULES_TEMPLATE, {'settings': settings})
     modules_config = remove_xmpp_modules_from_config(modules_config, replace_modules)
-
     return indent_xmpp_modules_config(modules_config, level=3)
 
 
@@ -197,9 +196,24 @@ def indent_xmpp_modules_config(config, level):
     if lines and lines[0].strip() == 'modules:':
         lines = lines[1:]
 
+    indent_levels = sorted({
+        len(line) - len(line.lstrip())
+        for line in lines
+        if line.strip()
+    })
+    indent_map = {
+        indent: index
+        for index, indent in enumerate(indent_levels)
+    }
+
     for line in lines:
         if line:
-            result.append('{}{}'.format(shift, line[2:] if line.startswith('  ') else line))
+            indent = len(line) - len(line.lstrip())
+            result.append('{}{}{}'.format(
+                shift,
+                '  ' * indent_map.get(indent, 0),
+                line.lstrip()
+            ))
         else:
             result.append('')
 
