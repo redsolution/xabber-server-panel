@@ -163,7 +163,6 @@ class Success(TemplateView):
     template_name = 'installation/success.html'
 
     def get(self, request, *args, **kwargs):
-        print(self.request.session.get('api_token'))
         return self.render_to_response(
             {
                 'host': VirtualHost.objects.first()
