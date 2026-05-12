@@ -228,11 +228,8 @@ class ModuleInstaller:
             }
         )
         self._update_server_configs(module, server_path)
-
-        if root_page:
-            root_page_obj = RootPage.objects.first()
-            if not root_page_obj:
-                RootPage.objects.create(module=module)
+        
+        self._set_root_page(root_page, module)
 
         # create permissions for new modules
         management.call_command('update_permissions')
@@ -323,3 +320,9 @@ class ModuleInstaller:
                     files.append(relative_path)
 
         return ','.join(files)
+    
+    def _set_root_page(self, root_page, module):
+        if root_page:
+            root_page_obj = RootPage.objects.first()
+            if not root_page_obj:
+                RootPage.objects.create(module=module)
