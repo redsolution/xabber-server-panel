@@ -6,7 +6,7 @@ from django.template.utils import get_app_template_dirs
 from importlib import import_module
 
 from xabber_server_panel.utils import update_app_list, reload_server
-from xabber_server_panel.base_modules.config.models import Module
+from xabber_server_panel.base_modules.config.models import Module, RootPage
 from xabber_server_panel.base_modules.modules.models import ModuleServerConfig
 from xabber_server_panel.utils import check_versions
 from xabber_server_panel.base_modules.config.utils import make_xmpp_config
@@ -228,6 +228,11 @@ class ModuleInstaller:
             }
         )
         self._update_server_configs(module, server_path)
+
+        if root_page:
+            root_page_obj = RootPage.objects.first()
+            if not root_page_obj:
+                RootPage.objects.create(module=module)
 
         # create permissions for new modules
         management.call_command('update_permissions')
