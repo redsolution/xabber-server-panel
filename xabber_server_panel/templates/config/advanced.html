@@ -41,6 +41,21 @@
                         <span class="form-text text-secondary">Select a module for the project's root page.</span>
                     </div>
                 </div>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3 {% if form.mod_webhooks_url.errors %}text-danger{% endif %}">
+                        Mod webhooks url
+                    </label>
+                    <div class="col-12 col-md-9">
+                        <input class="form-control {% if form.mod_webhooks_url.errors %}is-invalid{% endif %}" type="url" name="mod_webhooks_url"
+                               {% if form.mod_webhooks_url.value %}value="{{ form.mod_webhooks_url.value }}"{% endif %}
+                               {% if not settings_write_permissions %}disabled{% endif %}>
+                        <span class="form-text text-secondary">URL used by mod_webhooks to call the panel endpoint.</span>
+                        {% for error in form.mod_webhooks_url.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
             {% if settings_write_permissions %}

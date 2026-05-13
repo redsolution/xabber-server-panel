@@ -41,3 +41,10 @@ class VirtualHostForm(forms.ModelForm):
             self.add_error('name', result.get('error_message'))
 
         return name
+
+
+class AdvancedSettingsForm(forms.Form):
+    mod_webhooks_url = forms.URLField(
+        required=False,
+        label='MOD_WEBHOOKS_URL'
+    )

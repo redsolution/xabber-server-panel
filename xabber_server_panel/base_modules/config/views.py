@@ -12,7 +12,7 @@ from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.users.models import User
 from xabber_server_panel.base_modules.users.utils import check_users
 from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, check_hosts,\
-    get_dns_records, check_hosts_dns
+    get_dns_records, check_hosts_dns, make_xmpp_config
 from xabber_server_panel.utils import get_system_group_suffix
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
@@ -23,12 +23,13 @@ from xabber_server_panel.certificates.utils import update_or_create_certs, check
 from xabber_server_panel.certificates.models import Certificate
 
 
-from .models import LDAPSettings, LDAPServer, RootPage
-from .forms import LDAPSettingsForm, VirtualHostForm
+from .models import LDAPSettings, LDAPServer, RootPage, ModuleSettings
+from .forms import LDAPSettingsForm, VirtualHostForm, AdvancedSettingsForm
 
 import threading
 import os
 import re
+import ast
 
 
 class ConfigRoot(LoginRequiredMixin, TemplateView):
@@ -397,13 +398,66 @@ class Ldap(LoginRequiredMixin, TemplateView):
 
 class AdvancedView(LoginRequiredMixin, TemplateView):
     template_name = 'config/advanced.html'
+    webhooks_host = 'global'
+    webhooks_module = 'mod_webhooks'
+
+    def get_webhooks_settings(self):
+        return ModuleSettings.objects.filter(
+            host=self.webhooks_host,
+            module=self.webhooks_module
+        ).first()
+
+    def get_webhooks_url(self):
+        webhooks_settings = self.get_webhooks_settings()
+        if webhooks_settings is None:
+            return getattr(settings, 'MOD_WEBHOOKS_URL', '')
+
+        url = webhooks_settings.get_options().get('url', '')
+        try:
+            return ast.literal_eval(url)
+        except (ValueError, SyntaxError, TypeError):
+            return url
+
+    def update_webhooks_url(self, url):
+        webhooks_settings = self.get_webhooks_settings()
+        if webhooks_settings is None and not url:
+            return False
+
+        webhooks_settings, _ = ModuleSettings.objects.get_or_create(
+            host=self.webhooks_host,
+            module=self.webhooks_module,
+            defaults={'options': '{}'}
+        )
+        options = webhooks_settings.get_options()
+
+        if url:
+            options['url'] = f'"{url}"'
+        else:
+            options.pop('url', None)
+
+        webhooks_settings.set_options(options)
+        webhooks_settings.save()
+        return True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault(
+            'form',
+            AdvancedSettingsForm(
+                initial={'mod_webhooks_url': self.get_webhooks_url()}
+            )
+        )
+        return context
 
     @permission_read
     def get(self, request, *args, **kwargs):
-        return self.render_to_response({})
+        return self.render_to_response(self.get_context_data())
 
     @permission_write
     def post(self, request, *args, **kwargs):
+        form = AdvancedSettingsForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
 
         module = request.POST.get('module', 'home')
         root_page = RootPage.objects.first()
@@ -413,9 +467,16 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
         else:
             RootPage.objects.create(module=module)
 
+        has_webhooks_settings = self.get_webhooks_settings() is not None
+        old_webhooks_url = self.get_webhooks_url()
+        webhooks_url = form.cleaned_data['mod_webhooks_url']
+        if (webhooks_url != old_webhooks_url or (webhooks_url and not has_webhooks_settings)) \
+                and self.update_webhooks_url(webhooks_url):
+            make_xmpp_config()
+
         messages.success(request, 'Advanced settings changed successfully.')
 
-        return self.render_to_response({})
+        return self.render_to_response(self.get_context_data())
 
 
 class ChangeHost(LoginRequiredMixin, View):
