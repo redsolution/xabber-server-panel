@@ -13,12 +13,12 @@
 
     {% get_items_by_model_name 'rootpage' num=1 as rp %}
     <div class="col-12 pb-5 mb-5">
-        <form class="check-change-js" action="{% url 'config:root_page' %}" method="post">
+        <form class="check-change-js" action="{% url 'config:advanced' %}" method="post">
             {% csrf_token %}
 
             <div class="d-flex flex-column">
                 <h4 class="text-secondary mt-0">
-                    Root page
+                    Advanced
                 </h4>
 
                 <div class="row mb-3">

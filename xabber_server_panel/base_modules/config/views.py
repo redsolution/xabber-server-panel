@@ -395,8 +395,8 @@ class Ldap(LoginRequiredMixin, TemplateView):
         ldap_settings.servers.exclude(server__in=self.server_list).delete()
 
 
-class RootPageView(LoginRequiredMixin, TemplateView):
-    template_name = 'config/root_page.html'
+class AdvancedView(LoginRequiredMixin, TemplateView):
+    template_name = 'config/advanced.html'
 
     @permission_read
     def get(self, request, *args, **kwargs):
@@ -413,7 +413,7 @@ class RootPageView(LoginRequiredMixin, TemplateView):
         else:
             RootPage.objects.create(module=module)
 
-        messages.success(request, 'Root page changed successfully.')
+        messages.success(request, 'Advanced settings changed successfully.')
 
         return self.render_to_response({})
 
