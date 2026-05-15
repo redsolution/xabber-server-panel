@@ -400,6 +400,8 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
     template_name = 'config/advanced.html'
     webhooks_host = 'global'
     webhooks_module = 'mod_webhooks'
+    devices_host = 'global'
+    devices_module = 'mod_devices'
 
     def get_webhooks_settings(self):
         return ModuleSettings.objects.filter(
@@ -439,13 +441,62 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
         webhooks_settings.save()
         return True
 
+    def get_devices_settings(self):
+        return ModuleSettings.objects.filter(
+            host=self.devices_host,
+            module=self.devices_module
+        ).first()
+
+    def get_devices_initial(self):
+        devices_settings = self.get_devices_settings()
+        options = devices_settings.get_options() if devices_settings else {}
+        devices_only = options.get('devices_only', False)
+
+        if isinstance(devices_only, str):
+            devices_only = devices_only.lower() == 'true'
+
+        return {
+            'mod_devices_enabled': devices_settings is not None,
+            'mod_devices_devices_only': devices_only,
+            'mod_devices_device_expiration_time': options.get('device_expiration_time')
+        }
+
+    def update_devices_settings(self, enabled, devices_only, device_expiration_time):
+        devices_settings = self.get_devices_settings()
+        if not enabled:
+            if devices_settings is None:
+                return False
+            devices_settings.delete()
+            return True
+
+        devices_settings, _ = ModuleSettings.objects.get_or_create(
+            host=self.devices_host,
+            module=self.devices_module,
+            defaults={'options': '{}'}
+        )
+        old_options = devices_settings.get_options()
+        options = dict(old_options)
+
+        options['devices_only'] = 'true' if devices_only else 'false'
+        if device_expiration_time is None:
+            options.pop('device_expiration_time', None)
+        else:
+            options['device_expiration_time'] = device_expiration_time
+
+        if options == old_options:
+            return False
+
+        devices_settings.set_options(options)
+        devices_settings.save()
+        return True
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        initial = {'mod_webhooks_url': self.get_webhooks_url()}
+        initial.update(self.get_devices_initial())
         context.setdefault(
             'form',
-            AdvancedSettingsForm(
-                initial={'mod_webhooks_url': self.get_webhooks_url()}
-            )
+            AdvancedSettingsForm(initial=initial)
         )
         return context
 
@@ -470,8 +521,19 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
         has_webhooks_settings = self.get_webhooks_settings() is not None
         old_webhooks_url = self.get_webhooks_url()
         webhooks_url = form.cleaned_data['mod_webhooks_url']
+        config_changed = False
         if (webhooks_url != old_webhooks_url or (webhooks_url and not has_webhooks_settings)) \
                 and self.update_webhooks_url(webhooks_url):
+            config_changed = True
+
+        if self.update_devices_settings(
+            form.cleaned_data['mod_devices_enabled'],
+            form.cleaned_data['mod_devices_devices_only'],
+            form.cleaned_data['mod_devices_device_expiration_time']
+        ):
+            config_changed = True
+
+        if config_changed:
             make_xmpp_config()
 
         messages.success(request, 'Advanced settings changed successfully.')

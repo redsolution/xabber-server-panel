@@ -56,6 +56,66 @@
                         {% endfor %}
                     </div>
                 </div>
+
+                <h4 class="text-secondary mt-4">
+                    Mod devices
+                </h4>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3 {% if form.mod_devices_enabled.errors %}text-danger{% endif %}">
+                        Enabled
+                    </label>
+                    <div class="col-12 col-md-9">
+                        <div class="form-check">
+                            <input class="form-check-input {% if form.mod_devices_enabled.errors %}is-invalid{% endif %}"
+                                   type="checkbox" name="mod_devices_enabled" id="id_mod_devices_enabled"
+                                   {% if form.mod_devices_enabled.value %}checked{% endif %}
+                                   {% if not settings_write_permissions %}disabled{% endif %}>
+                            <label class="form-check-label" for="id_mod_devices_enabled">
+                                Enable mod_devices
+                            </label>
+                        </div>
+                        {% for error in form.mod_devices_enabled.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3 {% if form.mod_devices_devices_only.errors %}text-danger{% endif %}">
+                        Devices only
+                    </label>
+                    <div class="col-12 col-md-9">
+                        <div class="form-check">
+                            <input class="form-check-input {% if form.mod_devices_devices_only.errors %}is-invalid{% endif %}"
+                                   type="checkbox" name="mod_devices_devices_only" id="id_mod_devices_devices_only"
+                                   {% if form.mod_devices_devices_only.value %}checked{% endif %}
+                                   {% if not settings_write_permissions %}disabled{% endif %}>
+                            <label class="form-check-label" for="id_mod_devices_devices_only">
+                                Enable devices only mode
+                            </label>
+                        </div>
+                        {% for error in form.mod_devices_devices_only.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-form-label col-12 col-md-3 {% if form.mod_devices_device_expiration_time.errors %}text-danger{% endif %}">
+                        Device expiration time
+                    </label>
+                    <div class="col-12 col-md-9">
+                        <input class="form-control {% if form.mod_devices_device_expiration_time.errors %}is-invalid{% endif %}"
+                               type="number" min="0" name="mod_devices_device_expiration_time"
+                               value="{{ form.mod_devices_device_expiration_time.value|default_if_none:'' }}"
+                               {% if not settings_write_permissions %}disabled{% endif %}>
+                        <span class="form-text text-secondary">Value for mod_devices device_expiration_time.</span>
+                        {% for error in form.mod_devices_device_expiration_time.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
             {% if settings_write_permissions %}
