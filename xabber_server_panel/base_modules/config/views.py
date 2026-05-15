@@ -12,7 +12,8 @@ from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.users.models import User
 from xabber_server_panel.base_modules.users.utils import check_users
 from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, check_hosts,\
-    get_dns_records, check_hosts_dns, make_xmpp_config
+    get_dns_records, check_hosts_dns, make_xmpp_config, AdvancedOptionConfig, AdvancedModuleConfig, \
+    AdvancedModuleSettingsStore
 from xabber_server_panel.utils import get_system_group_suffix
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
@@ -23,13 +24,12 @@ from xabber_server_panel.certificates.utils import update_or_create_certs, check
 from xabber_server_panel.certificates.models import Certificate
 
 
-from .models import LDAPSettings, LDAPServer, RootPage, ModuleSettings
+from .models import LDAPSettings, LDAPServer, RootPage
 from .forms import LDAPSettingsForm, VirtualHostForm, AdvancedSettingsForm
 
 import threading
 import os
 import re
-import ast
 
 
 class ConfigRoot(LoginRequiredMixin, TemplateView):
@@ -398,105 +398,53 @@ class Ldap(LoginRequiredMixin, TemplateView):
 
 class AdvancedView(LoginRequiredMixin, TemplateView):
     template_name = 'config/advanced.html'
-    webhooks_host = 'global'
-    webhooks_module = 'mod_webhooks'
-    devices_host = 'global'
-    devices_module = 'mod_devices'
+    module_settings_configs = (
+        AdvancedModuleConfig(
+            host='global',
+            module='mod_webhooks',
+            options={
+                'url': AdvancedOptionConfig(
+                    field='mod_webhooks_url',
+                    default_setting='MOD_WEBHOOKS_URL',
+                    empty='',
+                    quoted_string=True
+                ),
+            },
+        ),
+        AdvancedModuleConfig(
+            host='global',
+            module='mod_devices',
+            enabled_field='mod_devices_enabled',
+            options={
+                'devices_only': AdvancedOptionConfig(
+                    field='mod_devices_devices_only',
+                    empty=False,
+                    bool_string=True
+                ),
+                'device_expiration_time': AdvancedOptionConfig(
+                    field='mod_devices_device_expiration_time'
+                ),
+            }
+        ),
+    )
+    module_settings_store_class = AdvancedModuleSettingsStore
 
-    def get_webhooks_settings(self):
-        return ModuleSettings.objects.filter(
-            host=self.webhooks_host,
-            module=self.webhooks_module
-        ).first()
+    def get_module_settings_store(self):
+        return self.module_settings_store_class(self.module_settings_configs)
 
-    def get_webhooks_url(self):
-        webhooks_settings = self.get_webhooks_settings()
-        if webhooks_settings is None:
-            return getattr(settings, 'MOD_WEBHOOKS_URL', '')
-
-        url = webhooks_settings.get_options().get('url', '')
-        try:
-            return ast.literal_eval(url)
-        except (ValueError, SyntaxError, TypeError):
-            return url
-
-    def update_webhooks_url(self, url):
-        webhooks_settings = self.get_webhooks_settings()
-        if webhooks_settings is None and not url:
-            return False
-
-        webhooks_settings, _ = ModuleSettings.objects.get_or_create(
-            host=self.webhooks_host,
-            module=self.webhooks_module,
-            defaults={'options': '{}'}
-        )
-        options = webhooks_settings.get_options()
-
-        if url:
-            options['url'] = f'"{url}"'
+    def update_root_page(self, module):
+        root_page = RootPage.objects.first()
+        if root_page:
+            root_page.module = module
+            root_page.save()
         else:
-            options.pop('url', None)
-
-        webhooks_settings.set_options(options)
-        webhooks_settings.save()
-        return True
-
-    def get_devices_settings(self):
-        return ModuleSettings.objects.filter(
-            host=self.devices_host,
-            module=self.devices_module
-        ).first()
-
-    def get_devices_initial(self):
-        devices_settings = self.get_devices_settings()
-        options = devices_settings.get_options() if devices_settings else {}
-        devices_only = options.get('devices_only', False)
-
-        if isinstance(devices_only, str):
-            devices_only = devices_only.lower() == 'true'
-
-        return {
-            'mod_devices_enabled': devices_settings is not None,
-            'mod_devices_devices_only': devices_only,
-            'mod_devices_device_expiration_time': options.get('device_expiration_time')
-        }
-
-    def update_devices_settings(self, enabled, devices_only, device_expiration_time):
-        devices_settings = self.get_devices_settings()
-        if not enabled:
-            if devices_settings is None:
-                return False
-            devices_settings.delete()
-            return True
-
-        devices_settings, _ = ModuleSettings.objects.get_or_create(
-            host=self.devices_host,
-            module=self.devices_module,
-            defaults={'options': '{}'}
-        )
-        old_options = devices_settings.get_options()
-        options = dict(old_options)
-
-        options['devices_only'] = 'true' if devices_only else 'false'
-        if device_expiration_time is None:
-            options.pop('device_expiration_time', None)
-        else:
-            options['device_expiration_time'] = device_expiration_time
-
-        if options == old_options:
-            return False
-
-        devices_settings.set_options(options)
-        devices_settings.save()
-        return True
+            RootPage.objects.create(module=module)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        initial = {'mod_webhooks_url': self.get_webhooks_url()}
-        initial.update(self.get_devices_initial())
         context.setdefault(
             'form',
-            AdvancedSettingsForm(initial=initial)
+            AdvancedSettingsForm(initial=self.get_module_settings_store().get_initial())
         )
         return context
 
@@ -510,30 +458,9 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
         if not form.is_valid():
             return self.render_to_response(self.get_context_data(form=form))
 
-        module = request.POST.get('module', 'home')
-        root_page = RootPage.objects.first()
-        if root_page:
-            root_page.module = module
-            root_page.save()
-        else:
-            RootPage.objects.create(module=module)
+        self.update_root_page(request.POST.get('module', 'home'))
 
-        has_webhooks_settings = self.get_webhooks_settings() is not None
-        old_webhooks_url = self.get_webhooks_url()
-        webhooks_url = form.cleaned_data['mod_webhooks_url']
-        config_changed = False
-        if (webhooks_url != old_webhooks_url or (webhooks_url and not has_webhooks_settings)) \
-                and self.update_webhooks_url(webhooks_url):
-            config_changed = True
-
-        if self.update_devices_settings(
-            form.cleaned_data['mod_devices_enabled'],
-            form.cleaned_data['mod_devices_devices_only'],
-            form.cleaned_data['mod_devices_device_expiration_time']
-        ):
-            config_changed = True
-
-        if config_changed:
+        if self.get_module_settings_store().save(form.cleaned_data):
             make_xmpp_config()
 
         messages.success(request, 'Advanced settings changed successfully.')

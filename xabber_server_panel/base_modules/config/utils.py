@@ -6,13 +6,136 @@ import stat
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
 from xabber_server_panel.utils import is_ejabberd_started
-from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls
+from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls, ModuleSettings
 
+from dataclasses import dataclass
+import ast
 import copy
 import os
 import requests
 from importlib import util, import_module
 import xml.etree.ElementTree as ET
+
+
+@dataclass(frozen=True)
+class AdvancedOptionConfig:
+    field: str
+    empty: object = None
+    default_setting: str = None
+    quoted_string: bool = False
+    bool_string: bool = False
+
+    def get_default(self):
+        if self.default_setting:
+            return getattr(settings, self.default_setting, self.empty)
+        return self.empty
+
+    def serialize(self, value):
+        if value in ('', None):
+            return None
+        if self.quoted_string:
+            return f'"{value}"'
+        if self.bool_string:
+            return 'true' if value else 'false'
+        return value
+
+    def deserialize(self, value):
+        if value is None:
+            return self.get_default()
+        if self.quoted_string:
+            try:
+                return ast.literal_eval(value)
+            except (ValueError, SyntaxError, TypeError):
+                return value
+        if self.bool_string and isinstance(value, str):
+            return value.lower() == 'true'
+        return value
+
+
+@dataclass(frozen=True)
+class AdvancedModuleConfig:
+    host: str
+    module: str
+    options: dict
+    enabled_field: str = None
+
+
+class AdvancedModuleSettingsStore:
+
+    def __init__(self, configs):
+        self.configs = configs
+
+    def get_initial(self):
+        initial = {}
+        for config in self.configs:
+            initial.update(self.get_module_initial(config))
+        return initial
+
+    def save(self, cleaned_data):
+        config_changed = False
+        for config in self.configs:
+            if self.save_module(config, cleaned_data):
+                config_changed = True
+        return config_changed
+
+    def get_module_settings(self, config):
+        return ModuleSettings.objects.filter(
+            host=config.host,
+            module=config.module
+        ).first()
+
+    def get_module_initial(self, config):
+        module_settings = self.get_module_settings(config)
+        options = module_settings.get_options() if module_settings else {}
+        initial = {}
+
+        if config.enabled_field:
+            initial[config.enabled_field] = module_settings is not None
+
+        for option_name, option_config in config.options.items():
+            initial[option_config.field] = option_config.deserialize(options.get(option_name))
+
+        return initial
+
+    def save_module(self, config, cleaned_data):
+        module_settings = self.get_module_settings(config)
+
+        if config.enabled_field and not cleaned_data.get(config.enabled_field):
+            if module_settings is None:
+                return False
+            module_settings.delete()
+            return True
+
+        old_options = module_settings.get_options() if module_settings else {}
+        new_options = self.get_updated_options(config, old_options, cleaned_data)
+
+        if new_options == old_options:
+            return False
+        if module_settings is None and not new_options:
+            return False
+
+        if module_settings is None:
+            module_settings = ModuleSettings(
+                host=config.host,
+                module=config.module,
+                options='{}'
+            )
+
+        module_settings.set_options(new_options)
+        module_settings.save()
+        return True
+
+    def get_updated_options(self, config, old_options, cleaned_data):
+        options = dict(old_options)
+
+        for option_name, option_config in config.options.items():
+            value = option_config.serialize(cleaned_data.get(option_config.field))
+            if value is None:
+                options.pop(option_name, None)
+            else:
+                options[option_name] = value
+
+        return options
 
 
 # ========== XABBERSERVER CONFIG ==============
