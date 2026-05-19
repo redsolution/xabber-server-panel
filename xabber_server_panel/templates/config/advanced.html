@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load config_tags base_tags %}
+{% load static config_tags base_tags %}
 
 {% block content_title %}
     Server settings
@@ -13,7 +13,7 @@
 
     {% get_items_by_model_name 'rootpage' num=1 as rp %}
     <div class="col-12 pb-5 mb-5">
-        <form class="check-change-js" action="{% url 'config:advanced' %}" method="post">
+        <form class="check-change-js advanced-settings-js" action="{% url 'config:advanced' %}" method="post">
             {% csrf_token %}
 
             <div class="d-flex flex-column">
@@ -90,7 +90,7 @@
                             <input class="form-check-input {% if form.mod_devices_devices_only.errors %}is-invalid{% endif %}"
                                    type="checkbox" name="mod_devices_devices_only" id="id_mod_devices_devices_only"
                                    {% if form.mod_devices_devices_only.value %}checked{% endif %}
-                                   {% if not settings_write_permissions %}disabled{% endif %}>
+                                   {% if not settings_write_permissions or not form.mod_devices_enabled.value %}disabled{% endif %}>
                             <label class="form-check-label" for="id_mod_devices_devices_only">
                                 Enable devices only mode
                             </label>
@@ -109,7 +109,7 @@
                         <input class="form-control {% if form.mod_devices_device_expiration_time.errors %}is-invalid{% endif %}"
                                type="number" min="0" name="mod_devices_device_expiration_time"
                                value="{{ form.mod_devices_device_expiration_time.value|default_if_none:'' }}"
-                               {% if not settings_write_permissions %}disabled{% endif %}>
+                               {% if not settings_write_permissions or not form.mod_devices_enabled.value %}disabled{% endif %}>
                         <span class="form-text text-secondary">Value for mod_devices device_expiration_time.</span>
                         {% for error in form.mod_devices_device_expiration_time.errors %}
                             <div class="invalid-feedback d-block">{{ error }}</div>
@@ -131,4 +131,9 @@
             {% endif %}
         </form>
     </div>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script src="{% static 'js/advanced-settings.js' %}"></script>
 {% endblock %}
