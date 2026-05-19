@@ -59,7 +59,7 @@ class ModuleInstaller:
             os.makedirs(self.temp_extract_dir, exist_ok=True)
 
             # Unpack archieve in temporary dir
-            with tarfile.open(fileobj=self.uploaded_file, mode='r:gz') as tar:
+            with tarfile.open(fileobj=self.uploaded_file, mode='r|gz') as tar:
                 self._safe_extract(tar, self.temp_extract_dir)
 
             module_name, version = self._check_version()
@@ -91,9 +91,10 @@ class ModuleInstaller:
             self._delete_rollback_backup()
 
     def _safe_extract(self, tar, path):
+
         target_dir = os.path.realpath(path)
 
-        for member in tar.getmembers():
+        for member in tar:
             member_path = os.path.realpath(os.path.join(path, member.name))
             if os.path.commonpath([target_dir, member_path]) != target_dir:
                 raise Exception('Archive contains unsafe paths.')
@@ -105,7 +106,7 @@ class ModuleInstaller:
                 if os.path.commonpath([target_dir, link_path]) != target_dir:
                     raise Exception('Archive contains unsafe links.')
 
-        tar.extractall(path)
+            tar.extract(member, path)
 
     def _prepare_rollback(self, module_name, server_path):
         self.module_name = module_name
