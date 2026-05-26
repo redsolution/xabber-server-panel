@@ -269,6 +269,20 @@ class AddSettings(models.Model):
     value = models.TextField()
 
 
+class XmppComponent(models.Model):
+    host = models.CharField(max_length=255, unique=True)
+    port = models.PositiveIntegerField(default=5237)
+    ip = models.GenericIPAddressField(default='127.0.0.1')
+    password = models.CharField(max_length=255)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('ip', 'port')
+
+    def __str__(self):
+        return self.host
+
+
 def check_vhost(vhost):
     return VirtualHost.objects.filter(name=vhost).exists() or vhost == "global"
 

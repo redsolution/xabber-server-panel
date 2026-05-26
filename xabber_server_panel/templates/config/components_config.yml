@@ -1,0 +1,9 @@
+{% for component in xmpp_components %}{% if component.enabled %}
+  -
+    port: {{ component.port }}
+    ip: "{{ component.ip }}"
+    module: ejabberd_service
+    hosts:
+      "{{ component.host }}":
+        password: "{{ component.password }}"
+{% endif %}{% endfor %}

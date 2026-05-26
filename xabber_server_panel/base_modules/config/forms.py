@@ -1,5 +1,6 @@
 from django import forms
-from .models import LDAPSettings, VirtualHost
+from django.forms import modelformset_factory
+from .models import LDAPSettings, VirtualHost, XmppComponent
 
 from jid_validation.utils import validate_host
 
@@ -64,3 +65,37 @@ class AdvancedSettingsForm(forms.Form):
         label='Device expiration time',
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+
+
+class XmppComponentForm(forms.ModelForm):
+
+    class Meta:
+        model = XmppComponent
+        fields = ('host', 'ip', 'port', 'password', 'enabled')
+        widgets = {
+            'host': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'max.example.com'}),
+            'ip': forms.TextInput(attrs={'class': 'form-control'}),
+            'port': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 65535}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}, render_value=True),
+            'enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_host(self):
+        name = self.cleaned_data['host']
+        result = validate_host(name)
+        if result.get('success'):
+            return result.get('host')
+        raise forms.ValidationError(result.get('error_message'))
+
+    def clean_port(self):
+        port = self.cleaned_data['port']
+        if port > 65535:
+            raise forms.ValidationError('Port must be between 1 and 65535.')
+        return port
+
+
+XmppComponentFormSet = modelformset_factory(
+    XmppComponent,
+    form=XmppComponentForm,
+    extra=0,
+)

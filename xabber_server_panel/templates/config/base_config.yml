@@ -28,15 +28,7 @@ listen:
     ip: "::"
     module: ejabberd_s2s_in
 
-{% if settings.XMPP_COMPONENT_MAX_ENABLED and settings.XMPP_COMPONENT_MAX_HOST and settings.XMPP_COMPONENT_MAX_PASSWORD %}
-  -
-    port: {{ settings.XMPP_COMPONENT_MAX_PORT }}
-    ip: "{{ settings.XMPP_COMPONENT_MAX_IP }}"
-    module: ejabberd_service
-    hosts:
-      "{{ settings.XMPP_COMPONENT_MAX_HOST }}":
-        password: "{{ settings.XMPP_COMPONENT_MAX_PASSWORD }}"
-{% endif %}
+{% include 'config/components_config.yml' %}
 
   - port: {{ settings.XMPP_HTTP_PORT }}
     ip: "::"

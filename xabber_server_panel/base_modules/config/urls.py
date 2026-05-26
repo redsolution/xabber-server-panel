@@ -21,6 +21,7 @@ urlpatterns = [
 
     # advanced
     path('advanced/', views.AdvancedView.as_view(), name='advanced'),
+    path('component/delete/<int:id>/', views.DeleteXmppComponent.as_view(), name='component_delete'),
 
     # cron
     path('cron_jobs/', views.CronJobs.as_view(), name='cron_jobs'),

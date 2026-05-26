@@ -1,0 +1,60 @@
+<tr class="component-row-js">
+    <td class="align-top">
+        {% if settings_write_permissions %}
+            {{ component_form.id }}
+            {{ component_form.host }}
+            {% for error in component_form.host.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            {% for error in component_form.non_field_errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        {% else %}
+            {{ component_form.instance.host }}
+        {% endif %}
+    </td>
+    <td class="align-top">
+        {% if settings_write_permissions %}
+            {{ component_form.ip }}
+            {% for error in component_form.ip.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        {% else %}
+            {{ component_form.instance.ip }}
+        {% endif %}
+    </td>
+    <td class="align-top">
+        {% if settings_write_permissions %}
+            {{ component_form.port }}
+            {% for error in component_form.port.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        {% else %}
+            {{ component_form.instance.port }}
+        {% endif %}
+    </td>
+    <td class="align-top">
+        {% if settings_write_permissions %}
+            {{ component_form.password }}
+            {% for error in component_form.password.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        {% else %}
+            ********
+        {% endif %}
+    </td>
+    <td class="align-middle">
+        {% if settings_write_permissions %}
+            {{ component_form.enabled }}
+        {% else %}
+            <input class="form-check-input" type="checkbox" {% if component_form.instance.enabled %}checked{% endif %} disabled>
+        {% endif %}
+    </td>
+    {% if settings_write_permissions %}
+        <td class="align-middle">
+            {% if component_form.instance.pk %}
+                <a class="text-danger"
+                   data-delete-href="{% url 'config:component_delete' id=component_form.instance.pk %}"
+                   data-delete-name="XMPP component"
+                   data-delete-target="{{ component_form.instance.host }}"
+                   data-bs-toggle="modal" data-bs-target="#delete_modal" role="button">
+                    Delete
+                </a>
+            {% else %}
+                <button class="btn btn-link text-danger p-0 remove-component-js" type="button">
+                    Delete
+                </button>
+            {% endif %}
+        </td>
+    {% endif %}
+</tr>

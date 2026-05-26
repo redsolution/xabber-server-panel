@@ -24,8 +24,8 @@ from xabber_server_panel.certificates.utils import update_or_create_certs, check
 from xabber_server_panel.certificates.models import Certificate
 
 
-from .models import LDAPSettings, LDAPServer, RootPage
-from .forms import LDAPSettingsForm, VirtualHostForm, AdvancedSettingsForm
+from .models import LDAPSettings, LDAPServer, RootPage, XmppComponent
+from .forms import LDAPSettingsForm, VirtualHostForm, AdvancedSettingsForm, XmppComponentFormSet
 
 import threading
 import os
@@ -440,12 +440,20 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
         else:
             RootPage.objects.create(module=module)
 
+    def get_component_formset(self, data=None):
+        return XmppComponentFormSet(
+            data=data,
+            queryset=XmppComponent.objects.all().order_by('host'),
+            prefix='components'
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.setdefault(
             'form',
             AdvancedSettingsForm(initial=self.get_module_settings_store().get_initial())
         )
+        context.setdefault('component_formset', self.get_component_formset())
         return context
 
     @permission_read
@@ -455,17 +463,51 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
     @permission_write
     def post(self, request, *args, **kwargs):
         form = AdvancedSettingsForm(request.POST)
-        if not form.is_valid():
-            return self.render_to_response(self.get_context_data(form=form))
+        component_formset = self.get_component_formset(request.POST)
+        if not form.is_valid() or not component_formset.is_valid():
+            return self.render_to_response(self.get_context_data(
+                form=form,
+                component_formset=component_formset
+            ))
 
         self.update_root_page(request.POST.get('module', 'home'))
 
-        if self.get_module_settings_store().save(form.cleaned_data):
+        settings_changed = self.get_module_settings_store().save(form.cleaned_data)
+        components_changed = component_formset.has_changed()
+        if components_changed:
+            component_formset.save()
+
+        if settings_changed or components_changed:
             make_xmpp_config()
+        if components_changed and is_ejabberd_started():
+            get_api(request).reload_config()
 
         messages.success(request, 'Advanced settings changed successfully.')
 
         return self.render_to_response(self.get_context_data())
+
+
+def apply_xmpp_component_config(request):
+    make_xmpp_config()
+    if is_ejabberd_started():
+        get_api(request).reload_config()
+
+
+class DeleteXmppComponent(LoginRequiredMixin, View):
+
+    @permission_write
+    def get(self, request, id, *args, **kwargs):
+        try:
+            component = XmppComponent.objects.get(id=id)
+        except XmppComponent.DoesNotExist:
+            raise Http404
+
+        host = component.host
+        component.delete()
+        apply_xmpp_component_config(request)
+
+        messages.success(request, 'XMPP component "%s" deleted successfully.' % host)
+        return HttpResponseRedirect(reverse('config:advanced'))
 
 
 class ChangeHost(LoginRequiredMixin, View):

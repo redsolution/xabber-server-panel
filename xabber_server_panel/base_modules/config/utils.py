@@ -1,14 +1,16 @@
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from django.conf import settings
 from django.apps import apps
 from django.urls import reverse, resolve, NoReverseMatch
 from django.db.models import Q
 import stat
+import yaml
 
-from xabber_server_panel.base_modules.config.models import VirtualHost, Module
+from xabber_server_panel.base_modules.config.models import VirtualHost, Module, XmppComponent
 from xabber_server_panel.utils import is_ejabberd_started
 from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls, ModuleSettings
 from xabber_server_panel.base_modules.modules.models import ModuleServerConfig
+from requests.utils import certs
 
 from dataclasses import dataclass
 import ast
@@ -192,7 +194,40 @@ def get_modules_config():
     return configs
 
 
-def make_xmpp_config():
+def get_base_xmpp_config_context(data=None):
+    context = dict(data or {})
+    if data is None:
+        config_path = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, 'ejabberd.yml')
+        if not os.path.exists(config_path):
+            return None
+
+        if os.path.islink(config_path):
+            config_path = os.readlink(config_path)
+
+        with open(config_path, 'r') as config_file:
+            current_config = yaml.safe_load(config_file) or {}
+
+        context.update({
+            'db_host': current_config.get('sql_server', ''),
+            'db_name': current_config.get('sql_database', ''),
+            'db_user': current_config.get('sql_username', ''),
+            'db_user_pass': current_config.get('sql_password', ''),
+        })
+
+    context.update({
+        'VHOST_FILE': os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_VHOSTS_CONFIG_FILE),
+        'MODULES_FILE': os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_MODULES_CONFIG_FILE),
+        'ADD_CONFIG': os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_ADD_CONFIG_FILE),
+        'CA_FILE': certs.where(),
+        'settings': settings,
+        'xmpp_components': XmppComponent.objects.all().order_by('host'),
+    })
+    return context
+
+
+def make_xmpp_config(base_config_data=None):
+    base_config_context = get_base_xmpp_config_context(base_config_data)
+
     # Get module configurations from settings
     module_configs = get_modules_config()
 
@@ -273,6 +308,11 @@ def make_xmpp_config():
 
     # Change the permissions
     os.chmod(target_path, desired_permissions)
+
+    if base_config_context is not None:
+        config_path = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, 'ejabberd.yml')
+        config_template = get_template('config/base_config.yml')
+        create_config_file(config_path, config_template.render(context=base_config_context))
 
 
 def get_default_xmpp_modules_config(server_configs):

@@ -116,6 +116,49 @@
                         {% endfor %}
                     </div>
                 </div>
+
+                <div class="d-flex align-items-center justify-content-between mt-4 mb-3">
+                    <h4 class="text-secondary m-0">
+                        XMPP components
+                    </h4>
+                    {% if settings_write_permissions %}
+                        <button class="btn btn-outline-primary add-component-js" type="button">
+                            Add
+                        </button>
+                    {% endif %}
+                </div>
+
+                {{ component_formset.management_form }}
+                {% for error in component_formset.non_form_errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped mb-0 components-table-js">
+                        <thead>
+                            <tr>
+                                <th>Host</th>
+                                <th>IP</th>
+                                <th>Port</th>
+                                <th>Password</th>
+                                <th>Enabled</th>
+                                {% if settings_write_permissions %}<th>Actions</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody class="components-list-js">
+                            {% for component_form in component_formset %}
+                                {% include 'config/parts/component_row.html' %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if settings_write_permissions %}
+                    <template class="component-empty-form-js">
+                        {% with component_form=component_formset.empty_form %}
+                            {% include 'config/parts/component_row.html' %}
+                        {% endwith %}
+                    </template>
+                {% endif %}
             </div>
 
             {% if settings_write_permissions %}

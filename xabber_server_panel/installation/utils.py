@@ -7,10 +7,7 @@ import string
 import secrets
 import threading
 
-from django.template.loader import get_template
 from django.conf import settings
-from requests.utils import certs
-
 from xabber_server_panel.base_modules.config.utils import make_xmpp_config, update_vhosts_config, get_dns_records, create_config_file
 from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.config.models import VirtualHost, ModuleSettings, AddSettings
@@ -202,26 +199,15 @@ def generate_cronjob_token(data):
 
 def create_config(data):
     add_config = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_ADD_CONFIG_FILE)
-    data['VHOST_FILE'] = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_VHOSTS_CONFIG_FILE)
-    data['MODULES_FILE'] = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_MODULES_CONFIG_FILE)
-    data['ADD_CONFIG'] = add_config
-    data['CA_FILE'] = certs.where()
-    data['settings'] = settings
-
     # Add config
     if not os.path.exists(add_config):
         create_config_file(add_config)
 
-    # main config
-    config_template = get_template('config/base_config.yml')
-    config_path = os.path.join(settings.XMPP_SERVER_CONFIG_PATH, 'ejabberd.yml')
-    create_config_file(config_path, config_template.render(context=data))
-
     # vhosts config
     update_vhosts_config([data['host']])
 
-    # modules config
-    make_xmpp_config()
+    # main and modules config
+    make_xmpp_config(base_config_data=data)
 
 
 def create_admin(data):
