@@ -10,7 +10,7 @@ from django.utils.dateparse import parse_datetime
 
 from jid_validation.utils import validate_jid
 
-from xabber_server_panel.base_modules.config.models import Module, DiscoUrls
+from xabber_server_panel.base_modules.config.models import Module, DiscoUrls, AddSettings
 from xabber_server_panel.base_modules.config.utils import make_xmpp_config
 from xabber_server_panel.utils import update_app_list, reload_server
 from xabber_server_panel.base_modules.users.decorators import permission_admin
@@ -375,6 +375,9 @@ class DeleteModule(LoginRequiredMixin, TemplateView):
 
         # delete module disco urls
         DiscoUrls.objects.filter(module_name=module).delete()
+
+        # delete module settings
+        AddSettings.objects.filter(module_name=module).delete()
 
         settings.INSTALLED_APPS.remove(app_name)
 
