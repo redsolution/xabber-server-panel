@@ -41,3 +41,26 @@ class VirtualHostForm(forms.ModelForm):
             self.add_error('name', result.get('error_message'))
 
         return name
+
+
+class AdvancedSettingsForm(forms.Form):
+    mod_webhooks_url = forms.URLField(
+        required=False,
+        label='MOD_WEBHOOKS_URL'
+    )
+    mod_devices_enabled = forms.BooleanField(
+        required=False,
+        label='Enable mod_devices',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    mod_devices_devices_only = forms.BooleanField(
+        required=False,
+        label='Devices only',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    mod_devices_device_expiration_time = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label='Device expiration time',
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )

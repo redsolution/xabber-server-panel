@@ -142,8 +142,7 @@ GitHub.sublime-settings
 
 /static/*
 /xabber-server/*
-
-.codex
 /xmppserver_modules
-DOCUMENTATION_RU.txt
 *.tar.gz
+.codex
+/DOCUMENTATION_RU.txt

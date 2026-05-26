@@ -12,7 +12,8 @@ from xabber_server_panel.base_modules.circles.models import Circle
 from xabber_server_panel.base_modules.users.models import User
 from xabber_server_panel.base_modules.users.utils import check_users
 from xabber_server_panel.base_modules.config.utils import update_ejabberd_config, check_hosts,\
-    get_dns_records, check_hosts_dns
+    get_dns_records, check_hosts_dns, make_xmpp_config, AdvancedOptionConfig, AdvancedModuleConfig, \
+    AdvancedModuleSettingsStore
 from xabber_server_panel.utils import get_system_group_suffix
 from xabber_server_panel.base_modules.users.decorators import permission_read, permission_write, permission_admin
 from xabber_server_panel.api.utils import get_api
@@ -24,7 +25,7 @@ from xabber_server_panel.certificates.models import Certificate
 
 
 from .models import LDAPSettings, LDAPServer, RootPage
-from .forms import LDAPSettingsForm, VirtualHostForm
+from .forms import LDAPSettingsForm, VirtualHostForm, AdvancedSettingsForm
 
 import threading
 import os
@@ -395,17 +396,43 @@ class Ldap(LoginRequiredMixin, TemplateView):
         ldap_settings.servers.exclude(server__in=self.server_list).delete()
 
 
-class RootPageView(LoginRequiredMixin, TemplateView):
-    template_name = 'config/root_page.html'
+class AdvancedView(LoginRequiredMixin, TemplateView):
+    template_name = 'config/advanced.html'
+    module_settings_configs = (
+        AdvancedModuleConfig(
+            host='global',
+            module='mod_webhooks',
+            options={
+                'url': AdvancedOptionConfig(
+                    field='mod_webhooks_url',
+                    default_setting='MOD_WEBHOOKS_URL',
+                    empty='',
+                    quoted_string=True
+                ),
+            },
+        ),
+        AdvancedModuleConfig(
+            host='global',
+            module='mod_devices',
+            enabled_field='mod_devices_enabled',
+            options={
+                'devices_only': AdvancedOptionConfig(
+                    field='mod_devices_devices_only',
+                    empty=False,
+                    bool_string=True
+                ),
+                'device_expiration_time': AdvancedOptionConfig(
+                    field='mod_devices_device_expiration_time'
+                ),
+            }
+        ),
+    )
+    module_settings_store_class = AdvancedModuleSettingsStore
 
-    @permission_read
-    def get(self, request, *args, **kwargs):
-        return self.render_to_response({})
+    def get_module_settings_store(self):
+        return self.module_settings_store_class(self.module_settings_configs)
 
-    @permission_write
-    def post(self, request, *args, **kwargs):
-
-        module = request.POST.get('module', 'home')
+    def update_root_page(self, module):
         root_page = RootPage.objects.first()
         if root_page:
             root_page.module = module
@@ -413,9 +440,32 @@ class RootPageView(LoginRequiredMixin, TemplateView):
         else:
             RootPage.objects.create(module=module)
 
-        messages.success(request, 'Root page changed successfully.')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault(
+            'form',
+            AdvancedSettingsForm(initial=self.get_module_settings_store().get_initial())
+        )
+        return context
 
-        return self.render_to_response({})
+    @permission_read
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(self.get_context_data())
+
+    @permission_write
+    def post(self, request, *args, **kwargs):
+        form = AdvancedSettingsForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        self.update_root_page(request.POST.get('module', 'home'))
+
+        if self.get_module_settings_store().save(form.cleaned_data):
+            make_xmpp_config()
+
+        messages.success(request, 'Advanced settings changed successfully.')
+
+        return self.render_to_response(self.get_context_data())
 
 
 class ChangeHost(LoginRequiredMixin, View):

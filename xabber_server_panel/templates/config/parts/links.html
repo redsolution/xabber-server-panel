@@ -21,9 +21,9 @@
     </li>
     {% if modules %}
         <li class="nav-item">
-            {% url 'config:root_page' as root_page %}
-            <a class="nav-link {% if root_page == request.path_info %}active{% endif %}" href="{{ root_page }}">
-                Root page
+            {% url 'config:advanced' as advanced %}
+            <a class="nav-link {% if advanced == request.path_info %}active{% endif %}" href="{{ advanced }}">
+                Advanced
             </a>
         </li>
     {% endif %}

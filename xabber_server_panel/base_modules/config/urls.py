@@ -19,8 +19,8 @@ urlpatterns = [
     # ldap
     path('ldap/', views.Ldap.as_view(), name='ldap'),
 
-    # root
-    path('root_page/', views.RootPageView.as_view(), name='root_page'),
+    # advanced
+    path('advanced/', views.AdvancedView.as_view(), name='advanced'),
 
     # cron
     path('cron_jobs/', views.CronJobs.as_view(), name='cron_jobs'),

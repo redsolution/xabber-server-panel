@@ -44,11 +44,11 @@ class BaseAPI:
         self._parse_response()
         self._create_error_messages()
 
-        if settings.DEBUG:
-            print('request:', http_method, url, data)
-            print('raw response:', self.raw_response)
-            print('response:', self.response)
-            print('errors:', self.errors)
+        # if settings.DEBUG:
+        #     print('request:', http_method, url, data)
+        #     print('raw response:', self.raw_response)
+        #     print('response:', self.response)
+        #     print('errors:', self.errors)
 
     def _parse_response(self):
         self.response = self.raw_response
