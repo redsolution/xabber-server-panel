@@ -2,11 +2,13 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.apps import apps
 from django.urls import reverse, resolve, NoReverseMatch
+from django.db.models import Q
 import stat
 
 from xabber_server_panel.base_modules.config.models import VirtualHost, Module
 from xabber_server_panel.utils import is_ejabberd_started
 from xabber_server_panel.base_modules.config.models import BaseXmppModule, BaseXmppOption, check_vhost, DiscoUrls, ModuleSettings
+from xabber_server_panel.base_modules.modules.models import ModuleServerConfig
 
 from dataclasses import dataclass
 import ast
@@ -204,6 +206,7 @@ def make_xmpp_config():
     global_options = {}
     host_config = {host.name: {} for host in hosts}
     append_host_config = copy.deepcopy(host_config)
+    server_configs = ModuleServerConfig.objects.select_related('module').all().order_by('module__name', 'name')
 
     # Loop through module configurations
     for module_config in module_configs:
@@ -261,15 +264,154 @@ def make_xmpp_config():
         # Write append_host_config to the file
         f.write("append_host_config:\n")
         for key, value in append_host_config.items():
-            if value:
-                f.write('  "{}":\n'.format(key) + "    modules:\n")
-                for key1, val1 in value.items():
-                    f.write(get_value(key1, val1, level=3))
-            else:
-                f.write('  "{}":\n'.format(key) + "    modules: []\n")
+            active_server_configs = get_active_server_configs(server_configs, key)
+            f.write('  "{}":\n'.format(key) + "    modules:\n")
+            f.write(get_default_xmpp_modules_config(active_server_configs))
+            for key1, val1 in value.items():
+                f.write(get_value(key1, val1, level=3))
+            f.write(get_server_modules_config(active_server_configs, level=3))
 
     # Change the permissions
     os.chmod(target_path, desired_permissions)
+
+
+def get_default_xmpp_modules_config(server_configs):
+
+    replace_modules = []
+    for server_config in server_configs:
+        replace_modules += server_config.get_replace()
+
+    modules_config = render_to_string(settings.MODULES_TEMPLATE, {'settings': settings})
+    modules_config = remove_xmpp_modules_from_config(modules_config, replace_modules)
+    return indent_xmpp_modules_config(modules_config, level=3)
+
+
+def get_active_server_configs(server_configs, host):
+
+    return [
+        server_config
+        for server_config in server_configs
+        if host in server_config.get_hosts()
+    ]
+
+
+def get_server_modules_config(server_configs, level):
+
+    result = ''
+    shift = '  ' * level
+
+    for server_config in server_configs:
+        options = server_config.get_options()
+        if not options or options == '{}':
+            result += '{}{}: {}\n'.format(shift, server_config.name, '{}')
+        else:
+            result += '{}{}:\n'.format(shift, server_config.name)
+            result += indent_raw_config(options, level + 1)
+
+    return result
+
+
+def indent_xmpp_modules_config(config, level):
+
+    result = []
+    shift = '  ' * level
+    lines = config.splitlines()
+    if lines and lines[0].strip() == 'modules:':
+        lines = lines[1:]
+
+    indent_levels = sorted({
+        len(line) - len(line.lstrip())
+        for line in lines
+        if line.strip()
+    })
+    indent_map = {
+        indent: index
+        for index, indent in enumerate(indent_levels)
+    }
+
+    for line in lines:
+        if line:
+            indent = len(line) - len(line.lstrip())
+            result.append('{}{}{}'.format(
+                shift,
+                '  ' * indent_map.get(indent, 0),
+                line.lstrip()
+            ))
+        else:
+            result.append('')
+
+    return '\n'.join(result) + '\n'
+
+
+def indent_raw_config(config, level):
+
+    shift = '  ' * level
+    return ''.join(
+        '{}{}\n'.format(shift, line) if line else '\n'
+        for line in config.splitlines()
+    )
+
+
+def remove_xmpp_modules_from_config(config: str, module_names):
+    import yaml
+
+    module_names = set(module_names)
+
+    if not module_names:
+        return config if config.endswith('\n') else config + '\n'
+
+    parsed = yaml.safe_load(config)
+
+    modules = parsed.get('modules', {})
+
+    if not isinstance(modules, dict):
+        return config if config.endswith('\n') else config + '\n'
+
+    lines = config.splitlines()
+
+    result = []
+
+    in_modules = False
+    current_module = None
+    current_module_indent = None
+    skip = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # empty line
+        if not stripped:
+            if not skip:
+                result.append(line)
+            continue
+
+        indent = len(line) - len(line.lstrip())
+
+        # find modules section:
+        if stripped == 'modules:':
+            in_modules = True
+            modules_indent = indent
+            result.append(line)
+            continue
+
+        # Out of modules block
+        if in_modules and indent <= modules_indent:
+            in_modules = False
+            skip = False
+
+        # Define first level module in modules block
+        if in_modules and indent > modules_indent:
+            if current_module_indent is None:
+                current_module_indent = indent
+
+            if indent == current_module_indent and ':' in stripped:
+                current_module = stripped.split(':', 1)[0].strip()
+                skip = current_module in module_names
+
+        if not skip:
+            result.append(line)
+
+    return '\n'.join(result) + '\n'
 
 
 def update_vhosts_config(hosts=None):
@@ -423,7 +565,9 @@ def check_modules():
 
     modules = get_modules()
 
-    Module.objects.exclude(name__in=modules).delete()
+    Module.objects.exclude(name__in=modules).filter(
+        Q(files__isnull=True) | Q(files='')
+    ).delete()
 
 
 def get_modules():

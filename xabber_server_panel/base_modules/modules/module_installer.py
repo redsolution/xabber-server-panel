@@ -7,7 +7,8 @@ from django.db.migrations.recorder import MigrationRecorder
 from importlib import import_module
 
 from xabber_server_panel.utils import update_app_list, reload_server
-from xabber_server_panel.base_modules.config.models import Module
+from xabber_server_panel.base_modules.config.models import Module, RootPage
+from xabber_server_panel.base_modules.modules.models import ModuleServerConfig
 from xabber_server_panel.utils import check_versions
 from xabber_server_panel.base_modules.config.utils import make_xmpp_config
 
@@ -68,20 +69,25 @@ class ModuleInstaller:
             panel_path = os.path.join(self.temp_extract_dir, 'panel')
             server_path = os.path.join(self.temp_extract_dir, 'server')
             module_path = os.path.join(panel_path, module_name)
+            replace_modules = self._get_replace_modules()
+
+            self._check_replace_conflicts(module_name, replace_modules, [])
 
             if os.path.isdir(module_path):
                 self._prepare_rollback(module_name, server_path)
 
                 # Copy module in modules dir
                 self._install_module(panel_path, module_name)
-
-                # Copy server files if it exists
-                self._install_server_files(server_path)
-
-                # after installation actions
-                self._after_install(module_name, version, server_path)
+            elif not os.path.isdir(panel_path) and os.path.isdir(server_path):
+                pass
             else:
                 raise Exception('Module folder is missed.')
+
+            # Copy server files if it exists
+            self._install_server_files(server_path)
+
+            # after installation actions
+            self._after_install(module_name, version, server_path)
         except Exception as e:
             self._rollback_install(e)
             raise
@@ -296,7 +302,7 @@ class ModuleInstaller:
     def _install_server_files(self, server_path):
 
         if not os.path.exists(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR):
-            os.mkdir(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
+            os.makedirs(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
 
         if os.path.exists(server_path):
 
@@ -305,9 +311,44 @@ class ModuleInstaller:
                 path_from = os.path.join(server_path, filename)
                 path_to = os.path.join(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR, filename)
 
-                # delete existing file
+                # delete existing file or directory
                 if os.path.exists(path_to):
-                    os.remove(path_to)
+                    if os.path.isdir(path_to):
+                        shutil.rmtree(path_to)
+                    else:
+                        os.remove(path_to)
+
+                if os.path.isdir(path_from):
+                    shutil.copytree(path_from, path_to)
+                else:
+                    shutil.copy(path_from, path_to)
+
+            self._install_server_ebin_files(server_path)
+
+    def _install_server_ebin_files(self, server_path):
+
+        if not os.path.exists(settings.XMPP_SERVER_EBIN_DIR):
+            os.makedirs(settings.XMPP_SERVER_EBIN_DIR)
+
+        for module_dir in os.listdir(server_path):
+            ebin_path = os.path.join(server_path, module_dir, 'ebin')
+            if not os.path.isdir(ebin_path):
+                continue
+
+            for filename in os.listdir(ebin_path):
+                if not filename.endswith('.beam'):
+                    continue
+
+                path_from = os.path.join(ebin_path, filename)
+                path_to = os.path.join(settings.XMPP_SERVER_EBIN_DIR, filename)
+                if not os.path.isfile(path_from):
+                    continue
+
+                if os.path.exists(path_to):
+                    if os.path.isdir(path_to):
+                        shutil.rmtree(path_to)
+                    else:
+                        os.remove(path_to)
 
                 shutil.copy(path_from, path_to)
 
@@ -330,14 +371,10 @@ class ModuleInstaller:
                 root_page = getattr(module_config, 'root_page', False)
                 global_module = getattr(module_config, 'global_module', False)
 
-        # prepare server files paths
-        if os.path.exists(server_path):
-            server_files = ','.join(os.listdir(server_path))
-        else:
-            server_files = ''
+        server_files = self._get_server_file_paths(server_path)
 
         # update module info
-        Module.objects.update_or_create(
+        module, _ = Module.objects.update_or_create(
             name=module_name,
             defaults={
                 'version': version,
@@ -352,6 +389,9 @@ class ModuleInstaller:
                 'refresh_token': self.refresh_token,
             }
         )
+        self._update_server_configs(module, server_path)
+        
+        self._set_root_page(root_page, module)
 
         # create permissions for new modules
         management.call_command('update_permissions')
@@ -363,3 +403,88 @@ class ModuleInstaller:
         get_app_template_dirs.cache_clear()
 
         reload_server()
+
+    def _update_server_configs(self, module, server_path):
+        module.server_configs.all().delete()
+
+        conf_path = os.path.join(server_path, module.name, 'conf')
+        if not os.path.isdir(conf_path):
+            return
+
+        replace_modules = self._get_replace_modules()
+
+        for filename in sorted(os.listdir(conf_path)):
+            file_path = os.path.join(conf_path, filename)
+            if not os.path.isfile(file_path) or not filename.endswith(('.yml', '.yaml')):
+                continue
+
+            with open(file_path, 'r') as file:
+                options = file.read()
+
+            config = ModuleServerConfig(
+                module=module,
+                name=os.path.splitext(filename)[0]
+            )
+            config.set_options(options)
+            config.set_replace(replace_modules)
+            config.set_hosts([])
+            config.save()
+
+    def _check_replace_conflicts(self, module_name, replace_modules, host_names):
+
+        if not replace_modules or not host_names:
+            return
+
+        conflicts = {}
+        server_configs = ModuleServerConfig.objects.select_related('module').exclude(module__name=module_name)
+        for server_config in server_configs:
+            conflict_modules = sorted(set(replace_modules) & set(server_config.get_replace()))
+            conflict_hosts = sorted(set(host_names) & set(server_config.get_hosts()))
+            if conflict_modules and conflict_hosts:
+                conflicts[server_config.module.name] = (conflict_modules, conflict_hosts)
+
+        if conflicts:
+            messages = [
+                '%s replaces %s for %s' % (installed_module, ', '.join(modules), ', '.join(hosts))
+                for installed_module, (modules, hosts) in sorted(conflicts.items())
+            ]
+            raise Exception('Replace conflict with installed module: %s.' % '; '.join(messages))
+
+    def _get_replace_modules(self):
+
+        spec_path = os.path.join(self.temp_extract_dir, 'module.spec')
+        if not os.path.exists(spec_path):
+            return []
+
+        with open(spec_path, 'r') as file:
+            content = file.read()
+
+        replace_match = re.search(r'REPLACE\s*=\s*([^\n]+)', content)
+        if not replace_match:
+            return []
+
+        return ModuleServerConfig.normalize_replace(replace_match.group(1))
+
+    def _get_server_file_paths(self, server_path):
+
+        if not os.path.exists(server_path):
+            return ''
+
+        files = []
+        for root, dirs, filenames in os.walk(server_path):
+            dirs.sort()
+            filenames.sort()
+            for filename in filenames:
+                file_path = os.path.join(root, filename)
+                relative_path = os.path.relpath(file_path, server_path)
+                relative_path = relative_path.replace(os.sep, '/').strip()
+                if relative_path:
+                    files.append(relative_path)
+
+        return ','.join(files)
+    
+    def _set_root_page(self, root_page, module):
+        if root_page:
+            root_page_obj = RootPage.objects.first()
+            if not root_page_obj:
+                RootPage.objects.create(module=module)
