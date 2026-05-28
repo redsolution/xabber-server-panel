@@ -359,8 +359,6 @@ def get_privileged_component_server_configs(hosts, existing_server_configs):
     )
     configs = []
     for host in hosts:
-        if not has_privileged_component_for_host(host.name, components):
-            continue
         if has_existing_module_server_config(existing_server_configs, host.name, PRIVILEGED_COMPONENT_MODULE):
             continue
 
@@ -376,11 +374,6 @@ def get_privileged_component_server_configs(hosts, existing_server_configs):
         config.set_replace([])
         configs.append(config)
     return configs
-
-
-def has_privileged_component_for_host(host, components):
-    suffix = '.{}'.format(host)
-    return any(component.host == host or component.host.endswith(suffix) for component in components)
 
 
 def has_existing_module_server_config(server_configs, host, module_name):
