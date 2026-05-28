@@ -3,9 +3,6 @@
     port: {{ component.port }}
     ip: "{{ component.ip }}"
     module: ejabberd_service
-{% if component.privileged %}
-    check_from: false
-{% endif %}
     hosts:
       "{{ component.host }}":
         password: "{{ component.password }}"
