@@ -275,6 +275,7 @@ class XmppComponent(models.Model):
     ip = models.GenericIPAddressField(default='127.0.0.1')
     password = models.CharField(max_length=255)
     enabled = models.BooleanField(default=True)
+    privileged = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('ip', 'port')

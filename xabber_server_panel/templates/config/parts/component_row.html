@@ -40,6 +40,13 @@
             <input class="form-check-input" type="checkbox" {% if component_form.instance.enabled %}checked{% endif %} disabled>
         {% endif %}
     </td>
+    <td class="align-middle">
+        {% if settings_write_permissions %}
+            {{ component_form.privileged }}
+        {% else %}
+            <input class="form-check-input" type="checkbox" {% if component_form.instance.privileged %}checked{% endif %} disabled>
+        {% endif %}
+    </td>
     {% if settings_write_permissions %}
         <td class="align-middle">
             {% if component_form.instance.pk %}

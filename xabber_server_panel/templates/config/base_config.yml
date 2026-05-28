@@ -85,6 +85,14 @@ acl:
       - "::1/128"
       - "::FFFF:127.0.0.1/128"
 
+{% if privileged_xmpp_components %}
+  max_bridge_component:
+    server:
+{% for component in privileged_xmpp_components %}
+      - "{{ component.host }}"
+{% endfor %}
+{% endif %}
+
 shaper_rules:
   max_user_sessions: 20
   max_user_offline_messages:
@@ -113,6 +121,10 @@ access_rules:
     - allow
   trusted_network:
     - allow: loopback
+{% if privileged_xmpp_components %}
+  max_bridge_component:
+    - allow: max_bridge_component
+{% endif %}
 
 api_permissions:
   "console commands":

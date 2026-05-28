@@ -20,6 +20,9 @@ import requests
 from importlib import util, import_module
 import xml.etree.ElementTree as ET
 
+PRIVILEGED_COMPONENT_ACCESS_RULE = 'max_bridge_component'
+PRIVILEGED_COMPONENT_MODULE = 'mod_privilege'
+
 
 @dataclass(frozen=True)
 class AdvancedOptionConfig:
@@ -221,6 +224,7 @@ def get_base_xmpp_config_context(data=None):
         'CA_FILE': certs.where(),
         'settings': settings,
         'xmpp_components': XmppComponent.objects.all().order_by('host'),
+        'privileged_xmpp_components': get_privileged_xmpp_components(),
     })
     return context
 
@@ -241,7 +245,10 @@ def make_xmpp_config(base_config_data=None):
     global_options = {}
     host_config = {host.name: {} for host in hosts}
     append_host_config = copy.deepcopy(host_config)
-    server_configs = ModuleServerConfig.objects.select_related('module').all().order_by('module__name', 'name')
+    server_configs = list(
+        ModuleServerConfig.objects.select_related('module').all().order_by('module__name', 'name')
+    )
+    server_configs += get_privileged_component_server_configs(hosts, server_configs)
 
     # Loop through module configurations
     for module_config in module_configs:
@@ -333,6 +340,54 @@ def get_active_server_configs(server_configs, host):
         for server_config in server_configs
         if host in server_config.get_hosts()
     ]
+
+
+def get_privileged_xmpp_components():
+    return list(
+        XmppComponent.objects.filter(enabled=True, privileged=True).order_by('host')
+    )
+
+
+def get_privileged_component_server_configs(hosts, existing_server_configs):
+    components = get_privileged_xmpp_components()
+    if not components:
+        return []
+
+    module = Module(
+        name=PRIVILEGED_COMPONENT_MODULE,
+        version='',
+    )
+    configs = []
+    for host in hosts:
+        if not has_privileged_component_for_host(host.name, components):
+            continue
+        if has_existing_module_server_config(existing_server_configs, host.name, PRIVILEGED_COMPONENT_MODULE):
+            continue
+
+        config = ModuleServerConfig(
+            module=module,
+            name=PRIVILEGED_COMPONENT_MODULE,
+        )
+        config.set_options(
+            'roster:\n'
+            f'  both: {PRIVILEGED_COMPONENT_ACCESS_RULE}'
+        )
+        config.set_hosts([host.name])
+        config.set_replace([])
+        configs.append(config)
+    return configs
+
+
+def has_privileged_component_for_host(host, components):
+    suffix = '.{}'.format(host)
+    return any(component.host == host or component.host.endswith(suffix) for component in components)
+
+
+def has_existing_module_server_config(server_configs, host, module_name):
+    return any(
+        server_config.name == module_name and host in server_config.get_hosts()
+        for server_config in server_configs
+    )
 
 
 def get_server_modules_config(server_configs, level):
