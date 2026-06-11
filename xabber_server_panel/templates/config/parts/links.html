@@ -19,7 +19,7 @@
             LDAP
         </a>
     </li>
-    {% if modules %}
+    {% if request.user.is_admin %}
         <li class="nav-item">
             {% url 'config:advanced' as advanced %}
             <a class="nav-link {% if advanced == request.path_info %}active{% endif %}" href="{{ advanced }}">
