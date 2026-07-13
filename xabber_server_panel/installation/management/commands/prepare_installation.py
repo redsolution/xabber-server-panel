@@ -2,6 +2,8 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.core.management import call_command
 import subprocess
+import shutil
+import os
 
 from xabber_server_panel.utils import is_ejabberd_started, server_installed, stop_ejabberd
 
@@ -20,6 +22,10 @@ class Command(BaseCommand):
         call_command('migrate', 'config', 'zero', interactive=False)
         call_command('migrate', 'registration', 'zero', interactive=False)
         call_command('migrate', 'users', 'zero', interactive=False)
+        call_command('migrate', 'modules', 'zero', interactive=False)
+
+        # clean xmppserver external modules
+        self._clean_directory(settings.XMPP_SERVER_EXTERNAL_MODULES_DIR)
 
         # migrate
         call_command('migrate', interactive=False)
@@ -44,3 +50,15 @@ class Command(BaseCommand):
         # Delete installation lock
         if server_installed():
             subprocess.run(['rm', settings.INSTALLATION_LOCK])
+
+    def _clean_directory(self, path):
+        if not os.path.isdir(path):
+            return
+
+        for name in os.listdir(path):
+            full_path = os.path.join(path, name)
+
+            if os.path.isdir(full_path):
+                shutil.rmtree(full_path)
+            else:
+                os.remove(full_path)
