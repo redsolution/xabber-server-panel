@@ -270,17 +270,27 @@ class AddSettings(models.Model):
 
 
 class XmppComponent(models.Model):
-    host = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    host = models.ForeignKey(
+        VirtualHost,
+        on_delete=models.CASCADE,
+        related_name='xmpp_components'
+    )
     port = models.PositiveIntegerField(default=5237)
     ip = models.GenericIPAddressField(default='127.0.0.1')
     password = models.CharField(max_length=255)
+    tls = models.BooleanField(default=False)
     enabled = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = ('ip', 'port')
+        unique_together = (('name', 'host'), ('ip', 'port'))
+
+    @property
+    def jid(self):
+        return '{}.{}'.format(self.name, self.host.name)
 
     def __str__(self):
-        return self.host
+        return self.jid
 
 
 def check_vhost(vhost):

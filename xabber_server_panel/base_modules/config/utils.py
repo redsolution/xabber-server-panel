@@ -219,7 +219,7 @@ def get_base_xmpp_config_context(data=None):
         'ADD_CONFIG': os.path.join(settings.XMPP_SERVER_CONFIG_PATH, settings.XMPP_SERVER_ADD_CONFIG_FILE),
         'CA_FILE': certs.where(),
         'settings': settings,
-        'xmpp_components': XmppComponent.objects.all().order_by('host'),
+        'xmpp_components': XmppComponent.objects.select_related('host').order_by('host__name', 'name'),
     })
     return context
 

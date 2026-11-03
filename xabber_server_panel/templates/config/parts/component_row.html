@@ -2,9 +2,17 @@
     <td class="align-top">
         {% if settings_write_permissions %}
             {{ component_form.id }}
+            {{ component_form.name }}
+            {% for error in component_form.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            {% for error in component_form.non_field_errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        {% else %}
+            {{ component_form.instance.name }}
+        {% endif %}
+    </td>
+    <td class="align-top">
+        {% if settings_write_permissions %}
             {{ component_form.host }}
             {% for error in component_form.host.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
-            {% for error in component_form.non_field_errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
         {% else %}
             {{ component_form.instance.host }}
         {% endif %}
@@ -35,6 +43,13 @@
     </td>
     <td class="align-middle">
         {% if settings_write_permissions %}
+            {{ component_form.tls }}
+        {% else %}
+            <input class="form-check-input" type="checkbox" {% if component_form.instance.tls %}checked{% endif %} disabled>
+        {% endif %}
+    </td>
+    <td class="align-middle">
+        {% if settings_write_permissions %}
             {{ component_form.enabled }}
         {% else %}
             <input class="form-check-input" type="checkbox" {% if component_form.instance.enabled %}checked{% endif %} disabled>
@@ -46,7 +61,7 @@
                 <a class="text-danger"
                    data-delete-href="{% url 'config:component_delete' id=component_form.instance.pk %}"
                    data-delete-name="XMPP component"
-                   data-delete-target="{{ component_form.instance.host }}"
+                   data-delete-target="{{ component_form.instance.jid }}"
                    data-bs-toggle="modal" data-bs-target="#delete_modal" role="button">
                     Delete
                 </a>

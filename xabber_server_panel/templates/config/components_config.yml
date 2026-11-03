@@ -3,7 +3,9 @@
     port: {{ component.port }}
     ip: "{{ component.ip }}"
     module: ejabberd_service
-    hosts:
-      "{{ component.host }}":
+{% if component.tls %}    tls: true
+    certfile: "{{ settings.CERTS_DIR }}/server.pem"
+{% endif %}    hosts:
+      "{{ component.jid }}":
         password: "{{ component.password }}"
 {% endif %}{% endfor %}

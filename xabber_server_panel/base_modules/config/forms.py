@@ -2,7 +2,7 @@ from django import forms
 from django.forms import modelformset_factory
 from .models import LDAPSettings, VirtualHost, XmppComponent
 
-from jid_validation.utils import validate_host
+from jid_validation.utils import validate_host, validate_localpart
 
 
 class LDAPSettingsForm(forms.ModelForm):
@@ -71,20 +71,26 @@ class XmppComponentForm(forms.ModelForm):
 
     class Meta:
         model = XmppComponent
-        fields = ('host', 'ip', 'port', 'password', 'enabled')
+        fields = ('name', 'host', 'ip', 'port', 'password', 'tls', 'enabled')
         widgets = {
-            'host': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'max.example.com'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'telegram'}),
+            'host': forms.Select(attrs={'class': 'form-select'}),
             'ip': forms.TextInput(attrs={'class': 'form-control'}),
             'port': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 65535}),
             'password': forms.PasswordInput(attrs={'class': 'form-control'}, render_value=True),
+            'tls': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-    def clean_host(self):
-        name = self.cleaned_data['host']
-        result = validate_host(name)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['host'].queryset = VirtualHost.objects.order_by('name')
+
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        result = validate_localpart(name)
         if result.get('success'):
-            return result.get('host')
+            return result.get('localpart')
         raise forms.ValidationError(result.get('error_message'))
 
     def clean_port(self):

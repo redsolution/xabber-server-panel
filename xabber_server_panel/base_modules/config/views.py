@@ -443,7 +443,7 @@ class AdvancedView(LoginRequiredMixin, TemplateView):
     def get_component_formset(self, data=None):
         return XmppComponentFormSet(
             data=data,
-            queryset=XmppComponent.objects.all().order_by('host'),
+            queryset=XmppComponent.objects.select_related('host').order_by('host__name', 'name'),
             prefix='components'
         )
 
@@ -502,11 +502,11 @@ class DeleteXmppComponent(LoginRequiredMixin, View):
         except XmppComponent.DoesNotExist:
             raise Http404
 
-        host = component.host
+        component_jid = component.jid
         component.delete()
         apply_xmpp_component_config(request)
 
-        messages.success(request, 'XMPP component "%s" deleted successfully.' % host)
+        messages.success(request, 'XMPP component "%s" deleted successfully.' % component_jid)
         return HttpResponseRedirect(reverse('config:advanced'))
 
 
