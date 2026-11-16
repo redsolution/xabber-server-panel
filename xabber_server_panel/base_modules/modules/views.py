@@ -496,6 +496,14 @@ class LoginXabberServices(LoginRequiredMixin, View):
         xservices_api = XabberServicesApi(request)
 
         jid = request.POST.get('jid')
+        if not jid or not jid.strip():
+            return JsonResponse(
+                {
+                    "message": "JID is required.",
+                },
+                status=400
+            )
+
         result = validate_jid(jid)
         if not result.get('success'):
             return JsonResponse(
@@ -568,7 +576,7 @@ class ConfirmXabberServices(LoginRequiredMixin, View):
                 {
                     "message": 'Confirm code error.'
                 },
-                status=500
+                status=400
             )
         
         license_token = response.get('license_token')

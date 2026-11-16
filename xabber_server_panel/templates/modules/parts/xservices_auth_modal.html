@@ -21,7 +21,7 @@
                                     </div>
                                 </div>
                                 <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data">
+                                    <form class="xservices-login-js" action="{% url 'modules:xservices_login' %}" method="POST" enctype="multipart/form-data" data-keep-submit-enabled>
                                         {% csrf_token %}
 
                                         <input class="form-control" type="text" name="jid" placeholder="username@example.com">
@@ -30,7 +30,7 @@
 
                                         <div class="overflow-hidden">
                                             <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
+                                                <button class="btn btn-primary me-3 mb-3" type="submit" name="save">
                                                     Next
                                                 </button>
                                             </div>
@@ -48,7 +48,7 @@
                                     </div>
                                 </div>
                                 <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="check-change-js xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data">
+                                    <form class="xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data" data-keep-submit-enabled>
                                         {% csrf_token %}
 
                                         <input class="form-control" type="text" name="code">
@@ -57,7 +57,7 @@
 
                                         <div class="overflow-hidden">
                                             <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
-                                                <button class="btn btn-primary btn-secondary me-3 mb-3" type="submit" name="save" disabled>
+                                                <button class="btn btn-primary me-3 mb-3" type="submit" name="save">
                                                     Confirm
                                                 </button>
                                             </div>

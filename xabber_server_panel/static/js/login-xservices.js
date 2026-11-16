@@ -182,6 +182,8 @@ $(function () {
                 updateLicenseData(account);
             })
             .catch(function (error) {
+                disabledCloseModal = false;
+
                 //Add error messages
                 currentStep.find('.stepper__error').removeClass('d-none').text(error);
             })

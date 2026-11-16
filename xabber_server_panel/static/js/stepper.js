@@ -5,7 +5,9 @@ function stepperClear(stepper) {
 	stepper.find('.stepper__step[data-step="1"]').addClass('active');
 	stepper.find('form').each(function(index, form) {
 		form.reset();
-		$(form).find('button[name="save"]').prop('disabled', true);
+		if (!$(form).is('[data-keep-submit-enabled]')) {
+			$(form).find('button[name="save"]').prop('disabled', true);
+		}
 		$(form).find('.stepper__error').addClass('d-none').text('');
 	});
 };
