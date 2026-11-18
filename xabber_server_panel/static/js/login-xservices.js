@@ -49,6 +49,29 @@ $(function () {
         });
     }
 
+    const resendTimeoutSeconds = 30;
+    let resendTimeoutId;
+
+    function startResendTimeout() {
+        const $resendButton = $('.xservices-resend-code-js');
+        let secondsLeft = resendTimeoutSeconds;
+
+        clearInterval(resendTimeoutId);
+        $resendButton.prop('disabled', true).text(`Resend code (${secondsLeft}s)`);
+
+        resendTimeoutId = setInterval(function () {
+            secondsLeft -= 1;
+
+            if (secondsLeft <= 0) {
+                clearInterval(resendTimeoutId);
+                $resendButton.prop('disabled', false).text('Resend code');
+                return;
+            }
+
+            $resendButton.text(`Resend code (${secondsLeft}s)`);
+        }, 1000);
+    }
+
     function openPaymentPopup(url, redirect) {
         const loader_target = $('.modules-data-js');
 
@@ -120,6 +143,7 @@ $(function () {
 
                 //Step 2
                 stepperGoToStep(xservicesAuthModal, 2);
+                startResendTimeout();
             })
             .catch(function (error) {
                 //Add error messages
@@ -128,6 +152,28 @@ $(function () {
             .finally(function () {
                 //Remove Loader
                 deleteLoader(currentStep.find('.stepper__content'));
+            });
+    });
+
+    $('.xservices-resend-code-js').on('click', function () {
+        const $button = $(this);
+        const $form = $button.closest('.xservices-confirm-js');
+        const $step = $button.parents('.stepper__step');
+
+        if ($button.prop('disabled')) {
+            return;
+        }
+
+        $button.prop('disabled', true).text('Sending...');
+
+        form_ajax_send($form.clone().attr('action', $form.data('resend-url')))
+            .then(function () {
+                $step.find('.stepper__error').addClass('d-none').text('');
+                startResendTimeout();
+            })
+            .catch(function (error) {
+                $step.find('.stepper__error').removeClass('d-none').text(error);
+                $button.prop('disabled', false).text('Resend code');
             });
     });
 

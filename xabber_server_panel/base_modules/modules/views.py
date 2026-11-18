@@ -26,8 +26,23 @@ from urllib.parse import urljoin
 
 import shutil
 import os
+import math
+import time
 
 XSERVICES_PLUGINS_SUBSCRIBE_URL = urljoin(settings.XABBER_SERVICES_UI_URL, '/#/plugins/subscribe/')
+XSERVICES_CODE_RESEND_TIMEOUT = 30
+
+
+def get_xservices_code_retry_after(request, jid):
+    if request.session.get('xservises_jid') != jid:
+        return 0
+
+    try:
+        requested_at = float(request.session.get('xservices_code_requested_at'))
+    except (TypeError, ValueError):
+        return 0
+
+    return max(0, math.ceil(XSERVICES_CODE_RESEND_TIMEOUT - (time.time() - requested_at)))
 
 
 class Installed(LoginRequiredMixin, TemplateView):
@@ -515,6 +530,15 @@ class LoginXabberServices(LoginRequiredMixin, View):
         
         jid = result.get('full_jid')
 
+        retry_after = get_xservices_code_retry_after(request, jid)
+        if retry_after:
+            return JsonResponse(
+                {
+                    "message": "Please wait %s seconds before requesting another code." % retry_after,
+                },
+                status=429
+            )
+
         request.session['xservises_jid'] = jid
         request.session.modified = True
 
@@ -527,6 +551,52 @@ class LoginXabberServices(LoginRequiredMixin, View):
                 },
                 status=500
             )
+
+        request.session['xservices_code_requested_at'] = time.time()
+        request.session.modified = True
+
+        return JsonResponse(
+            {
+                "message": "Code requested successfully.",
+            }
+        )
+
+
+class ResendXabberServicesCode(LoginRequiredMixin, View):
+
+    @permission_admin
+    def post(self, request, *args, **kwargs):
+        jid = request.session.get('xservises_jid')
+        if not jid:
+            return JsonResponse(
+                {
+                    "message": "JID is required.",
+                },
+                status=400
+            )
+
+        retry_after = get_xservices_code_retry_after(request, jid)
+        if retry_after:
+            return JsonResponse(
+                {
+                    "message": "Please wait %s seconds before requesting another code." % retry_after,
+                },
+                status=429
+            )
+
+        xservices_api = XabberServicesApi(request)
+        xservices_api.code_request(jid)
+
+        if xservices_api.errors:
+            return JsonResponse(
+                {
+                    "message": "Request code service error.",
+                },
+                status=500
+            )
+
+        request.session['xservices_code_requested_at'] = time.time()
+        request.session.modified = True
 
         return JsonResponse(
             {

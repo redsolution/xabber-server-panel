@@ -48,7 +48,7 @@
                                     </div>
                                 </div>
                                 <div class="stepper__content pt-0 pt-lg-3 pb-3">
-                                    <form class="xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data" data-keep-submit-enabled>
+                                    <form class="xservices-confirm-js" action="{% url 'modules:xservices_confirm' %}" method="POST" enctype="multipart/form-data" data-resend-url="{% url 'modules:xservices_resend_code' %}" data-keep-submit-enabled>
                                         {% csrf_token %}
 
                                         <input class="form-control" type="text" name="code">
@@ -59,6 +59,9 @@
                                             <div class="d-flex flex-wrap mt-3 mb-n3 me-n3">
                                                 <button class="btn btn-primary me-3 mb-3" type="submit" name="save">
                                                     Confirm
+                                                </button>
+                                                <button class="btn btn-outline-primary me-3 mb-3 xservices-resend-code-js" type="button" disabled>
+                                                    Resend code
                                                 </button>
                                             </div>
                                         </div>

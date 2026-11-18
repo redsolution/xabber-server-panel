@@ -15,6 +15,7 @@ urlpatterns = [
 
     # Xabber Services
     path('xservices/login/', views.LoginXabberServices.as_view(), name='xservices_login'),
+    path('xservices/resend-code/', views.ResendXabberServicesCode.as_view(), name='xservices_resend_code'),
     path('xservices/confirm/', views.ConfirmXabberServices.as_view(), name='xservices_confirm'),
     path('xservices/logout/', views.LogoutXabberServices.as_view(), name='xservices_logout')
 ]
