@@ -535,6 +535,7 @@ class LoginXabberServices(LoginRequiredMixin, View):
             return JsonResponse(
                 {
                     "message": "Please wait %s seconds before requesting another code." % retry_after,
+                    "retry_after": retry_after,
                 },
                 status=429
             )
@@ -580,6 +581,7 @@ class ResendXabberServicesCode(LoginRequiredMixin, View):
             return JsonResponse(
                 {
                     "message": "Please wait %s seconds before requesting another code." % retry_after,
+                    "retry_after": retry_after,
                 },
                 status=429
             )

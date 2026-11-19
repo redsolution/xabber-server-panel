@@ -38,8 +38,10 @@ $(function () {
                 error: function (xhr, status, error) {
                     try {
                         const json = JSON.parse(xhr.responseText);
-                        const message = json.message;
-                        reject(message);
+                        reject(json.retry_after ? {
+                            message: json.message,
+                            retryAfter: json.retry_after
+                        } : json.message);
                     } catch (e) {
                         const message = 'An error occurred: ' + xhr.responseText;
                         reject(message);
@@ -52,9 +54,9 @@ $(function () {
     const resendTimeoutSeconds = 30;
     let resendTimeoutId;
 
-    function startResendTimeout() {
+    function startResendTimeout(seconds = resendTimeoutSeconds) {
         const $resendButton = $('.xservices-resend-code-js');
-        let secondsLeft = resendTimeoutSeconds;
+        let secondsLeft = seconds;
 
         clearInterval(resendTimeoutId);
         $resendButton.prop('disabled', true).text(`Resend code (${secondsLeft}s)`);
@@ -146,8 +148,15 @@ $(function () {
                 startResendTimeout();
             })
             .catch(function (error) {
+                if (error.retryAfter) {
+                    currentStep.find('.stepper__error').addClass('d-none').text('');
+                    stepperGoToStep(xservicesAuthModal, 2);
+                    startResendTimeout(error.retryAfter);
+                    return;
+                }
+
                 //Add error messages
-                currentStep.find('.stepper__error').removeClass('d-none').text(error);
+                currentStep.find('.stepper__error').removeClass('d-none').text(error.message || error);
             })
             .finally(function () {
                 //Remove Loader
@@ -172,7 +181,13 @@ $(function () {
                 startResendTimeout();
             })
             .catch(function (error) {
-                $step.find('.stepper__error').removeClass('d-none').text(error);
+                if (error.retryAfter) {
+                    $step.find('.stepper__error').addClass('d-none').text('');
+                    startResendTimeout(error.retryAfter);
+                    return;
+                }
+
+                $step.find('.stepper__error').removeClass('d-none').text(error.message || error);
                 $button.prop('disabled', false).text('Resend code');
             });
     });
@@ -231,7 +246,7 @@ $(function () {
                 disabledCloseModal = false;
 
                 //Add error messages
-                currentStep.find('.stepper__error').removeClass('d-none').text(error);
+                currentStep.find('.stepper__error').removeClass('d-none').text(error.message || error);
             })
             .finally(function () {
                 //Remove Loader
