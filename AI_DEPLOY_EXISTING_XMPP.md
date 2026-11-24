@@ -32,19 +32,41 @@ document or silently reuse paths from another host.
 
 | Required input | Purpose |
 | --- | --- |
-| `PANEL_DIR` | Absolute directory where the panel source and its local state will live. |
+| `PANEL_DIR` | The absolute panel checkout path. Ask for it only when the current working directory is not already the intended panel checkout, or when the user explicitly wants the panel placed in another directory. |
 | `XMPP_DIR` | Absolute directory of the existing XMPP Server distribution. |
-| Panel bind address, port, and public hostnames | Development-server binding, `ALLOWED_HOSTS`, and reverse-proxy configuration. |
+| Panel bind address, port, and public hostnames | The **bind address** is the network interface on which the panel process listens: `127.0.0.1` exposes it only to the same host and is normally used behind a reverse proxy; `0.0.0.0` exposes it on all IPv4 interfaces. The **port** is the local listening port. **Public hostnames** are the DNS names users enter in a browser; they are required for `ALLOWED_HOSTS`, reverse-proxy configuration, and HTTPS certificates. |
 | `XMPP_SERVER_API_URL` | ejabberd panel API endpoint, including its scheme, host, port, and `/panel` path. |
 | `XABBER_SERVICES_API_URL`, `XABBER_SERVICES_UI_URL`, `PLUGINS_API_URL` | Dependent Xabber/Plugins API endpoints; an explicit empty value is valid only when that integration is intentionally disabled. |
 | PostgreSQL connection information | Required only when creating or migrating the XMPP database; never request a password in a public prompt or log it. |
-| Certificate and webhook settings | `CERT_CONF_DIR`, `CERTS_DIR`, `MOD_WEBHOOKS_URL`, and any required CA-file location. |
-| Panel and ejabberd runtime users | Needed to configure ownership and module-installation permissions. |
-| Existing panel state | Whether `panel.sqlite3`, `.installation_lock`, and the XMPP PostgreSQL database must be reused. |
+| Certificate and webhook settings | The paths for `CERT_CONF_DIR`, `CERTS_DIR`, `MOD_WEBHOOKS_URL`, and an optional CA bundle. Confirm whether TLS is required and whether the certificates already exist before configuring their paths. |
+| Panel and ejabberd runtime users | `PANEL_USER` is the operating-system user that runs Django (for example, the runserver, Gunicorn, uWSGI, or Apache/mod_wsgi user). `XMPP_USER` is the operating-system user that runs ejabberd/`beam.smp`. If they differ, ask the user to approve a shared Unix group that grants both processes the required access to module and configuration directories. |
+| Existing panel and XMPP state | `panel.sqlite3` is the panel's own SQLite database: panel accounts, permissions, virtual-host records, module metadata, and panel settings. `.installation_lock` is a marker that tells the panel the XMPP installation was already completed and prevents redirecting to the new-server wizard. XMPP PostgreSQL contains the actual XMPP service data, such as accounts, rosters, and server/module data. Ask which existing state must be reused. |
 
 Ask one concise clarification if any required value is unknown. Do not proceed
 past read-only discovery until the user supplies it or explicitly authorizes a
 chosen default.
+
+### Certificate prerequisite
+
+Before enabling TLS endpoints, the user must provision the required
+certificates or explicitly choose to run without TLS during local development.
+Ask which of the following are already available:
+
+1. A panel HTTPS certificate for every public panel hostname, if the panel is
+   served over HTTPS by Apache, Nginx, or another reverse proxy.
+2. An XMPP TLS certificate for every XMPP virtual host. A single certificate
+   with the required Subject Alternative Names, or an appropriate wildcard
+   certificate, is acceptable.
+3. A PEM deployment bundle in the format expected by the existing ejabberd
+   configuration. Commonly this consists of the private key and full certificate
+   chain in a PEM file; the AI must inspect the existing `certfile`/`certfiles`
+   settings rather than assume one layout.
+4. A CA bundle path when the deployment uses a private CA or requires explicit
+   trust configuration.
+
+The AI must not generate private keys, request private-key contents, or invent
+certificate paths. It should verify that the user-provided certificate files
+exist, are readable by `XMPP_USER`, and cover the configured hostnames.
 
 ## 2. Inspect the current checkout and existing installation
 
@@ -284,12 +306,17 @@ Read AI_DEPLOY_EXISTING_XMPP.md and safely attach Xabber Server Panel to an
 existing XMPP Server. Start by inspecting and reporting the current checkout.
 Then ask me for every required deployment-specific path, hostname, API endpoint,
 certificate location, runtime user, and existing-state decision listed in the
-runbook. Do not infer or hardcode values. First inspect panel.sqlite3,
-.installation_lock, PostgreSQL state, users, groups, and file permissions. Do
-not run the installation wizard or overwrite ejabberd.yml when the XMPP
-database is populated. Put local paths and API endpoints only in settings.py.
-Before enabling module installation, make the panel and ejabberd runtime users
-able to write the documented module/config paths through an explicitly confirmed
-shared group. Show proposed configuration changes and final validation results,
-but never disclose secrets.
+runbook. Explain what the bind address, panel SQLite database, installation lock,
+XMPP PostgreSQL database, runtime users, and shared group mean when asking for
+them. If the current directory is already the panel checkout, do not require a
+separate PANEL_DIR value. First confirm the certificate prerequisite: panel HTTPS
+certificates, XMPP virtual-host certificates, PEM layout, and any CA bundle. Do
+not infer or hardcode values. First inspect panel.sqlite3, .installation_lock,
+PostgreSQL state, users, groups, and file permissions. Do not run the
+installation wizard or overwrite ejabberd.yml when the XMPP database is
+populated. Put local paths and API endpoints only in settings.py. Before
+enabling module installation, make the panel and ejabberd runtime users able to
+write the documented module/config paths through an explicitly confirmed shared
+group. Show proposed configuration changes and final validation results, but
+never disclose secrets.
 ```
