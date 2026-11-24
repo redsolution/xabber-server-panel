@@ -73,7 +73,8 @@ Django secret locally, write it directly to the local `settings.py`, and never
 print or commit the value. It must preserve an already configured local secret
 unless the user explicitly asks to rotate it.
 
-`DEBUG` is also not a user question: set `DEBUG = False`. Do not ask about
+`DEBUG` is also not a user question: set `DEBUG = True` in the local
+`settings.py`, overriding the generic default. Do not ask about
 `MOD_WEBHOOKS_URL`, XMPP listener ports, `DNS_SERVICE`, `CRON_JOB_TOKEN`,
 installation markers, module paths, or log paths. Leave optional settings at
 their defaults unless current local settings already override them. Derive
@@ -130,7 +131,7 @@ placeholder with the user's deployment value.
 
 | Setting(s) from `generic_settings.py` | What to ask for | Expected format/example |
 | --- | --- | --- |
-| `DEBUG`, `ALLOWED_HOSTS` | Set `DEBUG` to `False` without asking. Ask only for browser-facing DNS names for `ALLOWED_HOSTS`. | `DEBUG = False`; `ALLOWED_HOSTS = ['<panel.example.net>']` |
+| `DEBUG`, `ALLOWED_HOSTS` | Set `DEBUG` to `True` without asking. Ask only for browser-facing DNS names for `ALLOWED_HOSTS`. | `DEBUG = True`; `ALLOWED_HOSTS = ['<panel.example.net>']` |
 | `DATABASES['default']` | Whether to reuse the default panel SQLite DB or use an explicitly provided Django DB configuration. | SQLite: `NAME = '<PANEL_DIR>/panel.sqlite3'` |
 | `XMPP_SERVER_DIR` | Existing XMPP Server installation directory. | `'<ABSOLUTE_XMPP_DIR>'` |
 | `XMPP_SERVER_DB_DUMP` | SQL schema dump bundled with the selected XMPP Server version; needed only for a fresh XMPP DB. | `'<XMPP_DIR>/.../pg-install.new.sql'` |
@@ -159,7 +160,7 @@ paths” or “API URLs”. Use this reference when forming the questions.
 | `PANEL_IP` *(runtime value, not a Django setting)* | IP address passed to the development server or used by the chosen WSGI/reverse-proxy service as the panel listener address. | Always confirm before starting the panel. | A user-selected IP address, for example `'<panel-ip>'`. |
 | `PANEL_PORT` *(runtime value, not a Django setting)* | TCP port on which that panel listener accepts requests. | Always confirm before starting the panel. | Port number, for example `'<panel-port>'`. |
 | `SECRET_KEY` | Django cryptographic secret used to sign sessions, CSRF data, and other security-sensitive values. | Always set for a new local `settings.py`. | Generate a high-entropy quoted string directly in local `settings.py`; never print it in chat or commit it. |
-| `DEBUG` | Enables Django development diagnostics. | Set automatically; do not ask. | `False`. |
+| `DEBUG` | Enables Django development diagnostics. | Set automatically; do not ask. | `True`. |
 | `ALLOWED_HOSTS` | Restricts which HTTP Host headers Django accepts. | Ask as part of question 2. | Python list: `['<panel-hostname>']`. |
 | `DATABASES['default']['NAME']` | Path to the panel's SQLite DB, which stores panel-side accounts, permissions, module metadata, and settings. | Always confirm when reusing or creating panel state. | `'<PANEL_DIR>/panel.sqlite3'` or an approved Django database configuration. |
 | `XMPP_SERVER_DIR` | Root of the XMPP Server distribution. All derived runtime paths depend on it. | Ask as question 1. | Absolute directory: `'<XMPP_DIR>'`. |
@@ -293,7 +294,7 @@ every path that depends on the XMPP Server location. Use absolute paths.
 from xabber_server_panel.generic_settings import *
 import os
 
-DEBUG = <TRUE_FOR_LOCAL_DEVELOPMENT_OR_FALSE_FOR_PRODUCTION>
+DEBUG = True
 ALLOWED_HOSTS = ['<PANEL_PUBLIC_HOSTNAME>', '<PANEL_IP>']
 # Generate a fresh high-entropy value locally. Keep this file out of Git.
 SECRET_KEY = '<LOCALLY_GENERATED_SECRET>'
