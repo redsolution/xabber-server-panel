@@ -1,8 +1,10 @@
-# Deploy Xabber Server Panel with an Existing XMPP Server
+# Configure a Checked-Out Xabber Server Panel with an Existing XMPP Server
 
-This runbook is for an AI agent that must install or attach Xabber Server Panel
-to an **existing** XMPP Server distribution. The panel can write ejabberd
-configuration, install Erlang modules, and modify the XMPP PostgreSQL database.
+This runbook is for an AI agent that must configure the current Xabber Server
+Panel checkout to work with an **existing** XMPP Server distribution. It focuses
+on runtime configuration and does not prescribe a Git acquisition workflow. The
+panel can write ejabberd configuration, install Erlang modules, and modify the
+XMPP PostgreSQL database.
 
 This document deliberately contains no deployment-specific paths, hostnames, or
 API endpoints. Treat every value shown as `<PLACEHOLDER>` as required input,
@@ -44,7 +46,18 @@ Ask one concise clarification if any required value is unknown. Do not proceed
 past read-only discovery until the user supplies it or explicitly authorizes a
 chosen default.
 
-## 2. Inspect the existing installation
+## 2. Inspect the current checkout and existing installation
+
+The AI should first confirm that `PANEL_DIR` is the panel checkout and report
+its branch, revision, and working-tree status.
+
+```bash
+cd "$PANEL_DIR"
+test -f manage.py
+test -f requirements.txt
+git status --short --branch
+git rev-parse --short HEAD
+```
 
 Run read-only checks first:
 
@@ -67,16 +80,13 @@ Choose the deployment path from the result:
 | XMPP PostgreSQL contains data but `panel.sqlite3` is missing | Stop and ask the user for a panel database backup or an approved migration plan. Do not run the new-server wizard. |
 | XMPP PostgreSQL is empty and `.installation_lock` is absent | This is a new server. The normal `/installation/steps/` flow may be used. |
 
-## 3. Place panel code and install Python dependencies
+## 3. Prepare the current checkout and install Python dependencies
 
-If the panel repository does not exist, clone the required branch. If it already
-exists, preserve its branch and uncommitted changes unless the user explicitly
-authorizes a change.
+Create or reuse a virtual environment in the current checkout and install the
+dependencies required by its current revision.
 
 ```bash
-git clone git@github.com:redsolution/xabber-server-panel.git "$PANEL_DIR"
 cd "$PANEL_DIR"
-git checkout <required-branch>
 
 python3 -m venv venv
 ./venv/bin/pip install --upgrade pip setuptools
@@ -271,15 +281,15 @@ curl -I "http://$PANEL_BIND_HOST:$PANEL_BIND_PORT/"
 
 ```text
 Read AI_DEPLOY_EXISTING_XMPP.md and safely attach Xabber Server Panel to an
-existing XMPP Server. Before making any change, ask me for every required
-deployment-specific path, hostname, API endpoint, certificate location,
-runtime user, and existing-state decision listed in the runbook. Do not infer
-or hardcode values. First inspect panel.sqlite3, .installation_lock,
-PostgreSQL state, users, groups, and file permissions. Do not run the
-installation wizard or overwrite ejabberd.yml when the XMPP database is
-populated. Put local paths and API endpoints only in settings.py. Before
-enabling module installation, make the panel and ejabberd runtime users able to
-write the documented module/config paths through an explicitly confirmed shared
-group. Show proposed configuration changes and final validation results, but
-never disclose secrets.
+existing XMPP Server. Start by inspecting and reporting the current checkout.
+Then ask me for every required deployment-specific path, hostname, API endpoint,
+certificate location, runtime user, and existing-state decision listed in the
+runbook. Do not infer or hardcode values. First inspect panel.sqlite3,
+.installation_lock, PostgreSQL state, users, groups, and file permissions. Do
+not run the installation wizard or overwrite ejabberd.yml when the XMPP
+database is populated. Put local paths and API endpoints only in settings.py.
+Before enabling module installation, make the panel and ejabberd runtime users
+able to write the documented module/config paths through an explicitly confirmed
+shared group. Show proposed configuration changes and final validation results,
+but never disclose secrets.
 ```
