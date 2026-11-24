@@ -104,7 +104,7 @@ paths” or “API URLs”. Use this reference when forming the questions.
 | --- | --- | --- | --- |
 | `PANEL_IP` *(runtime value, not a Django setting)* | IP address passed to the development server or used by the chosen WSGI/reverse-proxy service as the panel listener address. | Always confirm before starting the panel. | A user-selected IP address, for example `'<panel-ip>'`. |
 | `PANEL_PORT` *(runtime value, not a Django setting)* | TCP port on which that panel listener accepts requests. | Always confirm before starting the panel. | Port number, for example `'<panel-port>'`. |
-| `SECRET_KEY` | Django cryptographic secret used to sign sessions, CSRF data, and other security-sensitive values. | Production deployment or any persistent panel state. | A newly generated high-entropy secret stored outside Git; do not send it in chat. |
+| `SECRET_KEY` | Django cryptographic secret used to sign sessions, CSRF data, and other security-sensitive values. | Production deployment or any persistent panel state. | A high-entropy quoted string in the local `settings.py`. Ask the user to set it themselves, or generate and write it there only with their approval; do not send it in chat or commit it. |
 | `DEBUG` | Enables Django development diagnostics. | Always confirm. | `True` only for local development; `False` in production. |
 | `ALLOWED_HOSTS` | Restricts which HTTP Host headers Django accepts. | Always configure outside a throwaway local setup. | Python list: `['<panel-hostname>']`. |
 | `DATABASES['default']['NAME']` | Path to the panel's SQLite DB, which stores panel-side accounts, permissions, module metadata, and settings. | Always confirm when reusing or creating panel state. | `'<PANEL_DIR>/panel.sqlite3'` or an approved Django database configuration. |
@@ -241,9 +241,9 @@ import os
 
 DEBUG = <TRUE_FOR_LOCAL_DEVELOPMENT_OR_FALSE_FOR_PRODUCTION>
 ALLOWED_HOSTS = ['<PANEL_PUBLIC_HOSTNAME>', '<PANEL_IP>']
-# Provide this environment variable through the selected service manager;
-# do not commit a production secret to settings.py.
-SECRET_KEY = os.environ['PANEL_SECRET_KEY']
+# Ask the user to set a high-entropy value, or generate one only with approval.
+# Keep this local file out of Git.
+SECRET_KEY = '<USER_SUPPLIED_OR_APPROVED_GENERATED_SECRET>'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 XMPP_SERVER_DIR = '<ABSOLUTE_XMPP_DIR>'
