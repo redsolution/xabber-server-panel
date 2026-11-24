@@ -30,6 +30,12 @@ Before creating files, changing permissions, or starting services, the AI must
 ask the user for the following values. It must not infer them from this
 document or silently reuse paths from another host.
 
+Its first request must be one ordered, numbered list in the order below, so the
+user can answer by number. Do not use an unnumbered bullet list for these
+questions. When a question has choices (for example, the missing
+`panel.sqlite3` recovery decision), number the choices as sub-items of that
+same question.
+
 | Required input | Purpose |
 | --- | --- |
 | `PANEL_DIR` | The absolute panel checkout path. Ask for it only when the current working directory is not already the intended panel checkout, or when the user explicitly wants the panel placed in another directory. |
@@ -428,7 +434,9 @@ value and state its expected format with a placeholder example. Explain what the
 panel IP, panel SQLite database, installation lock, XMPP PostgreSQL database,
 runtime users, and shared group mean when asking for them. If the current
 directory is already the panel checkout, do not require a separate PANEL_DIR
-value. First confirm the certificate prerequisite: panel HTTPS certificates,
+value. Ask those questions as one ordered, numbered list so I can answer by
+number; put alternatives under their parent question as numbered sub-items.
+First confirm the certificate prerequisite: panel HTTPS certificates,
 XMPP virtual-host certificates, PEM layout, and any CA bundle. Do not infer or
 hardcode values. First inspect panel.sqlite3, .installation_lock, PostgreSQL
 state, users, groups, and file permissions. If panel.sqlite3 is absent, offer
