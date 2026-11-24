@@ -30,22 +30,68 @@ Before creating files, changing permissions, or starting services, the AI must
 ask the user for the following values. It must not infer them from this
 document or silently reuse paths from another host.
 
-Its first request must be one ordered, numbered list in the order below, so the
-user can answer by number. Do not use an unnumbered bullet list for these
-questions. When a question has choices (for example, the missing
-`panel.sqlite3` recovery decision), number the choices as sub-items of that
-same question.
+### Interactive question protocol
+
+Do not ask for every value in one large message. Before the first question,
+and in **every** later reply that asks for more information, print this compact
+numbered progress list. Its labels are intentionally no longer than five words;
+they are an annotation of the remaining deployment decisions, not the full
+question text.
+
+```text
+❌ 1. XMPP path and API
+❌ 2. Panel listener and hosts
+❌ 3. Panel database plan
+❌ 4. XMPP database state
+❌ 5. External integrations
+❌ 6. TLS prerequisites
+❌ 7. Certificate automation
+```
+
+Ask only the first unresolved item after the list. Once the user's answer has
+been checked for completeness and accepted, replace that item's `❌` with `✅`.
+Keep unresolved items marked `❌`. Reprint the whole list after every user
+answer, then ask only the next unresolved question. If an answer is incomplete,
+keep its `❌`, explain what is missing, and ask only for the missing part.
+
+For question 3, present the panel database recovery/reinitialization choices as
+numbered sub-items. Do not mark an explicitly destructive option complete until
+the user has given the required confirmation. The detailed question following
+the compact list must still name the relevant setting, explain its purpose,
+state whether it is optional, and give an expected-value example.
+
+Question 6 must offer an explicit choice: configure or verify TLS now, or
+postpone TLS and run the panel over HTTP for now. If the user postpones TLS,
+mark question 6 as `✅ postponed` and question 7 as `✅ not required`; do not
+ask certificate-automation questions. Do not remove or modify any existing
+ejabberd certificates or TLS configuration when TLS is postponed. If the user
+chooses TLS, question 7 asks separately whether certificates will be managed
+automatically or supplied and renewed manually.
+
+`SECRET_KEY` is not a user question. The AI must generate a fresh high-entropy
+Django secret locally, write it directly to the local `settings.py`, and never
+print or commit the value. It must preserve an already configured local secret
+unless the user explicitly asks to rotate it.
+
+`DEBUG` is also not a user question: set `DEBUG = False`. Do not ask about
+`MOD_WEBHOOKS_URL`, XMPP listener ports, `DNS_SERVICE`, `CRON_JOB_TOKEN`,
+installation markers, module paths, or log paths. Leave optional settings at
+their defaults unless current local settings already override them. Derive
+server-specific paths, `.installation_lock`, `XMPP_SERVER_STATE`, listener
+ports, and the ejabberd Panel API from `XMPP_DIR` and the existing ejabberd
+configuration. If the API URL cannot be determined from that inspection, ask
+only for the missing URL as part of question 1.
 
 | Required input | Purpose |
 | --- | --- |
 | `PANEL_DIR` | The absolute panel checkout path. Ask for it only when the current working directory is not already the intended panel checkout, or when the user explicitly wants the panel placed in another directory. |
 | `XMPP_DIR` | Absolute directory of the existing XMPP Server distribution. |
 | Panel IP, port, and public hostnames | The **panel IP** is the IP address on which the panel process listens. The **port** is its local listening port. **Public hostnames** are the DNS names users enter in a browser; they are required for `ALLOWED_HOSTS`, reverse-proxy configuration, and HTTPS certificates. |
-| `XMPP_SERVER_API_URL` | ejabberd panel API endpoint, including its scheme, host, port, and `/panel` path. |
+| `XMPP_SERVER_API_URL` | Derive the ejabberd panel API endpoint, including its scheme, host, port, and `/panel` path, from the existing ejabberd configuration. Ask only if that inspection is inconclusive. |
 | `XABBER_SERVICES_API_URL`, `XABBER_SERVICES_UI_URL`, `PLUGINS_API_URL` | Dependent Xabber/Plugins API endpoints; an explicit empty value is valid only when that integration is intentionally disabled. |
 | PostgreSQL connection information | Required by the installation wizard and for database checks: host, database name, database user, and a secure way to provide the password. Never request a password in a public prompt or log it. |
-| Certificate and webhook settings | The values of the certificate and webhook settings listed in the settings reference below. Confirm whether TLS is required and whether the certificates already exist before configuring their paths. |
-| Panel and ejabberd runtime users | `PANEL_USER` is the operating-system user that runs Django (for example, the runserver, Gunicorn, uWSGI, or Apache/mod_wsgi user). `XMPP_USER` is the operating-system user that runs ejabberd/`beam.smp`. If they differ, ask the user to approve a shared Unix group that grants both processes the required access to module and configuration directories. |
+| Certificate settings | Confirm whether TLS is required and whether the certificates already exist before configuring their paths. Leave `MOD_WEBHOOKS_URL` unset so its built-in fallback applies. |
+| Panel and ejabberd runtime users | Do not ask initially. Use the current operating-system user as the panel user by default, determine the ejabberd user from its process or installation ownership, and test the required access. Ask for an explicit permissions decision only if those checks reveal a conflict. |
 | Existing panel and XMPP state | `panel.sqlite3` is the panel's own SQLite database: panel accounts, permissions, virtual-host records, module metadata, and panel settings. `.installation_lock` is a marker that tells the panel the XMPP installation was already completed and prevents redirecting to the new-server wizard. XMPP PostgreSQL contains the actual XMPP service data, such as accounts, rosters, and server/module data. Ask whether to restore existing state, reset the existing XMPP database, or use a different empty database. |
 
 Ask one concise clarification if any required value is unknown. Do not proceed
@@ -76,13 +122,15 @@ exist, are readable by `XMPP_USER`, and cover the configured hostnames.
 
 ### Settings reference: values to request or confirm
 
-The AI must name the relevant setting when asking for a value. Examples below
-show the expected **format only**; replace every angle-bracket placeholder with
-the user's deployment value.
+The AI must name the relevant setting when asking for a value. It must first
+use the current checkout and ejabberd configuration to determine values that
+can be read safely; it asks the user only for the remaining deployment choices.
+Examples below show the expected **format only**; replace every angle-bracket
+placeholder with the user's deployment value.
 
 | Setting(s) from `generic_settings.py` | What to ask for | Expected format/example |
 | --- | --- | --- |
-| `DEBUG`, `ALLOWED_HOSTS` | Whether this is local development or production, and browser-facing DNS names. | `DEBUG = False`; `ALLOWED_HOSTS = ['<panel.example.net>']` |
+| `DEBUG`, `ALLOWED_HOSTS` | Set `DEBUG` to `False` without asking. Ask only for browser-facing DNS names for `ALLOWED_HOSTS`. | `DEBUG = False`; `ALLOWED_HOSTS = ['<panel.example.net>']` |
 | `DATABASES['default']` | Whether to reuse the default panel SQLite DB or use an explicitly provided Django DB configuration. | SQLite: `NAME = '<PANEL_DIR>/panel.sqlite3'` |
 | `XMPP_SERVER_DIR` | Existing XMPP Server installation directory. | `'<ABSOLUTE_XMPP_DIR>'` |
 | `XMPP_SERVER_DB_DUMP` | SQL schema dump bundled with the selected XMPP Server version; needed only for a fresh XMPP DB. | `'<XMPP_DIR>/.../pg-install.new.sql'` |
@@ -90,14 +138,14 @@ the user's deployment value.
 | `XMPP_SERVER_STATE`, `INSTALLATION_LOCK`, `XMPP_SERVER_LOG_DIR`, `XMPP_SERVER_LOG_FILE` | Runtime state marker, installation-complete marker, and ejabberd log location. | `'<XMPP_DIR>/server_state'`, `'<XMPP_DIR>/.installation_lock'`, `'<XMPP_DIR>/var/log/ejabberd/ejabberd.log'` |
 | `XMPP_SERVER_VHOSTS_CONFIG_FILE`, `XMPP_SERVER_MODULES_CONFIG_FILE`, `XMPP_SERVER_ADD_CONFIG_FILE` | Names of included ejabberd YAML files; normally retain the current names. | `'virtual_hosts.yml'`, `'modules_config.yml'`, `'additional_config.yml'` |
 | `XMPP_SERVER_EXTERNAL_MODULES_DIR`, `USER_FILES`, `MOD_NICK_AVATAR_FILES` | Panel-owned directories for installed modules and uploaded/generated files. | `'<PANEL_DIR>/xmppserver_modules'`, `'<PANEL_DIR>/user_files'` |
-| `XMPP_SERVER_API_URL` | ejabberd Panel API endpoint used by the Django panel. | `'http://<ejabberd-api-host>:<port>/panel'` |
-| `XMPP_CLIENT_PORT`, `XMPP_SERVER_PORT`, `XMPP_HTTP_PORT`, `XMPP_HTTPS_PORT`, `XMPPS_CLIENT_PORT` | Ports the panel should display/use for the existing XMPP deployment. | Strings such as `'5222'`, `'5269'`, `'5280'`, `'5443'`, `'5223'` |
+| `XMPP_SERVER_API_URL` | Derive the ejabberd Panel API endpoint used by Django from the existing listener configuration; ask only if it cannot be read. | `'http://<ejabberd-api-host>:<port>/panel'` |
+| `XMPP_CLIENT_PORT`, `XMPP_SERVER_PORT`, `XMPP_HTTP_PORT`, `XMPP_HTTPS_PORT`, `XMPPS_CLIENT_PORT` | Read existing listener ports from ejabberd configuration and preserve them. | Strings such as `'5222'`, `'5269'`, `'5443'`, `'5280'`, `'5223'` |
 | `XABBER_SERVICES_API_URL`, `XABBER_SERVICES_UI_URL`, `PLUGINS_API_URL` | Optional Xabber Services and plugin-catalogue integrations. | `'https://<services-api-host>'`, `'https://<services-ui-host>/'`, `'https://<plugins-api-host>/api/v1'`, or `''` to disable each integration |
-| `MOD_WEBHOOKS_URL` | Optional URL where ejabberd module webhooks reach this panel. | `'https://<panel-host>/webhooks/xmppserver/'` or omit it. If omitted, the panel first uses a configured `panel_address`; otherwise its built-in fallback is `https://xabber.<XMPP_HOST>/webhooks/xmppserver/`. |
+| `MOD_WEBHOOKS_URL` | Optional URL where ejabberd module webhooks reach this panel. Do not ask for it; leave it unset to use the built-in fallback. | When explicitly overridden: `'https://<panel-host>/webhooks/xmppserver/'`; otherwise omit it. |
 | `CERT_CONF_DIR`, `CERTS_DIR`, `CERT_CONF_FILENAME`, `CERT_DOMAIN_FILENAME` | Certificate-manager configuration and output directories. | `'<ABSOLUTE_CERT_CONFIG_DIR>'`, `'<ABSOLUTE_CERT_OUTPUT_DIR>'`, `'acertmgr.conf'`, `'domains.conf'` |
 | `XMPP_SERVER_ADD_CERTS_DIRS` | Additional certificate directories ejabberd should load, if any. | `['<ABSOLUTE_CERT_DIR>']` or `[]` |
 | `CERT_AUTHORITY`, `CERT_API`, `CERT_VALIDATE_OCSP`, `CERT_ACTION`, `CHALLENGE_URL`, `CHALLENGE_RECORD` | ACME/validation details, only when the panel manages certificate issuance. | A user-approved ACME URL, API version string, OCSP mode, deploy command, challenge URL, and DNS record. Keep the existing values when this integration is already configured. |
-| `CRON_JOB_TOKEN`, `DNS_SERVICE` | Optional scheduled-job token and DNS resolver endpoint. | A secret supplied through a protected channel; `'https://<dns-resolver>/resolve'` |
+| `CRON_JOB_TOKEN`, `DNS_SERVICE` | Optional scheduled-job token and DNS resolver endpoint. Do not ask for them; retain defaults or existing local overrides. | `''`; `'https://<dns-resolver>/resolve'` |
 
 ### Required question format and per-setting purpose
 
@@ -110,30 +158,30 @@ paths” or “API URLs”. Use this reference when forming the questions.
 | --- | --- | --- | --- |
 | `PANEL_IP` *(runtime value, not a Django setting)* | IP address passed to the development server or used by the chosen WSGI/reverse-proxy service as the panel listener address. | Always confirm before starting the panel. | A user-selected IP address, for example `'<panel-ip>'`. |
 | `PANEL_PORT` *(runtime value, not a Django setting)* | TCP port on which that panel listener accepts requests. | Always confirm before starting the panel. | Port number, for example `'<panel-port>'`. |
-| `SECRET_KEY` | Django cryptographic secret used to sign sessions, CSRF data, and other security-sensitive values. | Production deployment or any persistent panel state. | A high-entropy quoted string in the local `settings.py`. Ask the user to set it themselves, or generate and write it there only with their approval; do not send it in chat or commit it. |
-| `DEBUG` | Enables Django development diagnostics. | Always confirm. | `True` only for local development; `False` in production. |
-| `ALLOWED_HOSTS` | Restricts which HTTP Host headers Django accepts. | Always configure outside a throwaway local setup. | Python list: `['<panel-hostname>']`. |
+| `SECRET_KEY` | Django cryptographic secret used to sign sessions, CSRF data, and other security-sensitive values. | Always set for a new local `settings.py`. | Generate a high-entropy quoted string directly in local `settings.py`; never print it in chat or commit it. |
+| `DEBUG` | Enables Django development diagnostics. | Set automatically; do not ask. | `False`. |
+| `ALLOWED_HOSTS` | Restricts which HTTP Host headers Django accepts. | Ask as part of question 2. | Python list: `['<panel-hostname>']`. |
 | `DATABASES['default']['NAME']` | Path to the panel's SQLite DB, which stores panel-side accounts, permissions, module metadata, and settings. | Always confirm when reusing or creating panel state. | `'<PANEL_DIR>/panel.sqlite3'` or an approved Django database configuration. |
-| `XMPP_SERVER_DIR` | Root of the XMPP Server distribution. All derived runtime paths depend on it. | Always. | Absolute directory: `'<XMPP_DIR>'`. |
-| `XMPP_SERVER_DB_DUMP` | SQL schema file applied only during fresh XMPP database initialization. | Fresh installation only. | Absolute `.sql` file inside the selected XMPP distribution. |
-| `XMPP_SERVER_CONFIG_PATH` | Directory containing `ejabberd.yml` and its included YAML files. | Always. | Absolute directory: `'<XMPP_DIR>/etc/ejabberd'`. |
-| `XMPP_SERVER_EBIN_DIR` | Destination for `.beam` files copied by the panel module installer. | Module installation is enabled. | Absolute `ebin` directory inside the XMPP release. |
-| `XMPP_SERVER_CTL` | Executable used by the panel to start, stop, reload, register users, and manage ejabberd. | Always. | Absolute executable path: `'<XMPP_DIR>/bin/ejabberdctl'`. |
-| `XMPP_SERVER_STATE` | File where the panel records whether it requested ejabberd to be on or off. | Always. | Writable file path, normally under `XMPP_DIR`. |
-| `INSTALLATION_LOCK` | File that marks the XMPP installation complete; it suppresses the new-server wizard. | Always. | Existing or intended writable marker file, normally `'<XMPP_DIR>/.installation_lock'`. |
-| `XMPP_SERVER_LOG_DIR`, `XMPP_SERVER_LOG_FILE` | ejabberd log directory and the main log file displayed by the panel. | Log viewer is used. | Absolute directory and file path. |
-| `XMPP_SERVER_EXTERNAL_MODULES_DIR` | Panel-owned destination for non-`.beam` server files from installed modules. | Module installation is enabled. | Writable absolute directory, normally under `PANEL_DIR`. |
-| `USER_FILES`, `MOD_NICK_AVATAR_FILES` | Panel directories for user-uploaded files and generated nickname avatars. | Corresponding panel features are enabled. | Writable absolute directories. |
-| `XMPP_SERVER_API_URL` | Base URL used by the panel's authenticated API client to call ejabberd's `/panel` endpoint. | Always. | URL including scheme, host, port, and `/panel`: `'http://<host>:<port>/panel'`. |
-| `XMPP_CLIENT_PORT` | Port written into generated ejabberd config for XMPP client connections. | Fresh installation or generated config update. | Numeric string, for example `'5222'`. |
-| `XMPP_SERVER_PORT` | Port written into generated ejabberd config for server-to-server connections. | Fresh installation or generated config update. | Numeric string, for example `'5269'`. |
-| `XMPP_HTTP_PORT` | Port of the ejabberd HTTP listener that the bundled template marks `tls: true` and uses for `/api`, `/panel`, `/upload`, `/ws`, and `/iq`. | Fresh installation or generated config update. | Numeric string. Preserve the existing deployment value. |
-| `XMPP_HTTPS_PORT` | Port of the second ejabberd HTTP listener and the port embedded in the bundled upload/IQ HTTPS URLs. Its name alone is not proof of TLS: inspect the generated `ejabberd.yml` before changing it. | Fresh installation or generated config update. | Numeric string. Preserve the existing deployment value. |
-| `XMPPS_CLIENT_PORT` | Port for direct TLS XMPP client connections. | Direct XMPPS is enabled. | Numeric string, for example `'5223'`. |
+| `XMPP_SERVER_DIR` | Root of the XMPP Server distribution. All derived runtime paths depend on it. | Ask as question 1. | Absolute directory: `'<XMPP_DIR>'`. |
+| `XMPP_SERVER_DB_DUMP` | SQL schema file applied only during fresh XMPP database initialization. | Derive from the selected XMPP distribution; do not ask. | Absolute `.sql` file inside the selected XMPP distribution. |
+| `XMPP_SERVER_CONFIG_PATH` | Directory containing `ejabberd.yml` and its included YAML files. | Derive from `XMPP_SERVER_DIR`; do not ask. | Absolute directory: `'<XMPP_DIR>/etc/ejabberd'`. |
+| `XMPP_SERVER_EBIN_DIR` | Destination for `.beam` files copied by the panel module installer. | Derive from `XMPP_SERVER_DIR`; do not ask. | Absolute `ebin` directory inside the XMPP release. |
+| `XMPP_SERVER_CTL` | Executable used by the panel to start, stop, reload, register users, and manage ejabberd. | Derive from `XMPP_SERVER_DIR`; do not ask. | Absolute executable path: `'<XMPP_DIR>/bin/ejabberdctl'`. |
+| `XMPP_SERVER_STATE` | File where the panel records whether it requested ejabberd to be on or off. | Derive from `XMPP_SERVER_DIR`; do not ask. | Writable file path, normally under `XMPP_DIR`. |
+| `INSTALLATION_LOCK` | File that marks the XMPP installation complete; it suppresses the new-server wizard. | Derive and inspect from `XMPP_SERVER_DIR`; do not ask. | Existing or intended writable marker file, normally `'<XMPP_DIR>/.installation_lock'`. |
+| `XMPP_SERVER_LOG_DIR`, `XMPP_SERVER_LOG_FILE` | ejabberd log directory and the main log file displayed by the panel. | Derive from `XMPP_SERVER_DIR`; do not ask. | Absolute directory and file path. |
+| `XMPP_SERVER_EXTERNAL_MODULES_DIR` | Panel-owned destination for non-`.beam` server files from installed modules. | Use current-project default; do not ask. | Writable absolute directory, normally under `PANEL_DIR`. |
+| `USER_FILES`, `MOD_NICK_AVATAR_FILES` | Panel directories for user-uploaded files and generated nickname avatars. | Use current-project defaults; do not ask. | Writable absolute directories. |
+| `XMPP_SERVER_API_URL` | Base URL used by the panel's authenticated API client to call ejabberd's `/panel` endpoint. | Derive during question 1; ask only when config inspection is inconclusive. | URL including scheme, host, port, and `/panel`: `'http://<host>:<port>/panel'`. |
+| `XMPP_CLIENT_PORT` | Port written into generated ejabberd config for XMPP client connections. | Read from ejabberd config; do not ask. | Numeric string, for example `'5222'`. |
+| `XMPP_SERVER_PORT` | Port written into generated ejabberd config for server-to-server connections. | Read from ejabberd config; do not ask. | Numeric string, for example `'5269'`. |
+| `XMPP_HTTP_PORT` | Port of the ejabberd HTTP listener that the bundled template marks `tls: true` and uses for `/api`, `/panel`, `/upload`, `/ws`, and `/iq`. | Read from ejabberd config; do not ask. | Numeric string. Preserve the existing deployment value. |
+| `XMPP_HTTPS_PORT` | Port of the second ejabberd HTTP listener and the port embedded in the bundled upload/IQ HTTPS URLs. Its name alone is not proof of TLS: inspect the generated `ejabberd.yml` before changing it. | Read from ejabberd config; do not ask. | Numeric string. Preserve the existing deployment value. |
+| `XMPPS_CLIENT_PORT` | Port for direct TLS XMPP client connections. | Read from ejabberd config; do not ask. | Numeric string, for example `'5223'`. |
 | `XABBER_SERVICES_API_URL` | Base URL for the Xabber Services API client. | Xabber Services integration is enabled. | URL without a secret, or `''` to disable. |
 | `XABBER_SERVICES_UI_URL` | Base URL used to build Xabber Services browser links. | Xabber Services integration is enabled. | URL ending in `/`, or `''` to disable. |
 | `PLUGINS_API_URL` | Base URL for the plugin catalogue and plugin token client. | Remote plugin catalogue is enabled. | URL such as `'https://<host>/api/v1'`, or `''` to disable. |
-| `MOD_WEBHOOKS_URL` | Callback URL written into the `mod_webhooks` configuration. | Webhooks are enabled. | Full panel webhook URL, or omit it to use the panel's fallback: configured `panel_address`, then `https://xabber.<XMPP_HOST>/webhooks/xmppserver/`. |
+| `MOD_WEBHOOKS_URL` | Callback URL written into the `mod_webhooks` configuration. | Do not ask; leave unset to use the panel's fallback: configured `panel_address`, then `https://xabber.<XMPP_HOST>/webhooks/xmppserver/`. | Full panel webhook URL only when an existing local override must be retained. |
 | `CERT_CONF_DIR` | Directory where the panel creates certificate-manager configuration files. | Panel-managed certificate issuance is enabled. | Writable absolute directory. |
 | `CERTS_DIR` | Directory from which the panel reads generated PEM files and certificate status. | TLS/certificate management is enabled. | Readable absolute directory containing PEM files. |
 | `CERT_CONF_FILENAME` | Filename of the certificate-manager global configuration inside `CERT_CONF_DIR`. | Panel-managed certificate issuance is enabled. | Filename such as `'acertmgr.conf'`. |
@@ -145,8 +193,8 @@ paths” or “API URLs”. Use this reference when forming the questions.
 | `CERT_ACTION` | Command run after a certificate changes, normally to deploy/reload it. | Automatic certificate deployment is enabled. | Approved executable command string, or `None`. |
 | `CHALLENGE_URL` | Endpoint used by the custom Xabber DNS challenge mode to create/delete ACME challenge records. | Custom Xabber DNS challenge mode is enabled. | User-provided HTTPS URL. |
 | `CHALLENGE_RECORD` | Expected DNS target used to verify the ACME challenge setup. | Custom Xabber DNS challenge mode is enabled. | DNS record string ending with `.` when required. |
-| `DNS_SERVICE` | DNS-over-HTTP resolver queried when the panel validates host and certificate DNS records. | Host/certificate DNS validation is used. | Resolver URL ending in `/resolve`. |
-| `CRON_JOB_TOKEN` | Token expected by scheduled account-expiry maintenance command. | That cron endpoint/command is enabled. | Secret supplied through a protected channel, or an explicitly disabled empty value. |
+| `DNS_SERVICE` | DNS-over-HTTP resolver queried when the panel validates host and certificate DNS records. | Use the generic default or an existing local override; do not ask. | Resolver URL ending in `/resolve`. |
+| `CRON_JOB_TOKEN` | Token expected by scheduled account-expiry maintenance command. | Keep the default disabled value or an existing local override; do not ask. | `''` or an existing protected local value. |
 
 ## 2. Inspect the current checkout and existing installation
 
@@ -247,9 +295,8 @@ import os
 
 DEBUG = <TRUE_FOR_LOCAL_DEVELOPMENT_OR_FALSE_FOR_PRODUCTION>
 ALLOWED_HOSTS = ['<PANEL_PUBLIC_HOSTNAME>', '<PANEL_IP>']
-# Ask the user to set a high-entropy value, or generate one only with approval.
-# Keep this local file out of Git.
-SECRET_KEY = '<USER_SUPPLIED_OR_APPROVED_GENERATED_SECRET>'
+# Generate a fresh high-entropy value locally. Keep this file out of Git.
+SECRET_KEY = '<LOCALLY_GENERATED_SECRET>'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 XMPP_SERVER_DIR = '<ABSOLUTE_XMPP_DIR>'
@@ -306,18 +353,24 @@ apps into `PANEL_DIR/modules`, server files into
 `XMPP_SERVER_EBIN_DIR`, updates `modules_config.yml`, and runs Django migrations
 and `collectstatic`. Rollback needs the same permissions.
 
-Identify the runtime users before changing ownership:
+Use the user running the setup as the default panel user; do not ask the user
+to choose one. Determine the ejabberd user read-only before considering any
+permissions change:
 
 ```bash
+PANEL_USER="$(id -un)"
+PANEL_GROUP="$(id -gn)"
 ps -eo user,group,cmd | grep -E '[e]jabberd|[b]eam.smp'
 ps -eo user,group,cmd | grep -E '[g]unicorn|[u]wsgi|[a]pache2|[m]od_wsgi'
+stat -c '%U:%G %n' "$XMPP_DIR" "$XMPP_DIR/etc/ejabberd" \
+  "$XMPP_DIR/lib/ejabberd-0.0/ebin"
 ```
 
-The preferred local-development arrangement is to run ejabberd and the panel
-under one non-root service account. In production, if they use different
-accounts, create a shared service group and add both accounts to it. Do not
-recursively change ownership of a production server until the user confirms the
-account names and exact scope.
+If the current user can access every required path, retain that arrangement.
+The panel may be run by that user for the local setup. If a production process
+manager later uses a different account, its service configuration must use an
+account with the same verified access. Do not change users, groups, ownership,
+or modes merely because the names differ.
 
 The panel runtime user needs read/write access to:
 
@@ -335,8 +388,9 @@ XMPP_DIR/lib/ejabberd-0.0/ebin/     # .beam files installed by modules
 The ejabberd runtime user needs read access to the config, installed modules,
 and certificates, plus its normal write access to `XMPP_DIR/var/`.
 
-After the user confirms `PANEL_USER`, `XMPP_USER`, and a shared group such as
-`xabber-panel`, use this reviewed pattern for the directories the panel writes:
+If the read-only checks show an actual access failure, report the exact path and
+operation that fail. Only after the user explicitly approves a shared-group
+change, use this reviewed pattern for the directories the panel writes:
 
 ```bash
 PANEL_USER=<panel-runtime-user>
@@ -427,25 +481,32 @@ curl -I "http://$PANEL_IP:$PANEL_PORT/"
 ```text
 Read AI_DEPLOY_EXISTING_XMPP.md and safely attach Xabber Server Panel to an
 existing XMPP Server. Start by inspecting and reporting the current checkout.
-Then ask me for every required deployment-specific path, hostname, API endpoint,
-certificate location, runtime user, and existing-state decision listed in the
-runbook. Name the relevant `generic_settings.py` setting for each requested
-value and state its expected format with a placeholder example. Explain what the
-panel IP, panel SQLite database, installation lock, XMPP PostgreSQL database,
-runtime users, and shared group mean when asking for them. If the current
-directory is already the panel checkout, do not require a separate PANEL_DIR
-value. Ask those questions as one ordered, numbered list so I can answer by
-number; put alternatives under their parent question as numbered sub-items.
-First confirm the certificate prerequisite: panel HTTPS certificates,
-XMPP virtual-host certificates, PEM layout, and any CA bundle. Do not infer or
-hardcode values. First inspect panel.sqlite3, .installation_lock, PostgreSQL
+Then resolve the deployment values listed in the runbook. Read values from the
+current checkout and ejabberd configuration whenever possible, and ask me only
+for decisions or values that cannot be safely determined that way. Name the
+relevant `generic_settings.py` setting for each value requested from me and
+state its expected format with a placeholder example. Explain what the panel IP,
+panel SQLite database, installation lock, and XMPP PostgreSQL database mean
+when asking for them. Use the current operating-system user as the default
+panel user; determine ejabberd ownership and access read-only, and ask about a
+shared group only if an actual permission check fails. If the current directory
+is already the panel checkout, do not require a separate PANEL_DIR value. Follow
+the Interactive question protocol: always show its compact, numbered status
+list before asking for information; ask only one unresolved item at a time; and
+reprint the full list with ✅/❌ statuses after every answer.
+Generate a new `SECRET_KEY` locally in `settings.py` yourself, without asking
+me for it or printing it; preserve an existing local secret unless I request a
+rotation. First confirm the certificate prerequisite: panel HTTPS certificates,
+XMPP virtual-host certificates, PEM layout, and any CA bundle. Do not invent or
+hardcode deployment values; derive them only from the inspected local files.
+First inspect panel.sqlite3, .installation_lock, PostgreSQL
 state, users, groups, and file permissions. If panel.sqlite3 is absent, offer
 the documented choices to restore it, use a different empty XMPP database, or
 explicitly reinitialize the named database with prepare_installation; never take
 the destructive path without confirmation. Do not run the installation wizard
 or overwrite ejabberd.yml when the XMPP database is populated. Put local paths
-and API endpoints only in settings.py. Before enabling module installation, make
-the panel and ejabberd runtime users able to write the documented module/config
-paths through an explicitly confirmed shared group. Show proposed configuration
-changes and final validation results, but never disclose secrets.
+and API endpoints only in settings.py. Before enabling module installation,
+verify that the current user and ejabberd user have the documented access; use
+an explicitly approved shared group only if the checks require it. Show proposed
+configuration changes and final validation results, but never disclose secrets.
 ```
